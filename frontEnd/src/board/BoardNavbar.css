@@ -1,0 +1,123 @@
+/* Header Styles */
+.BNheader {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(229, 231, 235, 1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.BNheader-content {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 1rem 0rem;
+}
+
+.BNheader-main {
+    display: flex;
+    align-items: center;
+}
+
+.BNlogo-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.BNlogo-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: linear-gradient(to right, #66d9e8, #7fd6f9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+}
+
+.BNsite-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: linear-gradient(to right, #66d9e8, #7fd6f9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin: 0;
+}
+
+.BNsite-subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.BNheader-badge {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .BNheader-badge {
+        display: flex;
+    }
+}
+
+/* 화면 작아지면 로고 사라지게 */
+@media (max-width: 768px) {
+    .BNlogo-section {
+        display: none;
+    }
+}
+
+/* Board Navigation */
+.BNboard-nav {
+    background: rgba(255, 255, 255, 0);
+}
+
+.BNnav-content {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+}
+
+.BNnav-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.BNnav-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+/* 헤더 버튼 호버 */
+.BNnav-tab:hover {
+    background: linear-gradient(to right, #66d9e8, #7fd6f9);
+    color: white;
+}
+
+/* 헤더 버튼 클릭시 */
+.BNnav-tab:active {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: scale(0.97) translateY(2px);
+}
+
+/* 헤더 버튼 클릭된것 */
+.BNnav-tab-active {
+    background: linear-gradient(to right, #66d9e8, #7fd6f9);
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: scale(0.97) translateY(5px);
+}

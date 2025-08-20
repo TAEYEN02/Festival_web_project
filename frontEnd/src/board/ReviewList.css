@@ -1,0 +1,360 @@
+/* App Container */
+.app-container {
+    min-height: 100vh;
+    /* 기존 배경색 주석 처리 - 개별 게시판 배경색으로 대체 */
+    /* background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 50%, #dbeafe 100%); */
+}
+
+/* 게시판별 색상 테마 */
+.app-container.total-bg {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e6eff7 100%); /* 차분한 파스텔 블루 그라데이션 */
+}
+
+.app-container.chat-bg {
+    background: linear-gradient(135deg, #e0f2f7 0%, #d1ecf1 100%); /* 시원한 아쿠아 그라데이션 */
+}
+
+.app-container.inquiry-bg {
+    background: linear-gradient(135deg, #ffebee 0%, #ffe0f0 100%); /* 부드러운 핑크 그라데이션 */
+}
+
+.app-container.review-bg {
+    background: linear-gradient(135deg, #fffde7 0%, #fff8e1 100%); /* 따뜻한 크림/베이지 그라데이션 */
+    /* 기존: #fff3e0 */
+}
+
+
+/* Main Content */
+.main-content {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+}
+
+.posts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Post Card */
+.post-card {
+    background: rgba(255, 255, 255, 0.95); /* 배경 불투명도 약간 높임 */
+    backdrop-filter: blur(8px); /* 블러 강도 증가 */
+    border-radius: 1.25rem; /* 모서리 더 둥글게 */
+    box-shadow: 0 12px 25px -8px rgba(0, 0, 0, 0.15); /* 그림자 진하게 */
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.7); /* 테두리 더 선명하게 */
+}
+
+.post-card:hover {
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25); /* 호버 시 그림자 더 강조 */
+    transform: translateY(-5px); /* 약간 위로 떠오르는 효과 */
+}
+
+/* Post Header */
+.post-header {
+    padding: 1.25rem; /* 패딩 증가 */
+    padding-bottom: 1rem;
+}
+
+.post-author-section {
+    margin-bottom: 0.75rem;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.author-avatar {
+    width: 3.25rem; /* 아바타 크기 약간 키움 */
+    height: 3.25rem;
+    background: linear-gradient(to right, #ff9a8b, #ff6a88); /* 따뜻한 그라데이션 */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem; /* 이모지 크기 키움 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 아바타 그림자 추가 */
+}
+
+.author-name-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.author-name {
+    font-weight: 700; /* 글씨 굵기 증가 */
+    color: #263238; /* 진한 회색 */
+    margin: 0;
+}
+
+.category-badge {
+    padding: 0.3rem 0.6rem; /* 패딩 약간 조절 */
+    border-radius: 9999px;
+    font-size: 0.8rem; /* 폰트 크기 약간 키움 */
+    font-weight: 600; /* 굵기 증가 */
+    opacity: 0.9; /* 약간 투명하게 */
+}
+
+.category-chat {
+    background: #c3e6f0; /* 부드러운 하늘색 */
+    color: #00796b;
+}
+
+.category-inquiry {
+    background: #ffccbc; /* 부드러운 오렌지색 */
+    color: #d84315;
+}
+
+.category-review {
+    background: #fff9c4; /* 밝은 노란색 */
+    color: #fbc02d; /* 진한 노란색 */
+    /* 기존: #fef9c3, #ca8a04 */
+}
+
+
+.category-default {
+    background: #e0e0e0;
+    color: #757575;
+}
+
+.post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem; /* 간격 약간 조절 */
+    font-size: 0.85rem; /* 폰트 크기 약간 조절 */
+    color: #78909c; /* 부드러운 회색 */
+    margin-top: 0.25rem;
+}
+
+/* Post Content */
+.post-title {
+    all: unset;
+    font-size: 1.25rem; /* 제목 크기 키움 */
+    font-weight: bold;
+    color: #263238; /* 진한 회색 */
+    margin: 0.5rem 0 0.75rem 0; /* 상하 여백 조절 */
+    cursor: pointer;
+    transition: color 0.3s ease;
+    display: block; /* 제목이 블록 요소가 되도록 */
+}
+
+.post-title:hover {
+    color: #ff5722; /* 오렌지색으로 변경 (따뜻한 테마에 맞춰) */
+    /* 기존: #9333ea */
+}
+
+.post-content {
+    color: #455a64; /* 부드러운 진회색 */
+    margin: 0 0 1rem 0; /* 여백 증가 */
+    line-height: 1.7; /* 줄 간격 조절 */
+}
+
+/* Icon Placeholder */
+.icon-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem; /* 아이콘 크기 약간 키움 */
+    height: 1.3rem;
+    font-size: 0.85rem;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem; /* 간격 약간 조절 */
+    margin-bottom: 1rem; /* 여백 증가 */
+}
+
+.tag {
+    padding: 0.3rem 0.8rem; /* 패딩 조절 */
+    background: linear-gradient(to right, #ffecb3, #fffde7); /* 따뜻한 노란색 그라데이션 */
+    color: #ffa000; /* 진한 노란색 */
+    border-radius: 9999px;
+    font-size: 0.8rem; /* 폰트 크기 약간 키움 */
+    font-weight: 600; /* 굵기 증가 */
+    cursor: pointer;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+    border: 1px solid rgba(255, 202, 40, 0.3); /* 테두리 추가 */
+}
+
+.tag:hover {
+    box-shadow: 0 6px 12px -3px rgba(0, 0, 0, 0.1); /* 그림자 강조 */
+    transform: translateY(-2px); /* 약간 떠오르는 효과 */
+}
+
+/* Post Image */
+.post-image-container {
+    padding: 0 1.25rem 1rem; /* 패딩 조절 */
+}
+
+.post-image {
+    width: 100%;
+    height: 18rem; /* 이미지 높이 약간 증가 */
+    object-fit: cover;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 5px 15px -5px rgba(0, 0, 0, 0.1); /* 이미지에 그림자 추가 */
+}
+
+.post-image:hover {
+    transform: scale(1.02); /* 스케일 효과 약간 줄임 (너무 커지지 않게) */
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2); /* 호버 시 그림자 강조 */
+}
+
+/* Post Actions */
+.post-actions {
+    padding: 1rem 1.25rem; /* 패딩 증가 */
+    border-top: 1px solid #eceff1; /* 테두리 색상 변경 */
+    background: rgba(250, 250, 250, 0.7); /* 배경색 약간 밝게, 불투명도 추가 */
+}
+
+.actions-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem; /* 간격 약간 증가 */
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #607d8b; /* 부드러운 회색 */
+    font-size: 0.8rem; /* 폰트 크기 약간 키움 */
+    border: none;
+    background: transparent;
+    font-weight: 600; /* 굵기 증가 */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px); /* 약간 위로 떠오르는 효과 */
+    color: #ff7043; /* 호버 시 오렌지색으로 변경 */
+}
+
+.view-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem; /* 폰트 크기 약간 키움 */
+    color: #78909c; /* 부드러운 회색 */
+    font-weight: 500;
+    transition: transform 0.2s ease;
+}
+
+.view-count:hover {
+    transform: translateY(-2px); /* 약간 위로 떠오르는 효과 */
+}
+
+/* Load More Section */
+.load-more-section {
+    text-align: center;
+    padding: 2.5rem 0; /* 패딩 증가 */
+}
+
+.load-more-btn {
+    padding: 0.85rem 2.5rem; /* 패딩 증가 */
+    background: linear-gradient(135deg, #ffab91 0%, #ff8a65 100%); /* 따뜻한 오렌지 그라데이션 */
+    color: white;
+    border-radius: 9999px;
+    font-weight: 600; /* 굵기 증가 */
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px -8px rgba(255, 138, 101, 0.6); /* 따뜻한 색감의 그림자 */
+}
+
+.load-more-btn:hover {
+    box-shadow: 0 15px 30px -10px rgba(255, 138, 101, 0.7); /* 호버 시 그림자 더 강조 */
+    transform: translateY(-3px); /* 약간 위로 떠오르는 효과 */
+}
+
+/* Floating Action Button */
+.floating-btn {
+    position: fixed;
+    bottom: 2rem; /* 위치 약간 조절 */
+    right: 2rem;
+    width: 3.8rem; /* 크기 약간 키움 */
+    height: 3.8rem;
+    background: linear-gradient(135deg, #aed581 0%, #8bc34a 100%); /* 상큼한 연두색 그라데이션 */
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 12px 25px -8px rgba(0, 0, 0, 0.2); /* 그림자 강조 */
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem; /* 이모지 크기 키움 */
+    transition: all 0.3s ease;
+    z-index: 1000; /* 다른 요소 위에 오도록 z-index 설정 */
+}
+
+.floating-btn:hover {
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3); /* 호버 시 그림자 더 강조 */
+    transform: scale(1.08) translateY(-3px); /* 약간 커지고 위로 떠오르는 효과 */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    /* 기존 미디어 쿼리 유지 (필요에 따라 조절) */
+    .header-content {
+        padding: 0.75rem;
+    }
+
+    .nav-content {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .nav-tabs {
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+    }
+
+    .nav-tab {
+        flex-shrink: 0;
+        padding: 0.5rem 1rem;
+    }
+
+    .main-content {
+        padding: 1rem 0.75rem;
+    }
+
+    .post-header {
+        padding: 0.75rem;
+    }
+
+    .post-image-container {
+        padding: 0 0.75rem 0.5rem;
+    }
+
+    .post-actions {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .action-buttons {
+        gap: 1rem;
+    }
+
+    .floating-btn {
+        bottom: 1.5rem; /* 모바일에서 위치 약간 조절 */
+        right: 1.5rem;
+        width: 3.2rem; /* 모바일에서 크기 약간 줄임 */
+        height: 3.2rem;
+        font-size: 1.3rem;
+    }
+}

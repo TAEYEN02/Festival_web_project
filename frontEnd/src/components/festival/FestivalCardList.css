@@ -1,0 +1,28 @@
+/* 커스텀 캐러셀 화살표 */
+.custom-arrow-next,
+.custom-arrow-prev {
+  position: absolute;
+  top: 40%;
+  z-index: 2;
+  cursor: pointer;
+  background: #fff;
+  border-radius: 25%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.custom-arrow-next { right: -10px; }
+.custom-arrow-prev { left: -10px; }
+
+.custom-arrow-next span {
+  font-weight: bolder;
+  margin-left: 10px;
+}
+.custom-arrow-prev span {
+  font-weight: bolder;
+  margin-right: 10px;
+}

@@ -1,0 +1,251 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container */
+.BDcontainer {
+  min-height: 100dvh;
+  /* background: linear-gradient(to bottom right, #ffe4f0, #f0e4ff, #e0f7ff); */
+  font-family: sans-serif;
+}
+
+.BDcontainer.chat-bg {
+  background-color: #e0f7fa;
+  /* 잡담 */
+}
+
+.BDcontainer.inquiry-bg {
+  background-color: #fce4ec;
+  /* 문의 */
+}
+
+.BDcontainer.review-bg {
+  background-color: #fff3e0;
+  /* 후기 */
+}
+
+
+/* Header */
+.BDheader {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.BDheader-content {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.BDheader-main {
+  display: flex;
+  align-items: center;
+}
+
+.BDlogo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.BDlogo-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(to right, #a855f7, #ec4899);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.25rem;
+}
+
+.BDsite-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  background: linear-gradient(to right, #9333ea, #ec4899);
+  -webkit-background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+.BDsite-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Main */
+.BDmain {
+  max-width: 56rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Post */
+.BDpost {
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.5);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  padding: 1rem 1rem 2rem 1rem;
+}
+
+.BDpost-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.BDauthor-section {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.BDavatar {
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(to right, #a855f7, #ec4899);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.25rem;
+  color: white;
+}
+
+.BDauthor-name-category {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.BDauthor-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.BDcategory {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 9999px;
+}
+
+.BDchat {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.BDinquiry {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.BDlocation-date {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* Post Content */
+.BDtitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.BDcontent {
+  font-size: 1rem;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+/* Tags */
+.BDtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.BDtag {
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(to right, #ede9fe, #fce7f3);
+  color: #7c3aed;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.BDtag:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Images */
+.BDimage-wrapper {
+  margin-bottom: 1rem;
+}
+
+.BDimage {
+  width: 100%;
+  height: 24rem;
+  object-fit: cover;
+  border-radius: 1rem;
+  transition: transform 0.3s;
+}
+
+/* Actions */
+.BDactions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.BDactions-buttons{
+  display: flex;
+  flex-direction: row;
+}
+
+.BDaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.BDaction-btn:hover {
+  transform: scale(1.05);
+}
+
+.BDviews {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Empty fallback */
+.BDempty {
+  padding: 5rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 1rem;
+}

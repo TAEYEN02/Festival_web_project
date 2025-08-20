@@ -1,0 +1,53 @@
+/* 카드 공통 */
+.festival-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  margin: 10px;
+  transition: transform 0.2s;
+  background: #fff;
+  cursor: pointer;
+}
+.festival-card:hover { transform: translateY(-5px); }
+
+.festival-image {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+
+.festival-info { padding: 10px; }
+
+.festival-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.festival-location {
+  font-size: 14px;
+  color: gray;
+}
+
+/* 기간/디데이 */
+.festival-period-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.festival-period {
+  font-size: 13px;
+  color: #555;
+}
+
+.festival-dday {
+  font-size: 13px;
+  font-weight: bold;
+  margin-left: 8px;
+}
+.festival-dday.upcoming { color: #e63946; }  /* 시작 전 */
+.festival-dday.today { color: #ff7f50; }     /* 당일 */
+.festival-dday.ongoing { color: #2a9d8f; }   /* 진행중 */
+.festival-dday.ended { color: #999; }        /* 종료 */
