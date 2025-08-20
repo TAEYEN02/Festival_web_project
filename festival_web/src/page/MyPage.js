@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import MyPageSidebar from '../components/MyPageSidebar';
 import ProfileSection from '../components/ProfileSection';
 import ScrapSection from '../components/ScrapSection';
 import InquirySection from '../components/InquirySection';
+import axios from 'axios';
+import RealtimeChat from '../components/RealtimeChat';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -28,22 +30,48 @@ const MainContent = styled.div`
   }
 `;
 
-const MyPage = ({ userData }) => {
+const MyPage = () => {
+  const [userData, setUserData] = useState(null);
   const [currentSection, setCurrentSection] = useState('profile');
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+
+    axios.get('http://localhost:8081/api/user/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => setUserData(res.data))
+      .catch(() => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      });
+  }, []);
+
   const handleLogout = () => {
-    localStorage.removeItem('token'); // JWT 삭제
-    window.location.href = '/login';   // 로그인 페이지로 이동
+    localStorage.removeItem('token');
+    window.location.href = '/login';
   };
 
   const renderCurrentSection = () => {
     switch (currentSection) {
-      case 'profile': return <ProfileSection userData={userData} />;
-      case 'scraps': return <ScrapSection userId={userData.id} />;
-      case 'inquiries': return <InquirySection userId={userData.id} />;
-      default: return <ProfileSection userData={userData} />;
+      case 'profile':
+        return <ProfileSection userData={userData} />;
+      case 'scraps':
+        return <ScrapSection userData={userData} />;
+      case 'inquiries':
+        return <InquirySection userData={userData} />;
+      case 'chat': // 새로운 섹션
+        return <RealtimeChat regionCode="seoul" regionName="서울" />;
+      default:
+        return <ProfileSection userData={userData} />;
     }
   };
+
+  if (!userData) return <div>Loading...</div>;
 
   return (
     <PageContainer>

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { User, Bookmark, MessageSquare, LogOut, Calendar } from 'lucide-react';
+import { User, Bookmark, MessageSquare, LogOut, Calendar, MessageCircle } from 'lucide-react';
 
 const SidebarContainer = styled.div`
   background: rgba(255,255,255,0.95);
@@ -50,7 +50,8 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
   const menuItems = [
     { id: 'profile', label: '프로필 관리', icon: User },
     { id: 'scraps', label: '스크랩함', icon: Bookmark },
-    { id: 'inquiries', label: '1:1 문의', icon: MessageSquare }
+    { id: 'inquiries', label: '1:1 문의', icon: MessageSquare },
+    { id: 'chat', label: '채팅방', icon: MessageCircle },
   ];
 
   if (!isLoggedIn) {
@@ -60,6 +61,26 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
           <Avatar>?</Avatar>
           <h3>로그인이 필요합니다</h3>
           <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>마이페이지 기능을 사용하려면 로그인해주세요.</p>
+          <button
+            onClick={() => {
+              // 토큰 삭제
+              localStorage.removeItem('token');
+              // 강제 이동
+              window.location.href = '/login';
+            }}
+            style={{
+              marginTop: '1rem',
+              padding: '0.5rem 1rem',
+              borderRadius: '1rem',
+              border: 'none',
+              background: 'linear-gradient(to right, #6366f1, #a78bfa)',
+              color: 'white',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            로그인
+          </button>
         </div>
       </SidebarContainer>
     );
