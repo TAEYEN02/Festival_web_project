@@ -1,4 +1,4 @@
-import { REGIONS } from "../../api/festivals";
+import { REGIONS } from "../../api/regionFestival";
 
 export default function RegionFilter({ value = "all", onChange }) {
     return (

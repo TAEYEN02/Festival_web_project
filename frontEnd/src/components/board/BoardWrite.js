@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom"
 import './BoardWrite.css';
 import { useState } from "react";
 
-export const BoardWrtie = () => {
+export const BoardWrite = () => {
     const { categoryId } = useParams();
 
     const [formData, setFormData] = useState({

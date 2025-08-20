@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./RegionOverview.css";
-import { fetchFestivals, fetchFestivalsPage, REGIONS } from "../../api/festivals";
-import FestivalCard from "./FestivalCard";
+import { fetchFestivals, fetchFestivalsPage, REGIONS } from "../../api/regionFestival.js";
+import RegionFestivalCard from "./RegionFestivalCard.js";
 import RegionFilter from "./RegionFilter";
 import EmptyState from "./EmptyState";
 import MapView from "./MapView";
@@ -388,7 +388,7 @@ export default function RegionOverviewPage() {
                                         ) : (
                                             <div className="card-grid">
                                                 {list.slice(0, 8).map(f => (
-                                                    <FestivalCard
+                                                    <RegionFestivalCard
                                                         key={f.id}
                                                         festival={f}
                                                         onTagClick={handleTagClick}
@@ -416,7 +416,7 @@ export default function RegionOverviewPage() {
                                 <>
                                     <div className="card-grid">
                                         {listItems.map(f => (
-                                            <FestivalCard
+                                            <RegionFestivalCard
                                                 key={f.id}
                                                 festival={f}
                                                 onTagClick={handleTagClick}

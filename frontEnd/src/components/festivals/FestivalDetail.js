@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { fetchFestivalById, fetchRelatedFestivals } from "../api/festivals";
-import { formatDateRange, isOngoing, isUpcoming, isPast } from "../util/date";
-import "../components/RegionOverview/RegionOverview.css"; // 카드/버튼 재활용
+import { fetchFestivalById, fetchRelatedFestivals } from "../../api/regionFestival";
+import { formatDateRange, isOngoing, isUpcoming, isPast } from "../../util/date"
+import "../RegionOverview/RegionOverview.css"; // 카드/버튼 재활용
 import "./FestivalDetail.css";
-import MapView from "../components/RegionOverview/MapView";
-import useScrap from "../components/RegionOverview/useScrap";
+import MapView from "../RegionOverview/MapView";
+import useScrap from "../RegionOverview/useScrap";
 
 export default function FestivalDetail() {
     const { id } = useParams();

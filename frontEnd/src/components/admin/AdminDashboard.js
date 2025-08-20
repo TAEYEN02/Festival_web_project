@@ -1,13 +1,12 @@
-// AdminDashboard.js
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Sidebar from '../components/Sidebar';
-import TopBar from '../components/TopBar';
-import StatsCards from '../components/StatsCards';
-import RecentInquiries from '../components/RecentInquiries';
-import RecentUsers from '../components/RecentUsers';
-import ChartSection from '../components/ChartSection';
-import { fetchDashboardStats, fetchUsers } from '../api/admin';
+import Sidebar from './Sidebar';
+import TopBar from './TopBar';
+import StatsCards from './StatsCards';
+import RecentInquiries from './RecentInquiries';
+import RecentUsers from './RecentUsers';
+import ChartSection from './ChartSection';
+import { fetchDashboardStats, fetchUsers } from '../../api/admin';
 
 const Container = styled.div`
   min-height: 100vh;

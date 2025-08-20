@@ -1,7 +1,7 @@
 // src/page/MainPage.js
 import { useEffect, useState } from "react";
-import { fetchFestivalsFromApi } from "../api/festival";
-import FestivalCardList from "../components/festival/FestivalCardList";
+import { fetchFestivalsFromApi } from "../../api/festival"
+import FestivalCardList from "../festivals/FestivalCardList";
 
 import "./MainPage.css";
 

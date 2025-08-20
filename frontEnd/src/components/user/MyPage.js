@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import MyPageSidebar from '../components/MyPageSidebar';
-import ProfileSection from '../components/ProfileSection';
-import ScrapSection from '../components/ScrapSection';
-import InquirySection from '../components/InquirySection';
+import MyPageSidebar from './MyPageSidebar';
+import ProfileSection from './ProfileSection';
+import ScrapSection from './ScrapSection';
+import InquirySection from '../admin/InquirySection';
 
 const PageContainer = styled.div`
   min-height: 100vh;
