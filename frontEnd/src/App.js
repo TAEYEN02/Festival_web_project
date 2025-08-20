@@ -5,7 +5,7 @@ import RegisterForm from "./components/auth/RegisterForm";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import MyPage from "./components/user/MyPage";
 import RegionOverviewPage from "./components/RegionOverview/RegionOverviewPage";
-import MainHeader from "./components/common/MainHeader";
+import MainHeader from "./components/main/MainHeader";
 import FestivalDetail from "./components/festivals/FestivalDetail";
 import MainPage from "./components/main/MainPage";
 

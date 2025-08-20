@@ -9,6 +9,8 @@ import MapView from "./MapView";
 import useScrap from "./useScrap";
 import { toMonthKey } from "../../util/date.js";
 
+const PAGE_SIZE = 20; // 페이지 크기 고정(드롭다운 제거)
+
 export default function RegionOverviewPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { isScrapped, toggleScrap } = useScrap();
@@ -28,11 +30,10 @@ export default function RegionOverviewPage() {
     const [groupItems, setGroupItems] = useState([]);        // 그룹 모드용 전체(필터적용)
     const [listItems, setListItems] = useState([]);          // 단일 모드 누적
     const [page, setPage] = useState(0);                     // 0-based
-    const [size, setSize] = useState(20);                    // ★ 페이지 크기(12/20/40)
     const [hasNext, setHasNext] = useState(true);
     const [total, setTotal] = useState(0);
 
-    // URL → 상태 복원
+    // URL → 상태 복원 (size 관련 로직 제거)
     useEffect(() => {
         const initQ = searchParams.get("q") ?? "";
         const initRegion = searchParams.get("region") ?? "all";
@@ -43,8 +44,6 @@ export default function RegionOverviewPage() {
         const initTags = (searchParams.get("tags") ?? "")
             .split(",").map(s => s.trim()).filter(Boolean);
         const initMode = searchParams.get("mode") ?? "list";
-        const initSizeRaw = parseInt(searchParams.get("size") ?? "20", 10);
-        const initSize = [12, 20, 40].includes(initSizeRaw) ? initSizeRaw : 20;
 
         setQuery(initQ);
         setRegion(initRegion);
@@ -54,11 +53,10 @@ export default function RegionOverviewPage() {
         setMonthFilter(initMonth);
         setSelectedTags(initTags);
         setViewMode(initMode === "map" ? "map" : "list");
-        setSize(initSize);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // 상태 → URL 동기화
+    // 상태 → URL 동기화 (size 파라미터 제거)
     useEffect(() => {
         setSearchParams({
             q: query || "",
@@ -68,10 +66,9 @@ export default function RegionOverviewPage() {
             status: statusFilter,
             month: monthFilter,
             tags: selectedTags.join(","),
-            mode: viewMode,
-            size: String(size) // ★ size 동기화
+            mode: viewMode
         });
-    }, [query, region, sort, groupView, statusFilter, monthFilter, selectedTags, viewMode, size, setSearchParams]);
+    }, [query, region, sort, groupView, statusFilter, monthFilter, selectedTags, viewMode, setSearchParams]);
 
     // 그룹(전체) 모드: 한 번에 가져와서 섹션별 8개씩
     useEffect(() => {
@@ -118,7 +115,7 @@ export default function RegionOverviewPage() {
                 month: monthFilter,
                 tags: selectedTags,
                 page: nextPage,
-                size
+                size: PAGE_SIZE
             });
             setListItems(prev => isFirst ? res.items : [...prev, ...res.items]);
             setPage(res.page + 1);      // 다음 로딩을 위해 +1
@@ -136,7 +133,7 @@ export default function RegionOverviewPage() {
         if (groupView) return;
         resetAndLoadFirst();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [groupView, query, region, sort, statusFilter, monthFilter, selectedTags, size]);
+    }, [groupView, query, region, sort, statusFilter, monthFilter, selectedTags]);
 
     // 월 옵션(데이터 기반, 그룹/단일 각각 현재 로드분 기준)
     const monthOptions = useMemo(() => {
@@ -177,12 +174,6 @@ export default function RegionOverviewPage() {
         return () => io.disconnect();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [groupView, viewMode, loading, hasNext, page]);
-
-    // 빠른 월 칩
-    const now = new Date();
-    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const ymNext = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
 
     // 태그 토글
     const handleTagClick = (tag) => {
@@ -266,80 +257,36 @@ export default function RegionOverviewPage() {
                         <option value="latest">최신순</option>
                     </select>
 
-                    {/* 상태 라디오 탭 */}
-                    <div className="status-tabs" role="tablist" aria-label="진행 상태">
-                        {[
-                            { v: "all", label: "전체" },
-                            { v: "ongoing", label: "진행중" },
-                            { v: "upcoming", label: "예정" },
-                            { v: "past", label: "종료" }
-                        ].map(s => (
-                            <button
-                                key={s.v}
-                                className={`status-tab ${statusFilter === s.v ? "active" : ""}`}
-                                onClick={() => setStatusFilter(s.v)}
-                                role="tab"
-                                aria-selected={statusFilter === s.v}
-                                title={s.label}
-                            >
-                                {s.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* 월 필터 + 퀵칩 */}
-                    <div className="month-block">
-                        <select
-                            className="select"
-                            value={monthFilter}
-                            onChange={(e) => setMonthFilter(e.target.value)}
-                            aria-label="월 필터"
-                            title="월별"
-                        >
-                            {monthOptions.map(m => (
-                                <option key={m} value={m}>
-                                    {m === "all" ? "전체 월" : m}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="month-quick">
-                            <button
-                                className={`chip ${monthFilter === ym ? "on" : ""}`}
-                                onClick={() => setMonthFilter(ym)}
-                                title="이번 달"
-                            >
-                                이번 달
-                            </button>
-                            <button
-                                className={`chip ${monthFilter === ymNext ? "on" : ""}`}
-                                onClick={() => setMonthFilter(ymNext)}
-                                title="다음 달"
-                            >
-                                다음 달
-                            </button>
-                            <button
-                                className={`chip ${monthFilter === "all" ? "on" : ""}`}
-                                onClick={() => setMonthFilter("all")}
-                                title="전체 월"
-                            >
-                                전체
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* ★ 페이지 크기 선택 (단일·리스트 모드에서만 활성화) */}
+                    {/* 상태 드롭다운(버튼 탭 → select로 변경) */}
                     <select
                         className="select"
-                        value={size}
-                        onChange={(e) => setSize(parseInt(e.target.value, 10))}
-                        aria-label="페이지 크기"
-                        title="페이지 크기"
-                        disabled={groupView || viewMode === "map"}
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        aria-label="진행 상태"
+                        title="진행 상태"
                     >
-                        <option value={12}>12개</option>
-                        <option value={20}>20개</option>
-                        <option value={40}>40개</option>
+                        <option value="all">전체</option>
+                        <option value="ongoing">진행중</option>
+                        <option value="upcoming">예정</option>
+                        <option value="past">종료</option>
                     </select>
+
+                    {/* 월 필터 (퀵 버튼 제거, 드롭다운만 유지) */}
+                    <select
+                        className="select"
+                        value={monthFilter}
+                        onChange={(e) => setMonthFilter(e.target.value)}
+                        aria-label="월 필터"
+                        title="월별"
+                    >
+                        {monthOptions.map(m => (
+                            <option key={m} value={m}>
+                                {m === "all" ? "전체 월" : m}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* 페이지 크기 드롭다운 제거됨 */}
                 </div>
             </div>
 
@@ -351,11 +298,20 @@ export default function RegionOverviewPage() {
             {selectedTags.length > 0 && (
                 <div className="selected-tags">
                     {selectedTags.map(t => (
-                        <button key={t} className="chip on" onClick={() => handleTagClick(t)} title={`태그 '${t}' 해제`}>
+                        <button
+                            key={t}
+                            className="chip on"
+                            onClick={() => handleTagClick(t)}
+                            title={`태그 '${t}' 해제`}
+                        >
                             #{t} ✕
                         </button>
                     ))}
-                    <button className="chip clear" onClick={() => setSelectedTags([])} title="태그 전체 해제">
+                    <button
+                        className="chip clear"
+                        onClick={() => setSelectedTags([])}
+                        title="태그 전체 해제"
+                    >
                         태그 초기화
                     </button>
                 </div>
@@ -443,9 +399,9 @@ export default function RegionOverviewPage() {
                                         )}
                                     </div>
 
-                                    {/* 총 개수 안내(서버 페이징 대비) */}
+                                    {/* 총 개수 안내(페이지 크기 표기 제거) */}
                                     <div style={{ textAlign: "center", color: "#666", marginTop: 8 }}>
-                                        총 {total}개 중 {listItems.length}개 표시 (페이지 크기: {size})
+                                        총 {total}개 중 {listItems.length}개 표시
                                     </div>
                                 </>
                             )}
