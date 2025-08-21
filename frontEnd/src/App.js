@@ -8,6 +8,7 @@ import RegionOverviewPage from "./components/RegionOverview/RegionOverviewPage";
 import MainHeader from "./components/main/MainHeader";
 import FestivalDetail from "./components/festivals/FestivalDetail";
 import MainPage from "./components/main/MainPage";
+import AITestPage from "./components/festivalAI/AITestPage";
 
 // 게시판 관련
 import { BoardLayout } from "./components/board/BoardLayout";
@@ -87,6 +88,9 @@ function App() {
             <Routes>
                 {/* 메인 - 축제 리스트 */}
                 <Route path="/" element={<MainPage />} />
+
+                { /* AI 테스트 화면 */}
+                <Route path="/ai-test" element={<AITestPage />} />
                 
                 {/* 공개 페이지 */}
                 <Route path="/overview" element={<RegionOverviewPage />} />
