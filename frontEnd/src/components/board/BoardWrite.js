@@ -1,6 +1,9 @@
 import { useParams } from "react-router-dom"
-import './BoardWrite.css';
 import { useState } from "react";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import './BoardWrite.css';
+
 
 export const BoardWrite = () => {
     const { categoryId } = useParams();
@@ -19,9 +22,28 @@ export const BoardWrite = () => {
 
     const categories = [
         { id: 1, value: '잡담', label: '잡담', emoji: '💬', color: 'chat' },
-        { id: 2, value: '문의', label: '문의', emoji: '❓', color: 'inquiry' },
-        { id: 3, value: '후기', label: '후기', emoji: '⭐', color: 'review' }
+        { id: 2, value: '문의', label: '질문', emoji: '❓', color: 'inquiry' },
+        // { id: 3, value: '후기', label: '후기', emoji: '⭐', color: 'review' }
     ];
+
+    const avatars = [
+        { id: 1, emoji: "😀", name: "Smile" },
+        { id: 2, emoji: "😎", name: "Cool" },
+        { id: 3, emoji: "🙂", name: "Friendly" },
+        { id: 4, emoji: "🐶", name: "Dog" },
+        { id: 5, emoji: "🐱", name: "Cat" },
+        { id: 6, emoji: "🐼", name: "Panda" },
+        { id: 7, emoji: "🦊", name: "Fox" },
+        { id: 8, emoji: "🌞", name: "Sun" },
+        { id: 9, emoji: "🌸", name: "Flower" },
+        { id: 10, emoji: "🎉", name: "Party" },
+        { id: 11, emoji: "🎈", name: "Balloon" },
+        { id: 12, emoji: "🍀", name: "Clover" },
+        { id: 13, emoji: "🌈", name: "Rainbow" },
+        { id: 14, emoji: "🧸", name: "Teddy" },
+        { id: 15, emoji: "🎵", name: "Music" }
+    ];
+
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({
@@ -99,16 +121,13 @@ export const BoardWrite = () => {
     };
 
     return (
-        <div className={`BWwrite-container 
-            ${formData.category === '잡담' ? 'chat' : 
-            formData.category === '문의' ? 'inquiry' : 
-            'review'
-            }-bg`}>
+        <div className={`BWwrite-container`}>
 
             {/* Header */}
             <header className="BWwrite-header">
                 <div className="BWheader-content">
                     <div className="BWheader-main">
+                        {/* 작성하기 상단바 왼쪽 */}
                         <div className="BWheader-left">
                             {/* 뒤로가기 버튼 */}
                             <button className="BWback-button"
@@ -117,11 +136,13 @@ export const BoardWrite = () => {
                                 }}>
                                 <span className="BWicon-placeholder">←</span>
                             </button>
+                            {/* 간단한 안내 */}
                             <div className="BWheader-text">
                                 <h1 className="BWpage-title">{`${categories[categoryId - 1]?.value} 게시판 이야기 작성`}</h1>
                                 <p className="BWpage-subtitle">당신의 경험을 공유해보세요</p>
                             </div>
                         </div>
+                        {/* 상단바 오른쪽 발행하기 버튼 */}
                         <button onClick={handleSubmit} className="BWpublish-button">
                             <span className="BWicon-placeholder">📤</span>
                             <span>발행하기</span>
@@ -152,6 +173,22 @@ export const BoardWrite = () => {
                         </div>
                     </div>
 
+                    <div className="BWform-section">
+                        <label className="BWsection-label">아바타 선택</label>
+                        <div className="BWcategory-buttons">
+                            {avatars.map((avatar) => (
+                                <button
+                                    key={avatar.id}
+                                    type="button"
+                                    onClick={() => handleInputChange('avatar', avatar.emoji)}
+                                    className={`BWcategory-btn ${formData.avatar === avatar.emoji ? 'BWcategory-btn-active' : ''} BWcategory-chat`}
+                                >
+                                    <span>{avatar.emoji}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Title Input */}
                     <div className="BWform-section">
                         <input
@@ -164,7 +201,7 @@ export const BoardWrite = () => {
                     </div>
 
                     {/* Location & Date */}
-                    {formData.category === '후기'&&<div className="BWform-section">
+                    {formData.category === '후기' && <div className="BWform-section">
                         <div className="BWlocation-date-grid">
                             <div className="BWinput-group">
                                 <label className="BWinput-label">
@@ -197,13 +234,39 @@ export const BoardWrite = () => {
 
                     {/* Content Textarea */}
                     <div className="BWform-section">
-                        <textarea
+                        <ReactQuill
+                            className="BWcontent-textarea"
+                            editorClassName="BWcontent-editor"
+                            toolbarClassName="BWcontent-toolbar"
+                            style={{
+                                borderRadius: "12px",
+                                border: "1px solid #ccc",
+                                overflow: "hidden",
+                                height: "400px"
+                            }}
+                            theme="snow"
+                            value={formData.content}
+                            onChange={(e) => handleInputChange('content', e.target.value)}
+                            modules={{
+                                toolbar: [
+                                    [{ header: 1 }, { header: 2 }, { header: 3 }, { header: false }], // H1, H2, H3, 일반
+                                    ["bold", "italic", "underline", "strike"], // 굵게, 기울임, 밑줄, 취소선
+                                    [{ size: ["small", false, "large", "huge"] }], // 글자 크기
+                                    [{ color: [] }, { background: [] }], // 글자색, 배경색
+                                    [{ align: [] }], // 왼쪽, 가운데, 오른쪽, 양쪽 정렬
+                                    ["image"], // 링크, 이미지, 동영상
+                                    ["clean"], // 스타일 초기화
+                                ]
+                            }}
+                            placeholder="축제에 대한 생생한 이야기를 들려주세요! 🎊&#10;&#10;• 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
+                        />
+                        {/* <textarea
                             placeholder="축제에 대한 생생한 이야기를 들려주세요! 🎊&#10;&#10;• 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
                             value={formData.content}
                             onChange={(e) => handleInputChange('content', e.target.value)}
                             rows={8}
                             className="BWcontent-textarea"
-                        />
+                        /> */}
                     </div>
 
                     {/* Image Upload */}

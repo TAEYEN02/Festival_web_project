@@ -1,6 +1,9 @@
+import { useNavigate} from "react-router-dom"
 import './ReviewList.css';
 
 export const ReviewList = () => {
+
+    const navigate = useNavigate();
 
     const posts = [
         {
@@ -82,7 +85,7 @@ export const ReviewList = () => {
     ];
 
     return (
-        <div className={`app-container review-bg`}>
+        <div className={`app-container`}>
 
             {/* Posts List */}
             <main className="main-content">
@@ -121,7 +124,7 @@ export const ReviewList = () => {
                                     onClick={(e) => {
                                         //이벤트 전파 방지
                                         e.stopPropagation();
-                                        window.location.href = `/board/review/detail/${post.id}`
+                                        navigate(`/board/review/detail/${post.id}`)
                                     }}
                                     className="post-title">{post.title}</button>
                                 <p className="post-content">{post.content}</p>
@@ -146,7 +149,7 @@ export const ReviewList = () => {
                                         onClick={(e) => {
                                             //이벤트 전파 방지
                                             e.stopPropagation();
-                                            window.location.href = `/board/review/detail/${post.id}`
+                                            navigate(`/board/review/detail/${post.id}`)
                                         }}
                                     />
                                 </div>
@@ -196,7 +199,7 @@ export const ReviewList = () => {
                 onClick={(e) => {
                     //이벤트 전파 방지
                     e.stopPropagation();
-                    window.location.href = `review/write`
+                    navigate(`/board/review/write`)
                 }}
                 className="floating-btn">
                 ✨

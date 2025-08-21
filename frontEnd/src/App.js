@@ -16,9 +16,9 @@ import { BoardList } from "./components/board/BoardList";
 import { BoardWrite } from "./components/board/BoardWrite";
 import { BoardDetail } from "./components/board/BoardDetail";
 
-import { ReviewList } from "./components/board/ReviewList";
-import { ReviewWrtie } from "./components/board/ReviewWrite";
-import { ReviewDetail } from "./components/board/ReviewDetail";
+import { ReviewList } from "./components/board/review/ReviewList";
+import { ReviewWrtie } from "./components/board/review/ReviewWrite";
+import { ReviewDetail } from "./components/board/review/ReviewDetail";
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,10 +35,10 @@ function App() {
                     Array.isArray(payload.roles)
                         ? payload.roles
                         : Array.isArray(payload.authorities)
-                        ? payload.authorities
-                        : payload.roles
-                        ? String(payload.roles).split(",")
-                        : [];
+                            ? payload.authorities
+                            : payload.roles
+                                ? String(payload.roles).split(",")
+                                : [];
                 setUser({ username: payload.sub, roles });
                 setIsAuthenticated(true);
             } catch (err) {
@@ -55,8 +55,8 @@ function App() {
         const roles = Array.isArray(userData.roles)
             ? userData.roles
             : userData.roles
-            ? String(userData.roles).split(",")
-            : [];
+                ? String(userData.roles).split(",")
+                : [];
         setUser({ username: userData.username, roles });
         setIsAuthenticated(true);
 
@@ -91,7 +91,7 @@ function App() {
 
                 { /* AI 테스트 화면 */}
                 <Route path="/ai-test" element={<AITestPage />} />
-                
+
                 {/* 공개 페이지 */}
                 <Route path="/overview" element={<RegionOverviewPage />} />
 
@@ -177,15 +177,15 @@ function App() {
                 />
 
                 {/* 게시판 라우트 */}
-                <Route path='/board' element={<BoardLayout/>} >
-                <Route index element={<Navigate to='/board/0' />} />
-                <Route path=':categoryId' element={<BoardList />} />
-                <Route path=':categoryId/write' element={<BoardWrite />} />
-                <Route path=':categoryId/detail/:boardId' element={<BoardDetail />} />
+                <Route path='/board' element={<BoardLayout />} >
+                    <Route index element={<Navigate to='/board/0' />} />
+                    <Route path=':categoryId' element={<BoardList />} />
+                    <Route path=':categoryId/write' element={<BoardWrite />} />
+                    <Route path=':categoryId/detail/:boardId' element={<BoardDetail />} />
 
-                <Route path='review' element={<ReviewList />} />
-                <Route path='review/write' element={<ReviewWrtie />} />
-                <Route path='review/detail/:reviewId' element={<ReviewDetail />} />
+                    <Route path='review' element={<ReviewList />} />
+                    <Route path='review/write' element={<ReviewWrtie />} />
+                    <Route path='review/detail/:reviewId' element={<ReviewDetail />} />
                 </Route>
 
                 {/* 없는 경로 */}

@@ -5,23 +5,6 @@
     /* background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 50%, #dbeafe 100%); */
 }
 
-/* 게시판별 색상 테마 */
-.app-container.total-bg {
-    background: linear-gradient(135deg, #f0f4f8 0%, #e6eff7 100%); /* 차분한 파스텔 블루 그라데이션 */
-}
-
-.app-container.chat-bg {
-    background: linear-gradient(135deg, #e0f2f7 0%, #d1ecf1 100%); /* 시원한 아쿠아 그라데이션 */
-}
-
-.app-container.inquiry-bg {
-    background: linear-gradient(135deg, #ffebee 0%, #ffe0f0 100%); /* 부드러운 핑크 그라데이션 */
-}
-
-.app-container.review-bg {
-    background: linear-gradient(135deg, #fffde7 0%, #fff8e1 100%); /* 따뜻한 크림/베이지 그라데이션 */
-    /* 기존: #fff3e0 */
-}
 
 
 /* Main Content */

@@ -11,7 +11,7 @@
 .BNheader-content {
     max-width: 56rem;
     margin: 0 auto;
-    padding: 1rem 0rem;
+    padding: 0.2rem 0rem;
 }
 
 .BNheader-main {
@@ -60,18 +60,7 @@
     gap: 1rem;
 }
 
-@media (min-width: 768px) {
-    .BNheader-badge {
-        display: flex;
-    }
-}
 
-/* 화면 작아지면 로고 사라지게 */
-@media (max-width: 768px) {
-    .BNlogo-section {
-        display: none;
-    }
-}
 
 /* Board Navigation */
 .BNboard-nav {
@@ -120,4 +109,23 @@
     color: white;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     transform: scale(0.97) translateY(5px);
+}
+
+@media (min-width: 768px) {
+    .BNheader-badge {
+        display: flex;
+    }
+}
+
+/* 화면 작아지면 로고 사라지게 */
+@media (max-width: 768px) {
+    .BNnav-tabs {
+        gap: 0.2rem;
+    }
+
+    .BNnav-tab {
+        gap: 0.2rem;
+        padding: 0.7rem 1rem;
+    }
+
 }

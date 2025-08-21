@@ -4,22 +4,6 @@
   /* background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 50%, #dbeafe 100%); */
 }
 
-/* 선택에 따른 백그라운드 */
-.BWwrite-container.chat-bg {
-  background-color: #e0f7fa;
-  /* 잡담 */
-}
-
-.BWwrite-container.inquiry-bg {
-  background-color: #fce4ec;
-  /* 문의 */
-}
-
-.BWwrite-container.review-bg {
-  background-color: #fff3e0;
-  /* 후기 */
-}
-
 
 /* Icon Placeholder */
 .BWicon-placeholder {

@@ -3,27 +3,10 @@
     min-height: 100vh;
 }
 
-/* 게시판별 색 */
-.BLappcontainer.BLtotalbg {
-    background-color: #ede7f6;
-}
-
-.BLappcontainer.BLchatbg {
-    background-color: #e0f7fa;
-}
-
-.BLappcontainer.BLinquirybg {
-    background-color: #fce4ec;
-}
-
-.BLappcontainer.BLreviewbg {
-    background-color: #fff3e0;
-}
-
 /* Main Content */
 .BLmaincontent {
     max-width: 1200px;
-    min-width: 1025px;
+    /* min-width: 1010px; */
     margin: 0 auto;
     padding: 1.5rem 1rem;
 }
@@ -179,8 +162,8 @@
 
 .BLtag {
     padding: 0.125rem 0.375rem;
-    background: linear-gradient(to right, #f3e8ff, #fce7f3);
-    color: #7c3aed;
+    background: linear-gradient(to right, #e0f7fa, #e6f7ff);
+    color: #0284c7;
     border-radius: 0.375rem;
     font-size: 0.7rem;
     font-weight: 500;
@@ -310,88 +293,10 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
-    .BLmaincontent {
-        max-width: 100%;
-
-        padding: 1rem 0.5rem;
-    }
-
-    .BLheaderrow,
-    .BLpostrow {
-        grid-template-columns: 70px 1fr 100px 90px 80px;
-        gap: 0.75rem;
-    }
-
-    .BLtitletext {
-        font-size: 0.9rem;
-    }
-}
-
 @media (max-width: 768px) {
-
-    .BLheaderrow,
-    .BLpostrow {
-        grid-template-columns: 60px 1fr 80px 70px 70px;
-        gap: 0.5rem;
-        padding: 0.75rem 0.5rem;
-    }
-
-    .BLheaderrow {
-        font-size: 0.8rem;
-    }
-
-    .BLtitletext {
-        font-size: 0.85rem;
-    }
-
-    .BLtitlepreview {
-        font-size: 0.75rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        white-space: normal;
-        overflow: hidden;
-    }
-
-    .BLauthorname {
-        font-size: 0.7rem;
-        max-width: 70px;
-    }
-
-    .BLrowdate {
-        font-size: 0.7rem;
-    }
-
-    .BLlocation {
-        font-size: 0.65rem;
-    }
-
-    .BLtagscontainer {
-        gap: 0.125rem;
-    }
-
-    .BLtag {
-        font-size: 0.65rem;
-        padding: 0.1rem 0.25rem;
-    }
-
-    .BLfloatingbtn {
-        bottom: 1rem;
-        right: 1rem;
-        width: 3rem;
-        height: 3rem;
-        font-size: 1.25rem;
-    }
-
-    .BLstatsitem {
-        font-size: 0.7rem;
-    }
-}
-
-@media (max-width: 640px) {
     .BLpostscontainer {
         border-radius: 0.5rem;
+        min-width: auto;
         margin: 0 0.25rem;
     }
 
@@ -451,57 +356,6 @@
         padding: 0.15rem 0.35rem;
         min-width: 45px;
     }
-}
-
-@media (max-width: 480px) {
-    .BLmaincontent {
-        padding: 0.75rem 0.25rem;
-    }
-
-    .BLpostscontainer {
-        border-radius: 0.25rem;
-        margin: 0;
-    }
-
-    .BLheaderrow,
-    .BLpostrow {
-        grid-template-columns: 45px 1fr 55px;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
-    }
-
-    .BLcolumnauthor,
-    .BLcolumndate,
-    .BLrowauthor,
-    .BLrowdate {
-        display: none;
-    }
-
-    .BLheaderrow {
-        font-size: 0.7rem;
-        padding: 0.4rem 0.75rem;
-    }
-
-    /* 모바일에서는 제목 영역을 더 활용 */
-    .BLrowtitle {
-        padding: 0.25rem 0;
-    }
-
-    .BLtitlecontent {
-        margin-bottom: 0.5rem;
-    }
-
-    .BLtitletext {
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-
-    .BLtitlepreview {
-        font-size: 0.75rem;
-        -webkit-line-clamp: 2;
-        line-height: 1.3;
-        margin-bottom: 0.5rem;
-    }
 
     /* 모바일용 추가 정보 표시 */
     .BLmobileinfo {
@@ -513,31 +367,5 @@
         margin-top: 0.25rem;
         padding-top: 0.25rem;
         border-top: 1px solid #f3f4f6;
-    }
-
-    .BLmobileauthor {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .BLmobilestats {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .BLcategorybadge {
-        font-size: 0.6rem;
-        padding: 0.125rem 0.25rem;
-        min-width: 40px;
-    }
-
-    .BLfloatingbtn {
-        bottom: 0.75rem;
-        right: 0.75rem;
-        width: 2.75rem;
-        height: 2.75rem;
-        font-size: 1.1rem;
     }
 }

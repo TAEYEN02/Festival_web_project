@@ -6,7 +6,6 @@ export const ReviewWrtie = () => {
     const { categoryId } = useParams();
 
     const [formData, setFormData] = useState({
-        category: '리뷰',
         title: '',
         content: '',
         location: '',
@@ -16,12 +15,6 @@ export const ReviewWrtie = () => {
     const [tagInput, setTagInput] = useState('');
     const [images, setImages] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
-
-    const categories = [
-        { id: 1, value: '잡담', label: '잡담', emoji: '💬', color: 'chat' },
-        { id: 2, value: '문의', label: '문의', emoji: '❓', color: 'inquiry' },
-        { id: 3, value: '후기', label: '후기', emoji: '⭐', color: 'review' }
-    ];
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({

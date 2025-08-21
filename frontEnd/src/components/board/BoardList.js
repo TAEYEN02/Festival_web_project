@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { ArrowUpDown } from 'lucide-react'
 import './BoardList.css'
 
@@ -7,6 +7,7 @@ export const BoardList = () => {
 
     // 게시판 주제 가져오기
     const { categoryId } = useParams();
+    const navigate = useNavigate();
     const boardCategories = [
         { id: 0, name: '전체', emoji: '🌍' },
         { id: 1, name: '잡담', emoji: '💬' },
@@ -108,9 +109,7 @@ export const BoardList = () => {
     };
 
     return (
-        <div className={`BLappcontainer ${categoryId === '1' ? 'BLchatbg' :
-            categoryId === '2' ? 'BLinquirybg' : 'BLtotalbg'
-            }`}>
+        <div className='BLappcontainer' >
 
             {/* Posts List */}
             <main className="BLmaincontent">
@@ -132,7 +131,7 @@ export const BoardList = () => {
                                 key={post.id}
                                 className="BLpostrow"
                                 onClick={() => {
-                                    window.location.href = `/board/${categoryId}/detail/${post.id}`
+                                    navigate(`/board/${categoryId}/detail/${post.id}`)
                                 }}
                             >
                                 <div className="BLrowcategory">
@@ -220,7 +219,7 @@ export const BoardList = () => {
             {categoryId !== '0' && <button
                 onClick={(e) => {
                     e.stopPropagation();
-                    window.location.href = `${categoryId}/write`
+                    navigate(`/board/${categoryId}/write`)
                 }}
                 className="BLfloatingbtn">
                 ✨
