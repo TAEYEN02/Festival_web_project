@@ -156,36 +156,38 @@ export const BoardWrite = () => {
                 <div className="BWform-container">
 
                     {/* Category Selection */}
-                    <div className="BWform-section">
-                        <label className="BWsection-label">카테고리 선택</label>
-                        <div className="BWcategory-buttons">
-                            {categories.map((cat) => (
-                                <button
-                                    key={cat.value}
-                                    type="button"
-                                    onClick={() => handleInputChange('category', cat.value)}
-                                    className={`BWcategory-btn ${formData.category === cat.value ? 'BWcategory-btn-active' : ''} BWcategory-${cat.color}`}
-                                >
-                                    <span>{cat.emoji}</span>
-                                    <span>{cat.label}</span>
-                                </button>
-                            ))}
+                    <div className="BWform-top">
+                        <div className="BWform-section">
+                            <label className="BWsection-label">카테고리 선택</label>
+                            <div className="BWcategory-buttons">
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat.value}
+                                        type="button"
+                                        onClick={() => handleInputChange('category', cat.value)}
+                                        className={`BWcategory-btn ${formData.category === cat.value ? 'BWcategory-btn-active' : ''} BWcategory-${cat.color}`}
+                                    >
+                                        <span>{cat.emoji}</span>
+                                        <span>{cat.label}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="BWform-section">
-                        <label className="BWsection-label">아바타 선택</label>
-                        <div className="BWcategory-buttons">
-                            {avatars.map((avatar) => (
-                                <button
-                                    key={avatar.id}
-                                    type="button"
-                                    onClick={() => handleInputChange('avatar', avatar.emoji)}
-                                    className={`BWcategory-btn ${formData.avatar === avatar.emoji ? 'BWcategory-btn-active' : ''} BWcategory-chat`}
-                                >
-                                    <span>{avatar.emoji}</span>
-                                </button>
-                            ))}
+                        <div className="BWform-section">
+                            <label className="BWsection-label">아바타 선택</label>
+                            <div className="BWcategory-buttons">
+                                {avatars.map((avatar) => (
+                                    <button
+                                        key={avatar.id}
+                                        type="button"
+                                        onClick={() => handleInputChange('avatar', avatar.emoji)}
+                                        className={`BWcategory-btn ${formData.avatar === avatar.emoji ? 'BWcategory-btn-active' : ''} BWcategory-chat`}
+                                    >
+                                        <span>{avatar.emoji}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

@@ -60,8 +60,6 @@
     gap: 1rem;
 }
 
-
-
 /* Board Navigation */
 .BNboard-nav {
     background: rgba(255, 255, 255, 0);
@@ -75,7 +73,26 @@
 
 .BNnav-tabs {
     display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.BNnav-main-group {
+    display: flex;
     gap: 0.5rem;
+}
+
+.BNnav-special-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* 구분선 스타일 */
+.BNnav-divider {
+    width: 1px;
+    height: 2rem;
+    background: linear-gradient(to bottom, transparent, #d1d5db, transparent);
+    margin: 0 0.5rem;
 }
 
 .BNnav-tab {
@@ -91,10 +108,32 @@
     color: #6b7280;
 }
 
-/* 헤더 버튼 호버 */
+/* 특별 카테고리 기본 스타일 */
+.BNnav-tab-special {
+    background: rgba(251, 191, 36, 0.1);
+    /* 연한 황금색 배경 */
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: #92400e;
+    /* 갈색 텍스트 */
+    font-weight: 600;
+}
+
+/* 헤더 버튼 호버 - 일반 */
 .BNnav-tab:hover {
     background: linear-gradient(to right, #66d9e8, #7fd6f9);
     color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(245, 158, 11, 0.3);
+}
+
+/* 특별 카테고리 호버 */
+.BNnav-tab-special:hover {
+    background: linear-gradient(to right, #f59e0b, #f97316);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(245, 158, 11, 0.3);
 }
 
 /* 헤더 버튼 클릭시 */
@@ -103,12 +142,20 @@
     transform: scale(0.97) translateY(2px);
 }
 
-/* 헤더 버튼 클릭된것 */
+/* 헤더 버튼 클릭된것 - 일반 */
 .BNnav-tab-active {
     background: linear-gradient(to right, #66d9e8, #7fd6f9);
     color: white;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    transform: scale(0.97) translateY(5px);
+    
+}
+
+/* 특별 카테고리 활성화 */
+.BNnav-tab-special-active {
+    background: linear-gradient(to right, #f59e0b, #f97316) !important;
+    color: white !important;
+    border-color: transparent !important;
+    box-shadow: 0 10px 20px -3px rgba(245, 158, 11, 0.4) !important;
 }
 
 @media (min-width: 768px) {
@@ -120,6 +167,14 @@
 /* 화면 작아지면 로고 사라지게 */
 @media (max-width: 768px) {
     .BNnav-tabs {
+        gap: 0.5rem;
+    }
+
+    .BNnav-main-group {
+        gap: 0.2rem;
+    }
+
+    .BNnav-special-group {
         gap: 0.2rem;
     }
 
@@ -128,4 +183,7 @@
         padding: 0.7rem 1rem;
     }
 
+    .BNnav-divider {
+        margin: 0 0.25rem;
+    }
 }

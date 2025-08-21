@@ -131,6 +131,12 @@
 }
 
 /* Form Sections */
+.BWform-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  
+}
+
 .BWform-section {
   padding: 1.5rem;
   border-bottom: 1px solid rgba(243, 244, 246, 0.5);

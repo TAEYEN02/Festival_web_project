@@ -26,11 +26,7 @@ export const ReviewDetail = () => {
         }
 
     return (
-        <div className={`BDcontainer 
-            ${post.category === '잡담' ? 'chat' : 
-            post.category === '문의' ? 'inquiry' : 
-            'review'
-            }-bg`}>
+        <div className={`BDcontainer`}>
             {/* Header */}
             <header className="BDheader" />
 
