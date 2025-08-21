@@ -6,7 +6,7 @@ import os
 from typing import Any, Dict
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
@@ -45,23 +45,28 @@ def _cors_params() -> dict:
       allow_origins=['*'], allow_credentials=False (표준 제약)
     - 구체 오리진만 있을 때:
       allow_origins=<목록>, allow_credentials=True
+    또한 프런트에서 커스텀 헤더를 읽을 수 있도록 expose_headers를 지정합니다.
     """
     origins = _parse_allowed_origins()
     has_wildcard = any(o == "*" for o in origins)
 
+    base = {
+        "allow_methods": ["*"],
+        "allow_headers": ["*"],
+        "expose_headers": ["X-Cache", "X-Cache-Key", "X-AI-Mode"],
+    }
+
     if has_wildcard:
         return {
+            **base,
             "allow_origins": ["*"],
             "allow_credentials": False,
-            "allow_methods": ["*"],
-            "allow_headers": ["*"],
         }
     else:
         return {
+            **base,
             "allow_origins": origins,
             "allow_credentials": True,
-            "allow_methods": ["*"],
-            "allow_headers": ["*"],
         }
 
 
@@ -164,22 +169,33 @@ def create_app() -> FastAPI:
         tags=["travel"],
         summary="여행지 추천 생성 (캐시 적용)",
     )
-    async def travel_recommend(q: TravelQuery) -> TravelRecResponse:
+    async def travel_recommend(q: TravelQuery, response: Response) -> TravelRecResponse:
         """
         동일 요청은 캐시에서 서빙합니다.
+        캐시/AI 모드 상태를 응답 헤더로 내려줍니다.
         """
+        # 헤더: AI 모드 (FAKE / VERTEX)
+        ai_mode = "FAKE" if os.getenv("FAKE_AI", "0") == "1" else "VERTEX"
+        response.headers["X-AI-Mode"] = ai_mode
+
+        # 캐시 키
         fp = query_fingerprint(q)
         key = f"travelrec:{fp}"
+        response.headers["X-Cache-Key"] = key
 
         # 1) 캐시 조회
-        if getattr(app.state, "redis", None) is not None:
+        if getattr(app.state, "redis", None) is None:
+            response.headers["X-Cache"] = "DISABLED"
+        else:
             try:
                 cached = await app.state.redis.get(key)
                 if cached:
                     try:
                         data = json.loads(cached)
+                        response.headers["X-Cache"] = "HIT"
                         return TravelRecResponse.model_validate(data)
                     except Exception:
+                        # 파싱 실패 시 MISS로 계속 진행
                         pass
             except Exception as e:  # pragma: no cover
                 logger.warning("Redis GET 실패: %s", e)
@@ -190,6 +206,9 @@ def create_app() -> FastAPI:
             rec: TravelRecResponse = await loop.run_in_executor(
                 None, lambda: get_travel_recommendations(q)
             )
+            # 캐시가 완전히 비활성화가 아닌 경우 MISS 표기
+            if response.headers.get("X-Cache") != "DISABLED":
+                response.headers["X-Cache"] = "MISS"
         except Exception as e:
             logger.exception("여행 추천 생성 실패")
             raise HTTPException(
@@ -197,13 +216,14 @@ def create_app() -> FastAPI:
                 detail=f"추천 생성에 실패했습니다: {e}",
             )
 
-        # 3) 캐시에 저장
+        # 3) 캐시에 저장 (Pydantic v2 호환)
         if getattr(app.state, "redis", None) is not None:
             try:
+                json_str = json.dumps(rec.model_dump(mode="json"), ensure_ascii=False)
                 await app.state.redis.setex(
                     key,
                     settings.cache_ttl_seconds,
-                    rec.model_dump_json(ensure_ascii=False),
+                    json_str,
                 )
             except Exception as e:  # pragma: no cover
                 logger.warning("Redis SETEX 실패: %s", e)

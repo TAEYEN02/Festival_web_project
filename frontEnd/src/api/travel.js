@@ -1,7 +1,7 @@
 // src/api/travel.js
 // 프런트에서 Python 여행 추천 API를 호출하기 위한 유틸.
 // 기존 베이스 주소는 프로젝트의 baseUrl 모듈에서 가져옵니다.
-// import { BASE_URL } from "./baseUrl";
+import { BASE_URL } from "./baseUrl";
 
 /**
  * @typedef {Object} TravelQuery
@@ -45,7 +45,6 @@
  */
 
 /** ===== URL 보정 유틸 ===== */
-const BASE_URL = "http://localhost";
 
 /** 스킴 보정: http/https 없으면 http:// 붙임 */
 function ensureScheme(url) {
@@ -85,7 +84,7 @@ const JSON_HEADERS = {
 };
 
 /**
- * fetch 타임아웃 래퍼 (기본 **45초**)
+ * fetch 타임아웃 래퍼 (기본 45초)
  * @param {Promise<Response>} fetchPromise
  * @param {number} ms
  * @returns {Promise<Response>}
@@ -96,6 +95,52 @@ function withTimeout(fetchPromise, ms = 45000) {
         timeoutId = setTimeout(() => reject(new Error("Request timeout")), ms);
     });
     return Promise.race([fetchPromise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+/** 콘솔 로깅(선택) */
+function logCacheMeta(res, url, elapsedMs) {
+    try {
+        const xCache = res.headers.get("x-cache") || "unknown";
+        const xKey = res.headers.get("x-cache-key") || "-";
+        const xMode = res.headers.get("x-ai-mode") || "unknown";
+        const line = `[TravelAPI] ${url} | cache=${xCache} | ai=${xMode} | key=${xKey} | ${Math.round(
+            elapsedMs
+        )}ms`;
+        if (xCache === "HIT") {
+            console.info(line);
+        } else if (xCache === "MISS") {
+            console.warn(line);
+        } else if (xCache === "DISABLED") {
+            console.log(line);
+        } else {
+            console.debug(line + " (headers not exposed)");
+        }
+    } catch {}
+}
+
+/** 메타 추출: UI에서 표시할 값 */
+function extractMeta(res, url, elapsedMs) {
+    return {
+        cache: res.headers.get("x-cache") || "unknown",
+        key: res.headers.get("x-cache-key") || "-",
+        ai: res.headers.get("x-ai-mode") || "unknown",
+        elapsedMs: Math.round(elapsedMs),
+        url,
+    };
+}
+
+/**
+ * 샘플 요청 DTO 가져오기 (백엔드에서 제공)
+ * @returns {Promise<TravelQuery>}
+ */
+export async function getTravelSampleQuery() {
+    const url = `${PY_BASE}/api/travel/sample-query`;
+    const t0 = performance.now();
+    const res = await withTimeout(fetch(url), 45000);
+    const t1 = performance.now();
+    logCacheMeta(res, url, t1 - t0);
+    if (!res.ok) return throwHttpError(res);
+    return res.json();
 }
 
 /**
@@ -114,7 +159,7 @@ async function throwHttpError(res) {
             const text = await res.text();
             if (text) detail = text;
         }
-    } catch (_) {}
+    } catch {}
     const err = new Error(detail);
     // @ts-ignore
     err.status = res.status;
@@ -122,23 +167,13 @@ async function throwHttpError(res) {
 }
 
 /**
- * 샘플 요청 DTO 가져오기 (백엔드에서 제공)
- * @returns {Promise<TravelQuery>}
- */
-export async function getTravelSampleQuery() {
-    const url = `${PY_BASE}/api/travel/sample-query`;
-    const res = await withTimeout(fetch(url), 45000);
-    if (!res.ok) return throwHttpError(res);
-    return res.json();
-}
-
-/**
- * 여행지 추천 생성
+ * 여행지 추천 생성 (메타 포함)
  * @param {TravelQuery} query
- * @returns {Promise<TravelRecResponse>}
+ * @returns {Promise<{data: TravelRecResponse, meta: {cache:string, key:string, ai:string, elapsedMs:number, url:string}}>}
  */
-export async function recommendTravel(query) {
+export async function recommendTravelWithMeta(query) {
     const url = `${PY_BASE}/api/travel/recommend`;
+    const t0 = performance.now();
     const res = await withTimeout(
         fetch(url, {
             method: "POST",
@@ -147,8 +182,22 @@ export async function recommendTravel(query) {
         }),
         45000
     );
+    const t1 = performance.now();
+    logCacheMeta(res, url, t1 - t0);
     if (!res.ok) return throwHttpError(res);
-    return res.json();
+    const data = await res.json();
+    const meta = extractMeta(res, url, t1 - t0);
+    return { data, meta };
+}
+
+/**
+ * 여행지 추천 생성 (이전과 동일한 반환: 데이터만)
+ * @param {TravelQuery} query
+ * @returns {Promise<TravelRecResponse>}
+ */
+export async function recommendTravel(query) {
+    const { data } = await recommendTravelWithMeta(query);
+    return data;
 }
 
 /**

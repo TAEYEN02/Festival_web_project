@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { buildTravelPayload, recommendTravel, getTravelSampleQuery } from "../../api/travel";
+import {
+    buildTravelPayload,
+    recommendTravelWithMeta,
+    getTravelSampleQuery,
+} from "../../api/travel";
 
 export default function AITestPage() {
     const [form, setForm] = useState({
@@ -18,6 +22,9 @@ export default function AITestPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [result, setResult] = useState(null);
+
+    // ✅ 응답 메타(캐시/시간/AI모드)
+    const [meta, setMeta] = useState(null);
     const [showRaw, setShowRaw] = useState(false);
 
     const stylesChipWrap = { display: "flex", flexWrap: "wrap", gap: 8 };
@@ -66,10 +73,33 @@ export default function AITestPage() {
         }
     }
 
+    function badgeStyle(cache) {
+        const base = {
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 10px",
+            borderRadius: 999,
+            fontSize: 12,
+            border: "1px solid transparent",
+        };
+        if (cache === "HIT") {
+            return { ...base, background: "#ecfdf5", color: "#065f46", borderColor: "#10b981" }; // green
+        }
+        if (cache === "MISS") {
+            return { ...base, background: "#eff6ff", color: "#1e40af", borderColor: "#3b82f6" }; // blue
+        }
+        if (cache === "DISABLED") {
+            return { ...base, background: "#f3f4f6", color: "#374151", borderColor: "#9ca3af" }; // gray
+        }
+        return { ...base, background: "#fef3c7", color: "#92400e", borderColor: "#f59e0b" }; // amber for unknown
+    }
+
     async function onSubmit(e) {
         e?.preventDefault?.();
         setError("");
         setResult(null);
+        setMeta(null);
         setLoading(true);
         try {
             const payload = buildTravelPayload({
@@ -84,9 +114,9 @@ export default function AITestPage() {
                 avoid: form.avoid,
                 language: form.language,
             });
-            const data = await recommendTravel(payload);
-            console.log("data ::", data);
+            const { data, meta } = await recommendTravelWithMeta(payload);
             setResult(data);
+            setMeta(meta);
         } catch (e) {
             setError(e?.message || "요청 중 오류가 발생했습니다.");
         } finally {
@@ -108,14 +138,28 @@ export default function AITestPage() {
             language: "ko",
         });
         setResult(null);
+        setMeta(null);
         setError("");
     }
 
     return (
         <div style={{ maxWidth: 1080, margin: "0 auto", padding: 20 }}>
-            <h2 style={{ fontSize: 24, marginBottom: 8 }}>🤖 AI 여행 추천 — 테스트 페이지</h2>
+            {/* 헤더 + 캐시 뱃지 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <h2 style={{ fontSize: 24, margin: 0 }}>🤖 AI 여행 추천 — 테스트 페이지</h2>
+                {meta && (
+                    <span style={badgeStyle(meta.cache)} aria-live="polite" aria-label={`cache ${meta.cache}`}>
+                        {meta.cache === "HIT" ? "🟢" : meta.cache === "MISS" ? "🔵" : "⚪"} {meta.cache}
+                    </span>
+                )}
+            </div>
             <p style={{ color: "#6b7280", marginBottom: 16 }}>
                 폼을 채우고 <b>추천 받기</b>를 누르면 Python API가 Vertex AI를 호출해 JSON 결과를 내려줍니다.
+                {meta && (
+                    <span style={{ marginLeft: 8 }}>
+                        ⏱ {meta.elapsedMs}ms • AI: {meta.ai} • key: <code>{meta.key.slice(0, 20)}…</code>
+                    </span>
+                )}
             </p>
 
             <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -299,7 +343,16 @@ export default function AITestPage() {
             {result && (
                 <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
                     <section style={{ padding: 12, border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff" }}>
-                        <h3 style={{ fontSize: 20, marginBottom: 8 }}>Top Pick</h3>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <h3 style={{ fontSize: 20, margin: 0 }}>Top Pick</h3>
+                            {meta && (
+                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                    <span style={badgeStyle(meta.cache)}>{meta.cache}</span>
+                                    <span style={{ fontSize: 12, color: "#6b7280" }}>⏱ {meta.elapsedMs}ms • {meta.ai}</span>
+                                </div>
+                            )}
+                        </div>
+
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                             <b style={{ fontSize: 18 }}>
                                 {result.top_pick?.name}
