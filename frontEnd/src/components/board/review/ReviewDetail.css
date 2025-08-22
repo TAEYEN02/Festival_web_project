@@ -11,22 +11,6 @@ html, body {
   font-family: sans-serif;
 }
 
-.BDcontainer.chat-bg {
-  background-color: #e0f7fa;
-  /* 잡담 */
-}
-
-.BDcontainer.inquiry-bg {
-  background-color: #fce4ec;
-  /* 문의 */
-}
-
-.BDcontainer.review-bg {
-  background-color: #fff3e0;
-  /* 후기 */
-}
-
-
 /* Header */
 .BDheader {
   background: rgba(255, 255, 255, 0.8);

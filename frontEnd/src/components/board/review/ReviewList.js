@@ -125,6 +125,7 @@ export const ReviewList = () => {
                                         //이벤트 전파 방지
                                         e.stopPropagation();
                                         navigate(`/board/review/detail/${post.id}`)
+                                        window.scroll(0,0)
                                     }}
                                     className="post-title">{post.title}</button>
                                 <p className="post-content">{post.content}</p>
@@ -150,6 +151,7 @@ export const ReviewList = () => {
                                             //이벤트 전파 방지
                                             e.stopPropagation();
                                             navigate(`/board/review/detail/${post.id}`)
+                                            window.scroll(0,0)
                                         }}
                                     />
                                 </div>
@@ -200,6 +202,7 @@ export const ReviewList = () => {
                     //이벤트 전파 방지
                     e.stopPropagation();
                     navigate(`/board/review/write`)
+                    window.scroll(0,0)
                 }}
                 className="floating-btn">
                 ✨

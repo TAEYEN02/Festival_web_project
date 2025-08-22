@@ -9,8 +9,12 @@ export const ReviewWrtie = () => {
         title: '',
         content: '',
         location: '',
-        date: '',
-        tags: []
+        date: new Date(),
+        author: 'userNickname',
+        likes: 0,
+        comments: 0,
+        tags: [],
+        user : 1
     });
     const [tagInput, setTagInput] = useState('');
     const [images, setImages] = useState([]);
@@ -75,10 +79,12 @@ export const ReviewWrtie = () => {
         });
     };
 
+    //이미지 삭제
     const handleImageRemove = (imageId) => {
         setImages(prev => prev.filter(img => img.id !== imageId));
     };
 
+    //[POST]작성 완료 버튼 클릭시
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('게시글 데이터:', { ...formData, images });

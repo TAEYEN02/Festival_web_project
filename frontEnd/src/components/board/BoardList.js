@@ -132,6 +132,7 @@ export const BoardList = () => {
                                 className="BLpostrow"
                                 onClick={() => {
                                     navigate(`/board/${categoryId}/detail/${post.id}`)
+                                    window.scroll(0,0)
                                 }}
                             >
                                 <div className="BLrowcategory">
@@ -216,14 +217,15 @@ export const BoardList = () => {
             </main>
 
             {/* Floating Action Button */}
-            {categoryId !== '0' && <button
+            <button
                 onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/board/${categoryId}/write`)
+                    window.scroll(0,0)
                 }}
                 className="BLfloatingbtn">
                 ✨
-            </button>}
+            </button>
         </div>
     )
 }
