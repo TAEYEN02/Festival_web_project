@@ -32,6 +32,23 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService; // 이메일 서비스 추가
+    
+    // 중복 확인 메서드들
+    @Transactional(readOnly = true)
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+    
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+    
+    @Transactional(readOnly = true)
+    public boolean existsByNickname(String nickname) {
+        return userRepository.existsByNickname(nickname);
+    }
     
     // 회원가입
     public User registerUser(SignUpRequest signUpRequest) {
@@ -206,5 +223,127 @@ public class UserService {
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                 .collect(Collectors.toList())
         );
+    }
+// ===== 아이디/비밀번호 찾기 관련 메서드들 =====
+    
+    /**
+     * 이메일로 아이디 찾기
+     */
+    @Transactional(readOnly = true)
+    public String findUsernameByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("해당 이메일로 가입된 계정을 찾을 수 없습니다"));
+        
+        return user.getUsername();
+    }
+    
+    /**
+     * 비밀번호 재설정 (임시 비밀번호 발송)
+     */
+    public void resetPassword(String username, String email) {
+        // 사용자 정보 확인
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("해당 아이디로 가입된 계정을 찾을 수 없습니다"));
+        
+        // 이메일 일치 확인
+        if (!user.getEmail().equals(email)) {
+            throw new RuntimeException("입력하신 이메일과 가입된 이메일이 일치하지 않습니다");
+        }
+        
+        // OAuth 계정인 경우 비밀번호 재설정 불가
+        if (user.getProvider() != null) {
+            throw new RuntimeException("소셜 로그인 계정은 비밀번호 재설정이 불가능합니다. " + 
+                                     user.getProvider() + " 계정으로 로그인해주세요");
+        }
+        
+        // 임시 비밀번호 생성 (8자리 영문+숫자)
+        String tempPassword = generateTempPassword();
+        
+        // 비밀번호 업데이트
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        userRepository.save(user);
+        
+        // 이메일 발송
+        try {
+            emailService.sendTempPassword(email, username, tempPassword);
+        } catch (Exception e) {
+            // 이메일 발송 실패 시 비밀번호 롤백
+            throw new RuntimeException("이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요");
+        }
+    }
+    
+    /**
+     * 임시 비밀번호 생성
+     */
+    private String generateTempPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder tempPassword = new StringBuilder();
+        
+        // 8자리 랜덤 생성
+        for (int i = 0; i < 8; i++) {
+            int index = (int) (Math.random() * chars.length());
+            tempPassword.append(chars.charAt(index));
+        }
+        
+        return tempPassword.toString();
+    }
+    
+    /**
+     * 비밀번호 변경 (디버깅 포함)
+     */
+    public void changePassword(String username, String currentPassword, String newPassword) {
+        System.out.println("=== UserService.changePassword 시작 ===");
+        System.out.println("사용자명: " + username);
+        System.out.println("현재 비밀번호 길이: " + (currentPassword != null ? currentPassword.length() : "null"));
+        System.out.println("새 비밀번호 길이: " + (newPassword != null ? newPassword.length() : "null"));
+        
+        try {
+            // 사용자 정보 확인
+            System.out.println("사용자 조회 중...");
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+            
+            System.out.println("사용자 찾음: " + user.getUsername());
+            System.out.println("Provider: " + user.getProvider());
+            
+            // OAuth 계정인 경우 비밀번호 변경 불가
+            if (user.getProvider() != null) {
+                System.out.println("OAuth 계정이므로 비밀번호 변경 불가");
+                throw new RuntimeException("소셜 로그인 계정은 비밀번호를 변경할 수 없습니다");
+            }
+            
+            // 현재 비밀번호 확인
+            System.out.println("현재 비밀번호 확인 중...");
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                System.out.println("현재 비밀번호 불일치");
+                throw new RuntimeException("현재 비밀번호가 일치하지 않습니다");
+            }
+            
+            System.out.println("현재 비밀번호 확인 완료");
+            
+            // 새 비밀번호 유효성 검사
+            if (newPassword == null || newPassword.length() < 8) {
+                System.out.println("새 비밀번호 길이 부족");
+                throw new RuntimeException("새 비밀번호는 8자 이상이어야 합니다");
+            }
+            
+            // 현재 비밀번호와 새 비밀번호가 같은지 확인
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                System.out.println("새 비밀번호가 현재 비밀번호와 동일");
+                throw new RuntimeException("새 비밀번호는 현재 비밀번호와 달라야 합니다");
+            }
+            
+            // 비밀번호 변경
+            System.out.println("비밀번호 암호화 및 저장 중...");
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            
+            System.out.println("비밀번호 변경 완료!");
+            
+        } catch (Exception e) {
+            System.err.println("changePassword 메서드에서 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // 다시 던져서 컨트롤러에서 처리하도록
+        }
     }
 }

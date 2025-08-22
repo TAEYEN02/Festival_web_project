@@ -441,6 +441,7 @@ const UserManagement = () => {
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            style={{marginLeft: '0.75rem'}}
           >
             <option value="all">전체 상태</option>
             <option value="active">활성</option>

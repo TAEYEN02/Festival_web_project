@@ -11,3 +11,9 @@ export const updateUserInfo = async (userInfo) => {
   const response = await axiosInstance.put("/user/me", userInfo);
   return response.data;
 };
+
+// 비밀번호 변경 (추가)
+export const changePassword = async (passwordData) => {
+  const response = await axiosInstance.put("/user/change-password", passwordData);
+  return response.data;
+};

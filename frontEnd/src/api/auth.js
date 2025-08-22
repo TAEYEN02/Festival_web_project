@@ -41,6 +41,28 @@ export const register = async (username, nickname, email, password) => {
   }
 };
 
+// 중복 확인 함수
+export const checkDuplicate = async (field, value) => {
+  try {
+    const response = await axios.get(`${API_URL}/check-duplicate`, {
+      params: {
+        field,
+        value
+      }
+    });
+
+    return {
+      available: response.data.available,
+      message: response.data.message,
+      field: response.data.field,
+      value: response.data.value
+    };
+  } catch (error) {
+    console.error("Duplicate check error:", error);
+    throw error.response?.data || "중복 확인 실패";
+  }
+};
+
 // 현재 사용자 정보 가져오기 (localStorage에서)
 export const getCurrentUser = () => {
   try {
@@ -194,10 +216,98 @@ export const setupAuthStateListener = (callback) => {
   };
 };
 
+// ===== 중복 확인 관련 유틸리티 함수들 =====
+
+// 아이디 중복 확인
+export const checkUsernameAvailability = async (username) => {
+  return await checkDuplicate('username', username);
+};
+
+// 닉네임 중복 확인
+export const checkNicknameAvailability = async (nickname) => {
+  return await checkDuplicate('nickname', nickname);
+};
+
+// 이메일 중복 확인
+export const checkEmailAvailability = async (email) => {
+  return await checkDuplicate('email', email);
+};
+
+// ===== 아이디/비밀번호 찾기 함수들 =====
+
+// 아이디 찾기 (이메일로)
+export const findUsername = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/find-username`, {
+      email
+    });
+    
+    return {
+      username: response.data.username,
+      message: response.data.message
+    };
+  } catch (error) {
+    console.error("Find username error:", error);
+    throw error.response?.data || "아이디 찾기 실패";
+  }
+};
+
+// 비밀번호 재설정 (임시 비밀번호 이메일 발송)
+export const resetPassword = async (username, email) => {
+  try {
+    const response = await axios.post(`${API_URL}/reset-password`, {
+      username,
+      email
+    });
+    
+    return {
+      message: response.data.message,
+      success: response.data.success
+    };
+  } catch (error) {
+    console.error("Reset password error:", error);
+    throw error.response?.data || "비밀번호 재설정 실패";
+  }
+};
+
+// 전체 폼 중복 확인 (회원가입 전 최종 검증)
+export const validateRegistrationForm = async (formData) => {
+  try {
+    const { username, nickname, email } = formData;
+    
+    const checks = await Promise.all([
+      checkUsernameAvailability(username),
+      checkNicknameAvailability(nickname),
+      checkEmailAvailability(email)
+    ]);
+
+    const [usernameCheck, nicknameCheck, emailCheck] = checks;
+
+    return {
+      isValid: usernameCheck.available && nicknameCheck.available && emailCheck.available,
+      results: {
+        username: usernameCheck,
+        nickname: nicknameCheck,
+        email: emailCheck
+      }
+    };
+  } catch (error) {
+    console.error("Form validation error:", error);
+    throw error;
+  }
+};
+
 // 기본 export (호환성을 위해)
 export default {
   login,
   register,
+  checkDuplicate,
+  checkUsernameAvailability,
+  checkNicknameAvailability,
+  checkEmailAvailability,
+  findUsername,
+  resetPassword,
+  validateRegistrationForm,
   logout,
   getCurrentUser,
   isAuthenticated,
