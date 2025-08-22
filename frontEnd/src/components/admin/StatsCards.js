@@ -1,33 +1,39 @@
-// StatsCards.js
-import React, { useState, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
-import { Users, Mail, Calendar, MessageCircle, TrendingUp, TrendingDown } from 'lucide-react';
+// src/components/StatsCards.js
+import React from 'react';
+import styled from 'styled-components';
+import { Users, Mail, Calendar, MessageCircle } from 'lucide-react';
 
-const Grid = styled.div`
+const StatsGrid = styled.div`
   display: grid;
   gap: 1.5rem;
   grid-template-columns: repeat(1, 1fr);
-  @media(min-width: 640px) { grid-template-columns: repeat(2, 1fr); }
-  @media(min-width: 1280px) { grid-template-columns: repeat(4, 1fr); }
+  
+  @media(min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media(min-width: 1280px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 `;
 
-const Card = styled.div`
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 1rem;
+const StatsCard = styled.div`
+  background: white;
+  border-radius: 0.75rem;
   padding: 1.5rem;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
   transition: all 0.3s;
-  &:hover { 
-    box-shadow: 0 20px 25px rgba(0,0,0,0.15);
-    transform: translateY(-4px);
+  
+  &:hover {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
 `;
 
 const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 1rem;
 `;
 
@@ -36,126 +42,134 @@ const CardInfo = styled.div``;
 const CardTitle = styled.p`
   font-size: 0.875rem;
   font-weight: 500;
-  color: #4b5563;
-  margin-bottom: 0.25rem;
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
 `;
 
 const CardValue = styled.p`
-  font-size: 1.875rem;
+  font-size: 2rem;
   font-weight: bold;
-  color: #1f2937;
+  color: #111827;
+  margin: 0;
 `;
 
-const IconWrapper = styled.div`
+const CardIconWrapper = styled.div`
   padding: 0.75rem;
-  border-radius: 1rem;
-  background: ${({ gradient }) => `linear-gradient(to right, ${gradient[0]}, ${gradient[1]})`};
+  border-radius: 0.75rem;
+  background: ${({ $color }) => {
+    const colors = {
+      blue: 'linear-gradient(to right, #dbeafe, #bfdbfe)',
+      red: 'linear-gradient(to right, #fecaca, #fca5a5)',
+      green: 'linear-gradient(to right, #d1fae5, #a7f3d0)',
+      purple: 'linear-gradient(to right, #e9d5ff, #ddd6fe)'
+    };
+    return colors[$color] || colors.blue;
+  }};
+  color: ${({ $color }) => {
+    const colors = {
+      blue: '#1d4ed8',
+      red: '#dc2626',
+      green: '#059669',
+      purple: '#7c3aed'
+    };
+    return colors[$color] || colors.blue;
+  }};
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.3s;
-  ${Card}:hover & { transform: scale(1.1); }
+  
+  ${StatsCard}:hover & {
+    transform: scale(1.1);
+  }
 `;
 
-const Trend = styled.div`
+const CardFooter = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
+  gap: 0.5rem;
+  margin-top: 1rem;
+`;
+
+const ChangeIndicator = styled.span`
+  font-size: 0.875rem;
   font-weight: 600;
-  color: ${({ isPositive }) => isPositive ? '#166534' : '#991b1b'};
-  background: ${({ isPositive }) => isPositive ? '#d1fae5' : '#fecaca'};
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
+  color: ${({ $positive }) => ($positive ? '#059669' : '#dc2626')};
 `;
 
 const ChangeText = styled.span`
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: #6b7280;
-  margin-left: 0.5rem;
-`;
-
-const ProgressBarContainer = styled.div`
-  margin-top: 1rem;
-  height: 0.5rem;
-  background: #f3f4f6;
-  border-radius: 9999px;
-  overflow: hidden;
-`;
-
-const ProgressBar = styled.div`
-  height: 100%;
-  background: ${({ gradient }) => `linear-gradient(to right, ${gradient[0]}, ${gradient[1]})`};
-  transition: width 1s ease-out;
 `;
 
 const StatsCards = ({ stats }) => {
-  const [previousStats, setPreviousStats] = useState(stats);
-  const [animatedStats, setAnimatedStats] = useState(stats);
-
   const cardData = [
-    { title: '총 사용자', value: animatedStats.totalUsers, icon: Users, gradient: ['#6366f1','#8b5cf6'], change: '+12%', changeText: '이번 달', isPositive: true },
-    { title: '대기 중인 문의', value: animatedStats.pendingInquiries, icon: Mail, gradient: ['#ec4899','#f43f5e'], change: '-5%', changeText: '지난 주', isPositive: false },
-    { title: '진행 중인 축제', value: animatedStats.activeFestivals, icon: Calendar, gradient: ['#3b82f6','#06b6d4'], change: '+8%', changeText: '이번 달', isPositive: true },
-    { title: '채팅 활성 사용자', value: animatedStats.activeChatUsers, icon: MessageCircle, gradient: ['#10b981','#22c55e'], change: '+23%', changeText: '오늘', isPositive: true }
+    { 
+      title: '총 사용자', 
+      value: stats?.totalUsers || 0, 
+      icon: Users, 
+      color: 'blue',
+      change: '+12%',
+      changeText: '이번 달',
+      positive: true
+    },
+    { 
+      title: '대기 중인 문의', 
+      value: stats?.pendingInquiries || 0, 
+      icon: Mail, 
+      color: 'red',
+      change: '-5%',
+      changeText: '지난 주',
+      positive: false
+    },
+    { 
+      title: '진행 중인 축제', 
+      value: stats?.activeFestivals || 0, 
+      icon: Calendar, 
+      color: 'green',
+      change: '+8%',
+      changeText: '이번 달',
+      positive: true
+    },
+    { 
+      title: '채팅 활성 사용자', 
+      value: stats?.activeChatUsers || 0, 
+      icon: MessageCircle, 
+      color: 'purple',
+      change: '+23%',
+      changeText: '오늘',
+      positive: true
+    }
   ];
 
-  useEffect(() => {
-    const animateValue = (start, end, duration, callback) => {
-      const startTime = Date.now();
-      const step = () => {
-        const progress = Math.min((Date.now() - startTime) / duration, 1);
-        const current = Math.floor(start + (end - start) * progress);
-        callback(current);
-        if (progress < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    };
-
-    Object.keys(stats).forEach(key => {
-      if (previousStats[key] !== stats[key]) {
-        animateValue(previousStats[key], stats[key], 1000, value => {
-          setAnimatedStats(prev => ({ ...prev, [key]: value }));
-        });
-      }
-    });
-
-    setPreviousStats(stats);
-  }, [stats, previousStats]);
-
   const formatNumber = (num) => new Intl.NumberFormat('ko-KR').format(num);
-  const maxValue = Math.max(...Object.values(stats));
 
   return (
-    <Grid>
+    <StatsGrid>
       {cardData.map((card, index) => {
         const Icon = card.icon;
-        const TrendIcon = card.isPositive ? TrendingUp : TrendingDown;
         return (
-          <Card key={index}>
+          <StatsCard key={index}>
             <CardHeader>
               <CardInfo>
                 <CardTitle>{card.title}</CardTitle>
                 <CardValue>{formatNumber(card.value)}</CardValue>
               </CardInfo>
-              <IconWrapper gradient={card.gradient}><Icon size={24} color="white"/></IconWrapper>
+              <CardIconWrapper $color={card.color}>
+                <Icon size={24} />
+              </CardIconWrapper>
             </CardHeader>
-
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Trend isPositive={card.isPositive}>
-                <TrendIcon size={12}/>
+            
+            <CardFooter>
+              <ChangeIndicator $positive={card.positive}>
                 {card.change}
-              </Trend>
+              </ChangeIndicator>
               <ChangeText>{card.changeText}</ChangeText>
-            </div>
-
-            <ProgressBarContainer>
-              <ProgressBar gradient={card.gradient} style={{ width: `${Math.min((card.value / maxValue) * 100, 100)}%` }} />
-            </ProgressBarContainer>
-          </Card>
+            </CardFooter>
+          </StatsCard>
         );
       })}
-    </Grid>
+    </StatsGrid>
   );
 };
 

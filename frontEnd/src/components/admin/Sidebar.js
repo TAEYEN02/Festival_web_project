@@ -1,14 +1,7 @@
-// Sidebar.js
+// src/components/Sidebar.js
 import React from 'react';
 import styled from 'styled-components';
 import { Crown, PieChart, Users, Mail, Calendar, MessageCircle, BarChart3, Settings, LogOut } from 'lucide-react';
-
-const Overlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 40;
-`;
 
 const Aside = styled.aside`
   position: fixed;
@@ -17,108 +10,171 @@ const Aside = styled.aside`
   z-index: 50;
   width: 18rem;
   height: 100%;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-  transform: ${({ isOpen }) => (isOpen ? 'translateX(0)' : 'translateX(-100%)')};
-  transition: transform 0.3s ease-in-out;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
 `;
 
-const Header = styled.div`
+const SidebarHeader = styled.div`
   padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(to right, #4f46e5, #a855f7);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0; /* 고정 */
+`;
+
+const SidebarTitle = styled.h1`
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
 `;
 
 const Nav = styled.nav`
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  overflow-y: auto;   /* 스크롤 가능 */
+  min-height: 0;      /* flexbox overflow 스크롤 해결 */
 `;
 
 const NavButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
   width: 100%;
   font-weight: 500;
-  background: ${({ active }) => (active ? 'linear-gradient(to right, #6366f1, #a855f7)' : 'transparent')};
-  color: ${({ active }) => (active ? 'white' : '#4b5563')};
+  border: none;
   cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+
+  background: ${({ $active }) => ($active ? '#f3f4f6' : 'transparent')};
+  color: ${({ $active }) => ($active ? '#1f2937' : '#6b7280')};
+
   &:hover {
-    background: ${({ active }) => (active ? undefined : '#f9fafb')};
-    color: ${({ active }) => (active ? undefined : '#6366f1')};
+    background: ${({ $active }) => ($active ? '#f3f4f6' : '#f9fafb')};
+    color: ${({ $active }) => ($active ? '#1f2937' : '#374151')};
+    transform: translateX(2px);
   }
+  
+  svg {
+    transition: color 0.2s ease;
+  }
+`;
+
+const NavSection = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const SectionTitle = styled.div`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  padding: 0 1rem;
+`;
+
+const LogoutSection = styled.div`
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+  flex-shrink: 0; /* 로그아웃 버튼도 고정 */
 `;
 
 const LogoutButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
   color: #dc2626;
   width: 100%;
   font-weight: 500;
   background: transparent;
+  border: none;
   cursor: pointer;
+  transition: all 0.2s ease;
+
   &:hover {
-    background: #fee2e2;
+    background: #fef2f2;
+    transform: translateX(2px);
   }
 `;
 
-const Sidebar = ({ currentPage, onPageChange, isOpen, onToggle, onLogout }) => {
-  const menuItems = [
+const Sidebar = ({ currentPage, onPageChange, onLogout }) => {
+  const mainMenuItems = [
     { id: 'dashboard', label: '대시보드', icon: PieChart },
+  ];
+
+  const managementItems = [
     { id: 'users', label: '사용자 관리', icon: Users },
     { id: 'inquiries', label: '1:1 문의 관리', icon: Mail },
     { id: 'festivals', label: '축제 관리', icon: Calendar },
     { id: 'chat', label: '채팅방 관리', icon: MessageCircle },
+  ];
+
+  const systemItems = [
     { id: 'reports', label: '통계 및 리포트', icon: BarChart3 },
     { id: 'settings', label: '시스템 설정', icon: Settings }
   ];
 
+  const renderNavItems = (items) => (
+    items.map(item => {
+      const Icon = item.icon;
+      return (
+        <NavButton
+          key={item.id}
+          $active={currentPage === item.id}
+          onClick={() => onPageChange(item.id)}
+        >
+          <Icon size={18} />
+          {item.label}
+        </NavButton>
+      );
+    })
+  );
+
   return (
-    <>
-      {isOpen && <Overlay onClick={onToggle} />}
-      <Aside isOpen={isOpen}>
-        <Header>
-          <Crown size={24} />
-          <h1>Admin Panel</h1>
-        </Header>
-        <Nav>
-          {menuItems.map(item => {
-            const Icon = item.icon;
-            return (
-              <NavButton
-                key={item.id}
-                active={currentPage === item.id}
-                onClick={() => onPageChange(item.id)}
-              >
-                <Icon size={16} />
-                {item.label}
-              </NavButton>
-            );
-          })}
-        </Nav>
-        <div style={{ padding: '1rem' }}>
-          <LogoutButton onClick={onLogout}>
-            <LogOut size={16}  />
-            로그아웃
-          </LogoutButton>
-        </div>
-      </Aside>
-    </>
+    <Aside>
+      <SidebarHeader>
+        <Crown size={24} />
+        <SidebarTitle>Festival Admin</SidebarTitle>
+      </SidebarHeader>
+      
+      <Nav>
+        <NavSection>
+          {renderNavItems(mainMenuItems)}
+        </NavSection>
+
+        <NavSection>
+          <SectionTitle>관리</SectionTitle>
+          {renderNavItems(managementItems)}
+        </NavSection>
+
+        <NavSection>
+          <SectionTitle>시스템</SectionTitle>
+          {renderNavItems(systemItems)}
+        </NavSection>
+      </Nav>
+      
+      <LogoutSection>
+        <LogoutButton onClick={onLogout}>
+          <LogOut size={18} />
+          로그아웃
+        </LogoutButton>
+      </LogoutSection>
+    </Aside>
   );
 };
 

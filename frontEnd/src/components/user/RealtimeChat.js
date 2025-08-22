@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { Send, Users, MapPin, Settings, Smile } from 'lucide-react';
+import { Send, Users, MapPin, Settings, Smile, Trash2 } from 'lucide-react';
+import { sendChatMessage, fetchRegionalMessages } from '../../api/mypage';
+import ConfirmModal from '../common/ConfirmModal';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -37,6 +39,15 @@ const HeaderRight = styled.div`
   gap: 1rem;
 `;
 
+const RegionSelector = styled.select`
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #1f2937;
+  font-size: 0.875rem;
+`;
+
 const StatusDot = styled.div`
   width: 0.75rem;
   height: 0.75rem;
@@ -56,6 +67,7 @@ const MessagesContainer = styled.div`
 const MessageWrapper = styled.div`
   display: flex;
   justify-content: ${({ isOwn }) => (isOwn ? 'flex-end' : 'flex-start')};
+  position: relative;
 `;
 
 const MessageBox = styled.div`
@@ -65,6 +77,7 @@ const MessageBox = styled.div`
   color: ${({ isOwn }) => (isOwn ? '#fff' : '#1f2937')};
   padding: 0.5rem 1rem;
   border-radius: 1rem;
+  position: relative;
 `;
 
 const MessageMeta = styled.div`
@@ -72,6 +85,26 @@ const MessageMeta = styled.div`
   color: #9ca3af;
   margin-top: 0.25rem;
   text-align: ${({ isOwn }) => (isOwn ? 'right' : 'left')};
+`;
+
+const DeleteButton = styled.button`
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: none;
+  
+  ${MessageWrapper}:hover & {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const InputContainer = styled.div`
@@ -98,26 +131,13 @@ const MessageInput = styled.textarea`
   }
 `;
 
-const EmojiButton = styled.button`
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 0.25rem;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-  &:hover {
-    background: #e5e7eb;
-  }
-`;
-
 const SendButton = styled.button`
   padding: 0.75rem;
   border-radius: 1rem;
   background: ${({ disabled }) => (disabled ? '#e5e7eb' : 'linear-gradient(to right, #6366f1, #a855f7)')};
   color: ${({ disabled }) => (disabled ? '#9ca3af' : '#fff')};
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
+  border: none;
   transition: all 0.2s;
   &:hover {
     transform: ${({ disabled }) => (disabled ? 'none' : 'translateY(-2px)')};
@@ -133,71 +153,147 @@ const InfoRow = styled.div`
   color: #6b7280;
 `;
 
-const RealtimeChat = ({ regionCode = 'seoul', regionName = '서울' }) => {
+const LoadingState = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #6b7280;
+`;
+
+const regions = [
+  { code: 'seoul', name: '서울' },
+  { code: 'busan', name: '부산' },
+  { code: 'daegu', name: '대구' },
+  { code: 'incheon', name: '인천' },
+  { code: 'gwangju', name: '광주' },
+  { code: 'daejeon', name: '대전' },
+  { code: 'ulsan', name: '울산' },
+];
+
+const RealtimeChat = ({ userId, userNickname }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [participants, setParticipants] = useState(42);
-  const [isConnected, setIsConnected] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState('seoul');
+  const [participants, setParticipants] = useState(0);
+  const [isConnected, setIsConnected] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
+
   const messagesEndRef = useRef(null);
 
-  const sampleMessages = [
-    { id: 1, username: '축제마니아', message: '서울 불꽃축제 언제 시작하나요?', timestamp: new Date(Date.now() - 300000) },
-    { id: 2, username: '한강러버', message: '한강공원에서 7시부터 시작해요!', timestamp: new Date(Date.now() - 240000) },
-    { id: 3, username: '사진작가', message: '좋은 촬영 포인트 추천 부탁드려요', timestamp: new Date(Date.now() - 180000) },
-    { id: 4, username: '로컬가이드', message: '63빌딩 근처가 뷰가 좋아요', timestamp: new Date(Date.now() - 120000) }
-  ];
-
   useEffect(() => {
-    setMessages(sampleMessages);
-    setIsConnected(true);
-
-    const interval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        const randomUsers = ['여행객A', '지역주민', '축제참가자', '관광가이드'];
-        const randomMessages = [
-          '축제 정말 재미있네요!',
-          '사람이 너무 많아요 ㅠㅠ',
-          '주차장 어디에 있나요?',
-          '맛집 추천 부탁드려요',
-          '다음에도 또 오고 싶어요',
-          '사진 찍기 좋은 곳이네요'
-        ];
-
-        const newMsg = {
-          id: Date.now(),
-          username: randomUsers[Math.floor(Math.random() * randomUsers.length)],
-          message: randomMessages[Math.floor(Math.random() * randomMessages.length)],
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, newMsg]);
-        setParticipants(prev => prev + Math.floor(Math.random() * 3) - 1);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [regionCode]);
+    loadMessages();
+  }, [selectedRegion]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const loadMessages = async () => {
+    try {
+      setLoading(true);
+      const currentRegion = regions.find(r => r.code === selectedRegion);
+      const response = await fetchRegionalMessages(currentRegion.name, 0, 50);
+
+      // 백엔드 응답이 없으면 샘플 데이터 사용
+      if (response.content && response.content.length > 0) {
+        setMessages(response.content.reverse()); // 최신 메시지가 아래로 오도록
+        setParticipants(response.totalElements);
+      } else {
+        // 샘플 데이터
+        const sampleMessages = [
+          {
+            id: 1,
+            userNickname: '축제마니아',
+            message: `${regions.find(r => r.code === selectedRegion).name} 지역 축제 정보 궁금해요!`,
+            createdAt: new Date(Date.now() - 300000).toISOString(),
+            isOwn: false
+          },
+          {
+            id: 2,
+            userNickname: '현지인',
+            message: '이번 주말에 좋은 축제 있어요!',
+            createdAt: new Date(Date.now() - 240000).toISOString(),
+            isOwn: false
+          }
+        ];
+        setMessages(sampleMessages);
+        setParticipants(25);
+      }
+    } catch (err) {
+      console.error('메시지 로드 실패:', err);
+      // 오류 시 샘플 데이터 표시
+      setMessages([]);
+      setParticipants(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    const message = {
+    const tempMessage = {
       id: Date.now(),
-      username: '나',
+      userNickname: userNickname || '나',
       message: newMessage.trim(),
-      timestamp: new Date(),
+      createdAt: new Date().toISOString(),
       isOwn: true
     };
 
-    setMessages(prev => [...prev, message]);
+    // 즉시 UI 업데이트
+    setMessages(prev => [...prev, tempMessage]);
     setNewMessage('');
+
+    try {
+      const currentRegion = regions.find(r => r.code === selectedRegion);
+      await sendChatMessage({
+        region: currentRegion.name,
+        message: newMessage.trim()
+      });
+
+      // 성공 시 실제 메시지로 교체하거나 다시 로드
+      setTimeout(() => {
+        loadMessages();
+      }, 1000);
+    } catch (err) {
+      console.error('메시지 전송 실패:', err);
+      // 실패 시 임시 메시지 제거
+      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+    }
   };
 
-  const formatTime = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  const handleDeleteMessage = async (messageId) => {
+    // 커스텀 모달로 변경
+    setMessageToDelete(messageId);
+    setShowDeleteConfirm(true);
+  };
+
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const confirmDeleteMessage = async () => {
+    if (!messageToDelete) return;
+
+    try {
+      // await deleteChatMessage(messageToDelete);
+      setMessages(prev => prev.filter(m => m.id !== messageToDelete));
+    } catch (err) {
+      console.error('메시지 삭제 실패:', err);
+    } finally {
+      setMessageToDelete(null);
+    }
+  };
+
+  const getCurrentRegionName = () => {
+    return regions.find(r => r.code === selectedRegion)?.name || '서울';
+  };
 
   return (
     <ChatContainer>
@@ -205,34 +301,87 @@ const RealtimeChat = ({ regionCode = 'seoul', regionName = '서울' }) => {
         <HeaderLeft>
           <MapPin size={20} />
           <div>
-            <h3>{regionName} 실시간 채팅</h3>
-            <p style={{ fontSize: '0.75rem', opacity: 0.9 }}>지역 정보를 공유해보세요</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3>지역 실시간 채팅</h3>
+              <RegionSelector
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+              >
+                {regions.map(region => (
+                  <option key={region.code} value={region.code}>
+                    {region.name}
+                  </option>
+                ))}
+              </RegionSelector>
+            </div>
+            <p style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+              {getCurrentRegionName()} 지역 정보를 공유해보세요
+            </p>
           </div>
         </HeaderLeft>
         <HeaderRight>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <StatusDot connected={isConnected} />
-            <span style={{ fontSize: '0.75rem' }}>{isConnected ? '연결됨' : '연결 중...'}</span>
+            <span style={{ fontSize: '0.75rem' }}>
+              {isConnected ? '연결됨' : '연결 중...'}
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Users size={16} />
             <span style={{ fontSize: '0.75rem' }}>{participants}명</span>
           </div>
-          <Settings size={16} />
         </HeaderRight>
       </Header>
 
       <MessagesContainer>
-        {messages.map((msg) => (
-          <MessageWrapper key={msg.id} isOwn={msg.isOwn}>
-            <div style={{ maxWidth: '18rem' }}>
-              {!msg.isOwn && <div style={{ fontSize: '0.625rem', color: '#6b7280', marginBottom: '0.25rem' }}>{msg.username}</div>}
-              <MessageBox isOwn={msg.isOwn}>{msg.message}</MessageBox>
-              <MessageMeta isOwn={msg.isOwn}>{formatTime(msg.timestamp)}</MessageMeta>
-            </div>
-          </MessageWrapper>
-        ))}
-        <div ref={messagesEndRef} />
+        {loading ? (
+          <LoadingState>메시지를 불러오는 중...</LoadingState>
+        ) : (
+          <>
+            {messages.map((msg) => (
+              <MessageWrapper key={msg.id} isOwn={msg.isOwn}>
+                <div style={{ maxWidth: '18rem' }}>
+                  {!msg.isOwn && (
+                    <div style={{
+                      fontSize: '0.625rem',
+                      color: '#6b7280',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {msg.userNickname}
+                    </div>
+                  )}
+                  <MessageBox isOwn={msg.isOwn}>
+                    {msg.message}
+                    {msg.isOwn && (
+                      <DeleteButton onClick={() => handleDeleteMessage(msg.id)}>
+                        <Trash2 size={10} />
+                      </DeleteButton>
+                    )}
+                  </MessageBox>
+                  <MessageMeta isOwn={msg.isOwn}>
+                    {formatTime(msg.createdAt)}
+                  </MessageMeta>
+                </div>
+              </MessageWrapper>
+            ))}
+            <div ref={messagesEndRef} />
+
+            {/* 삭제 확인 모달 */}
+            <ConfirmModal
+              isOpen={showDeleteConfirm}
+              onClose={() => {
+                setShowDeleteConfirm(false);
+                setMessageToDelete(null);
+              }}
+              onConfirm={confirmDeleteMessage}
+              title="메시지 삭제"
+              message="이 메시지를 삭제하시겠습니까? 삭제된 메시지는 복구할 수 없습니다."
+              confirmText="삭제"
+              cancelText="취소"
+              variant="danger"
+            />
+          </>
+        )}
       </MessagesContainer>
 
       <InputContainer>
@@ -251,9 +400,11 @@ const RealtimeChat = ({ regionCode = 'seoul', regionName = '서울' }) => {
               placeholder="메시지를 입력하세요..."
               maxLength={500}
             />
-            <EmojiButton><Smile size={20} /></EmojiButton>
           </div>
-          <SendButton disabled={!newMessage.trim() || !isConnected} onClick={handleSendMessage}>
+          <SendButton
+            disabled={!newMessage.trim() || !isConnected}
+            onClick={handleSendMessage}
+          >
             <Send size={20} />
           </SendButton>
         </InputWrapper>

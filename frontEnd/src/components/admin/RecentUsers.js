@@ -1,43 +1,44 @@
-// RecentUsers.js
+// src/components/RecentUsers.js
 import React from 'react';
 import styled from 'styled-components';
 import { Users } from 'lucide-react';
 
 const Container = styled.div`
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 1rem;
+  background: white;
+  border-radius: 0.75rem;
   padding: 1.5rem;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
 `;
 
 const Header = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 1.5rem;
 `;
 
 const Title = styled.h2`
   font-size: 1.25rem;
   font-weight: bold;
-  color: #1f2937;
+  color: #111827;
+  margin: 0;
 `;
 
-const ViewAllButton = styled.button`
+const ViewButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(to right, #6366f1, #a855f7);
+  background: #2563eb;
   color: white;
+  border: none;
   border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
+
   &:hover {
-    box-shadow: 0 5px 15px rgba(99,102,241,0.3);
+    background: #1d4ed8;
   }
 `;
 
@@ -46,76 +47,108 @@ const Table = styled.table`
   border-collapse: collapse;
 `;
 
-const Th = styled.th`
-  text-align: left;
-  padding: 0.75rem 1rem;
-  font-weight: 600;
-  color: #374151;
+const TableHead = styled.thead`
   border-bottom: 1px solid #e5e7eb;
 `;
 
-const Td = styled.td`
-  padding: 0.75rem 1rem;
+const TableHeader = styled.th`
+  text-align: left;
+  padding: 0.75rem 0;
+  font-weight: 600;
+  color: #6b7280;
   font-size: 0.875rem;
-  color: ${({ muted }) => (muted ? '#6b7280' : '#1f2937')};
-  font-weight: ${({ bold }) => (bold ? 500 : 400)};
-  font-family: ${({ mono }) => (mono ? 'monospace' : 'inherit')};
 `;
 
-const ActionButton = styled.button`
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-right: ${({ mr }) => (mr ? '0.75rem' : 0)};
-  color: ${({ color }) => color};
-  background: transparent;
-  border: none;
-  cursor: pointer;
+const TableBody = styled.tbody``;
+
+const TableRow = styled.tr`
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+  
   &:hover {
-    color: ${({ hoverColor }) => hoverColor};
+    background: #f9fafb;
   }
 `;
 
-const RecentUsers = () => {
-  const users = [
-    { id: 'USR-2024-101', name: '최준호', email: 'junho.choi@email.com', date: '2024-01-15', status: 'active' },
-    { id: 'USR-2024-102', name: '한지민', email: 'jimin.han@email.com', date: '2024-01-14', status: 'active' },
-    { id: 'USR-2024-103', name: '오세훈', email: 'sehoon.oh@email.com', date: '2024-01-13', status: 'active' }
-  ];
+const TableCell = styled.td`
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: ${({ $muted }) => ($muted ? '#6b7280' : '#111827')};
+  font-weight: ${({ $bold }) => ($bold ? '500' : '400')};
+`;
 
+const StatusBadge = styled.span`
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  
+  ${({ $status }) => {
+    if ($status === true || $status === 'active') {
+      return `
+        background: #d1fae5;
+        color: #065f46;
+      `;
+    } else {
+      return `
+        background: #fecaca;
+        color: #991b1b;
+      `;
+    }
+  }}
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+`;
+
+const RecentUsers = ({ users = [], onViewAll }) => {
   return (
     <Container>
       <Header>
         <Title>최근 가입 사용자</Title>
-        <ViewAllButton>
+        <ViewButton onClick={onViewAll}>
           <Users size={16} />
           전체 보기
-        </ViewAllButton>
+        </ViewButton>
       </Header>
-      <Table>
-        <thead>
-          <tr>
-            <Th>사용자 ID</Th>
-            <Th>이름</Th>
-            <Th>이메일</Th>
-            <Th>가입일</Th>
-            <Th>작업</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(user => (
-            <tr key={user.id}>
-              <Td mono>{user.id}</Td>
-              <Td bold>{user.name}</Td>
-              <Td muted>{user.email}</Td>
-              <Td muted>{user.date}</Td>
-              <Td>
-                <ActionButton mr color="#4f46e5" hoverColor="#4338ca">상세</ActionButton>
-                <ActionButton color="#dc2626" hoverColor="#b91c1c">비활성화</ActionButton>
-              </Td>
+      
+      {users.length > 0 ? (
+        <Table>
+          <TableHead>
+            <tr>
+              <TableHeader>이름</TableHeader>
+              <TableHeader>이메일</TableHeader>
+              <TableHeader>가입일</TableHeader>
+              <TableHeader>상태</TableHeader>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {users.map(user => (
+              <TableRow key={user.id}>
+                <TableCell $bold>
+                  {user.nickname || user.name || '알 수 없음'}
+                </TableCell>
+                <TableCell $muted>{user.email}</TableCell>
+                <TableCell $muted>
+                  {new Date(user.createdAt).toLocaleDateString('ko-KR')}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge $status={user.isActive}>
+                    {user.isActive ? '활성' : '비활성'}
+                  </StatusBadge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <EmptyState>
+          사용자 데이터가 없습니다.
+        </EmptyState>
+      )}
     </Container>
   );
 };

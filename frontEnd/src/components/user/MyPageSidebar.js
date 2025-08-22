@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { User, Bookmark, MessageSquare, LogOut, Calendar } from 'lucide-react';
+import { User, Bookmark, MessageSquare, LogOut, Calendar, Users } from 'lucide-react';
 
 const SidebarContainer = styled.div`
   background: rgba(255,255,255,0.95);
@@ -11,6 +11,7 @@ const SidebarContainer = styled.div`
   border: 1px solid rgba(255,255,255,0.2);
   position: sticky;
   top: 1.5rem;
+  height: fit-content;
 `;
 
 const Avatar = styled.div`
@@ -27,6 +28,23 @@ const Avatar = styled.div`
   margin: 0 auto 1rem;
 `;
 
+const UserInfo = styled.div`
+  text-align: center;
+  margin-bottom: 1.5rem;
+`;
+
+const UserName = styled.h3`
+  margin: 0 0 0.25rem 0;
+  color: #1f2937;
+  font-weight: 600;
+`;
+
+const UserEmail = styled.p`
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+`;
+
 const MenuButton = styled.button`
   width: 100%;
   display: flex;
@@ -36,6 +54,8 @@ const MenuButton = styled.button`
   border-radius: 1rem;
   font-weight: 500;
   transition: all 0.2s;
+  border: none;
+  cursor: pointer;
 
   background: ${props => props.active ? 'linear-gradient(to right, #6366f1, #a78bfa)' : 'transparent'};
   color: ${props => props.active ? 'white' : '#4b5563'};
@@ -43,70 +63,113 @@ const MenuButton = styled.button`
   &:hover {
     background: ${props => props.active ? '' : '#f9fafb'};
     color: ${props => props.active ? 'white' : '#6366f1'};
+    transform: translateY(-1px);
+  }
+`;
+
+const MenuNav = styled.nav`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+`;
+
+const JoinInfo = styled.div`
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const LogoutButton = styled.button`
+  width: 100%;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  color: #ef4444;
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #fee2e2;
+    transform: translateY(-1px);
   }
 `;
 
 const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, onLogout }) => {
   const menuItems = [
     { id: 'profile', label: '프로필 관리', icon: User },
-    { id: 'scraps', label: '스크랩함', icon: Bookmark },
-    { id: 'inquiries', label: '1:1 문의', icon: MessageSquare }
+    { id: 'scraps', label: '찜 목록', icon: Bookmark },
+    { id: 'inquiries', label: '1:1 문의', icon: MessageSquare },
+    { id: 'regionChat', label: '지역 채팅', icon: Users },
   ];
 
-  if (!isLoggedIn) {
+  if (!isLoggedIn || !userData) {
     return (
       <SidebarContainer>
         <div style={{ textAlign: 'center' }}>
           <Avatar>?</Avatar>
-          <h3>로그인이 필요합니다</h3>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>마이페이지 기능을 사용하려면 로그인해주세요.</p>
+          <UserInfo>
+            <UserName>로그인이 필요합니다</UserName>
+            <UserEmail>마이페이지 기능을 사용하려면 로그인해주세요.</UserEmail>
+          </UserInfo>
         </div>
       </SidebarContainer>
     );
   }
 
+  const formatJoinDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ko-KR');
+  };
+
+  const getInitial = () => {
+    return userData.nickname ?
+      userData.nickname.charAt(0) :
+      userData.username.charAt(0);
+  };
+
   return (
     <SidebarContainer>
-      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <Avatar>{userData.nickname ? userData.nickname.charAt(0) : userData.username.charAt(0)}</Avatar>
-        <h3>{userData.nickname || userData.username}</h3>
-        <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{userData.email}</p>
-      </div>
+      <UserInfo>
+        <Avatar>{getInitial()}</Avatar>
+        <UserName>{userData.nickname || userData.username}</UserName>
+        <UserEmail>{userData.email}</UserEmail>
+      </UserInfo>
 
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <MenuNav>
         {menuItems.map(item => {
           const Icon = item.icon;
           const isActive = currentSection === item.id;
           return (
-            <MenuButton key={item.id} active={isActive} onClick={() => onSectionChange(item.id)}>
+            <MenuButton
+              key={item.id}
+              active={isActive}
+              onClick={() => onSectionChange(item.id)}
+            >
               <Icon size={20} />
               {item.label}
-            </MenuButton>
-          );
+            </MenuButton>);
         })}
-      </nav>
+      </MenuNav>
 
-      <div style={{ marginTop: '1.5rem', borderTop: '1px solid #f3f4f6', paddingTop: '1rem', fontSize: '0.875rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-        <Calendar size={16} /> 가입일: {new Date(userData.joinDate).toLocaleDateString('ko-KR')}
-      </div>
+      <JoinInfo>
+        <Calendar size={16} />
+        가입일: {formatJoinDate(userData.createdAt)}
+      </JoinInfo>
 
-      <button
-        onClick={onLogout}
-        style={{
-          width: '100%',
-          marginTop: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          padding: '0.75rem 1rem',
-          borderRadius: '1rem',
-          color: '#ef4444',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        <LogOut size={20} /> 로그아웃
-      </button>
+      <LogoutButton onClick={onLogout}>
+        <LogOut size={20} />
+        로그아웃
+      </LogoutButton>
     </SidebarContainer>
   );
 };

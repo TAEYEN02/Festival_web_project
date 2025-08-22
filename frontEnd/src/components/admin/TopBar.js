@@ -1,39 +1,27 @@
-// TopBar.js
+// src/components/TopBar.js
 import React from 'react';
 import styled from 'styled-components';
-import { Menu, TrendingUp, Bell } from 'lucide-react';
+import { TrendingUp, Bell } from 'lucide-react';
 
-const Container = styled.div`
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+const TopBarContainer = styled.div`
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 `;
 
-const Flex = styled.div`
+const TopBarFlex = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
 `;
 
-const LeftSection = styled.div`
+const TopBarLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-`;
-
-const MenuButton = styled.button`
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  &:hover {
-    background: #f3f4f6;
-  }
 `;
 
 const TitleContainer = styled.div`
@@ -44,7 +32,7 @@ const TitleContainer = styled.div`
 
 const IconWrapper = styled.div`
   padding: 0.5rem;
-  background: linear-gradient(to right, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -55,15 +43,17 @@ const TitleText = styled.div`
   h1 {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #1f2937;
+    color: #111827;
+    margin: 0;
   }
   p {
     font-size: 0.875rem;
     color: #6b7280;
+    margin: 0;
   }
 `;
 
-const RightSection = styled.div`
+const TopBarRight = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -72,10 +62,12 @@ const RightSection = styled.div`
 const NotificationButton = styled.button`
   position: relative;
   padding: 0.75rem;
-  border-radius: 1rem;
-  background: transparent;
   border: none;
+  background: transparent;
+  border-radius: 0.5rem;
   cursor: pointer;
+  transition: background-color 0.2s;
+
   &:hover {
     background: #f3f4f6;
   }
@@ -90,10 +82,11 @@ const Badge = styled.span`
   background: #ef4444;
   color: white;
   font-size: 0.625rem;
-  border-radius: 9999px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 600;
 `;
 
 const Profile = styled.div`
@@ -103,80 +96,122 @@ const Profile = styled.div`
   padding: 0.5rem;
   border-radius: 0.75rem;
   cursor: pointer;
+  transition: background-color 0.2s;
+
   &:hover {
     background: #f9fafb;
   }
 `;
 
 const Avatar = styled.div`
-  width: 3rem;
-  height: 3rem;
-  background: linear-gradient(to right, #6366f1, #a855f7);
-  border-radius: 9999px;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 1.125rem;
+  font-size: 1rem;
 `;
 
-const StatsRow = styled.div`
+const ProfileInfo = styled.div`
+  @media(max-width: 640px) {
+    display: none;
+  }
+`;
+
+const ProfileName = styled.div`
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.875rem;
+`;
+
+const ProfileRole = styled.div`
+  font-size: 0.75rem;
+  color: #6b7280;
+`;
+
+const StatusRow = styled.div`
   display: flex;
   gap: 1.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
 `;
 
-const Stat = styled.div`
+const StatusItem = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
   color: #4b5563;
-  div {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 9999px;
-    background-color: ${({ color }) => color};
+  
+  &:first-child {
+    color: #059669;
   }
 `;
 
-const TopBar = ({ onMenuToggle }) => {
+const StatusDot = styled.div`
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: ${({ $color }) => $color};
+`;
+
+const TopBar = ({ stats }) => {
   return (
-    <Container>
-      <Flex>
-        <LeftSection>
-          <MenuButton onClick={onMenuToggle}><Menu size={24} color="#4b5563" /></MenuButton>
+    <TopBarContainer>
+      <TopBarFlex>
+        <TopBarLeft>
           <TitleContainer>
-            <IconWrapper><TrendingUp size={24} color="white" /></IconWrapper>
+            <IconWrapper>
+              <TrendingUp size={24} style={{ color: 'white' }} />
+            </IconWrapper>
             <TitleText>
               <h1>관리자 대시보드</h1>
-              <p>시스템 현황을 한눈에 확인하세요</p>
+              <p>축제 플랫폼 통합 관리 시스템</p>
             </TitleText>
           </TitleContainer>
-        </LeftSection>
-        <RightSection>
+        </TopBarLeft>
+        
+        <TopBarRight>
           <NotificationButton>
-            <Bell size={24} color="#4b5563" />
-            <Badge>3</Badge>
+            <Bell size={24} style={{ color: '#6b7280' }} />
+            <Badge>{stats?.pendingInquiries || 0}</Badge>
           </NotificationButton>
+          
           <Profile>
             <Avatar>관</Avatar>
-            <div>
-              <div style={{ fontWeight: 600, color: '#1f2937' }}>태연 관리자</div>
-              <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Super Admin</div>
-            </div>
+            <ProfileInfo>
+              <ProfileName>관리자</ProfileName>
+              <ProfileRole>Super Admin</ProfileRole>
+            </ProfileInfo>
           </Profile>
-        </RightSection>
-      </Flex>
-      <StatsRow>
-        <Stat color="#22c55e"><div />시스템 정상</Stat>
-        <Stat color="#3b82f6"><div />실시간 사용자: 1,247명</Stat>
-        <Stat color="#facc15"><div />대기 중인 문의: 23건</Stat>
-      </StatsRow>
-    </Container>
+        </TopBarRight>
+      </TopBarFlex>
+      
+      <StatusRow>
+        <StatusItem>
+          <StatusDot $color="#22c55e" />
+          시스템 정상 운영
+        </StatusItem>
+        <StatusItem>
+          <StatusDot $color="#3b82f6" />
+          실시간 사용자: {stats?.activeChatUsers?.toLocaleString() || 0}명
+        </StatusItem>
+        <StatusItem>
+          <StatusDot $color="#f59e0b" />
+          대기 중인 문의: {stats?.pendingInquiries || 0}건
+        </StatusItem>
+        <StatusItem>
+          <StatusDot $color="#8b5cf6" />
+          활성 축제: {stats?.activeFestivals || 0}개
+        </StatusItem>
+      </StatusRow>
+    </TopBarContainer>
   );
 };
 
