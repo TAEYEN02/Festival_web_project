@@ -129,7 +129,7 @@
 
 /* 특별 카테고리 호버 */
 .BNnav-tab-special:hover {
-    background: linear-gradient(to right, #f59e0b, #f97316);
+    background: linear-gradient(to right, hsl(38, 90%, 65%), hsl(25, 90%, 65%));
     color: white;
     border-color: transparent;
     transform: translateY(-2px);
@@ -147,15 +147,15 @@
     background: linear-gradient(to right, #66d9e8, #7fd6f9);
     color: white;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    
+
 }
 
 /* 특별 카테고리 활성화 */
 .BNnav-tab-special-active {
-    background: linear-gradient(to right, #f59e0b, #f97316) !important;
-    color: white !important;
-    border-color: transparent !important;
-    box-shadow: 0 10px 20px -3px rgba(245, 158, 11, 0.4) !important;
+    background: linear-gradient(to right, hsl(38, 90%, 65%), hsl(25, 90%, 65%));
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 10px 20px -3px rgba(245, 158, 11, 0.4);
 }
 
 @media (min-width: 768px) {

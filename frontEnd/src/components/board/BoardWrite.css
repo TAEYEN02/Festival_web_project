@@ -225,6 +225,34 @@
   gap: 1rem;
 }
 
+/* ReactQuill Custom Styling */
+.BWquill-wrapper .ql-toolbar {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border: 1px solid #ccc;
+  border-bottom: 0; /* 아래쪽 테두리는 container에서 처리 */
+}
+
+.BWquill-wrapper .ql-container {
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.BWquill-wrapper .ql-editor {
+  height: 400px; /* 에디터 높이 지정 */
+  padding: 1rem;
+}
+
+/* Placeholder 스타일 */
+.BWquill-wrapper .ql-editor.ql-blank::before {
+  font-style: normal;
+  color: #999;
+  left: 1rem; /* padding과 맞춤 */
+}
+
+
 @media (max-width: 768px) {
   .BWlocation-date-grid {
     grid-template-columns: 1fr;
@@ -515,97 +543,3 @@
   gap: 1rem;
 }
 
-@media (max-width: 768px) {
-  .BWsubmit-footer {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-}
-
-.BWsubmit-tip {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.BWfinal-submit-btn {
-  padding: 1rem 2rem;
-  background: rgba(156, 163, 175, 0.5);
-  color: white;
-  border: none;
-  border-radius: 9999px;
-  font-weight: 600;
-  cursor: not-allowed;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-}
-
-.BWfinal-submit-btn-active {
-  background: linear-gradient(to right, #a855f7, #ec4899);
-  cursor: pointer;
-}
-
-.BWfinal-submit-btn-active:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.BWfinal-submit-btn:disabled {
-  opacity: 0.6;
-}
-
-/* Floating Help Button */
-.BWfloating-help-btn {
-  position: fixed;
-  bottom: 1.5rem;
-  left: 1.5rem;
-  width: 3.5rem;
-  height: 3.5rem;
-  background: linear-gradient(to right, #06b6d4, #0891b2);
-  color: white;
-  border-radius: 50%;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  transition: all 0.3s ease;
-}
-
-.BWfloating-help-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .BWheader-content {
-    padding: 0.75rem;
-  }
-
-  .BWwrite-main {
-    padding: 1rem 0.75rem;
-  }
-
-  .BWform-section {
-    padding: 1rem;
-  }
-
-  .BWcategory-buttons {
-    gap: 0.5rem;
-  }
-
-  .BWcategory-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-  }
-
-  .BWtitle-input {
-    font-size: 1.25rem;
-  }
-}
