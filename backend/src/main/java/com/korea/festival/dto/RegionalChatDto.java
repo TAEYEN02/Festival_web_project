@@ -10,17 +10,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InquiryDto {
+public class RegionalChatDto {
     private Long id;
     
-    @NotBlank(message = "제목은 필수입니다")
-    private String title;
+    @NotBlank(message = "지역은 필수입니다")
+    private String region;
     
-    @NotBlank(message = "내용은 필수입니다")
-    private String content;
+    @NotBlank(message = "메시지는 필수입니다")
+    private String message;
     
-    private String status;
-    private String answer;
+    private String userNickname;
     private LocalDateTime createdAt;
-    private LocalDateTime answeredAt;
 }

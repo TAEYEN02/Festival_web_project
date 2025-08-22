@@ -1,38 +1,48 @@
-HELP.md
-.gradle
-build/
+# ---- Gradle / Build ----
+.gradle/
+**/build/
 !gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+gradle/wrapper/gradle-wrapper.properties
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
+# ---- Java / Logs ----
+*.log
+hs_err_pid*
+replay_pid*
+*.hprof
+
+# ---- IDE ----
+# Eclipse / STS
 .project
-.settings
-.springBeans
+.classpath
+.settings/
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+.apt_generated
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IntelliJ
+.idea/
 *.iml
+*.iws
 *.ipr
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+# VS Code
 .vscode/
-/.metadata/
+
+# ---- OS 크랩 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 환경/비밀 ----
+.env
+.env.*
+*.pem
+*.key
+*.jks
+*.keystore
+*.p12
+*.crt
+*.der
+
+# ---- 기타 ----
+/metadata/

@@ -1,34 +1,35 @@
 package com.korea.festival.dto;
 
-import lombok.Data;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
-import com.korea.festival.entity.User;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class UserDetailDto {
-    private Long userId;
+    private Long id;
     private String username;
-    private String email;
     private String nickname;
-    private String phoneNumber;
-    private LocalDate birthDate;
-    private String gender;
-    private String role;
-    private LocalDateTime createdAt;
-    private LocalDateTime lastLogin;
+    private String email;
+    private Set<String> roles;
     private Boolean isActive;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
-    public UserDetailDto(User user) {
-        this.userId = user.getUserId();
-        this.username = user.getUsername();
-        this.email = user.getEmail();
-        this.nickname = user.getNickname();
-        this.phoneNumber = user.getPhoneNumber();
-        this.birthDate = user.getBirthDate();
-        this.createdAt = user.getCreatedAt();
-        this.lastLogin = user.getLastLogin();
-        this.isActive = user.getIsActive();
+    // 생성자 추가
+    public UserDetailDto(Long id, String username, String nickname, String email, 
+                        Set<String> roles, Boolean isActive, 
+                        LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.username = username;
+        this.nickname = nickname;
+        this.email = email;
+        this.roles = roles;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }

@@ -1,4 +1,4 @@
-package com.korea.festival.dto;
+package com.korea.festival.jwt;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,21 +12,10 @@ public class JwtAuthenticationResponse {
     private String tokenType = "Bearer";
     private String username;
     private String role;
-    private String nickname;
     
-    // 기본 생성자 + 토큰만 설정하는 생성자
-    public JwtAuthenticationResponse(String accessToken) {
-        this.accessToken = accessToken;
-        this.tokenType = "Bearer";
-    }
-    
-    // 전체 정보를 받는 생성자
     public JwtAuthenticationResponse(String accessToken, String username, String role) {
         this.accessToken = accessToken;
-        this.tokenType = "Bearer";
         this.username = username;
         this.role = role;
-        this.nickname = nickname;
     }
-
 }
