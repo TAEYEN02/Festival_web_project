@@ -36,7 +36,7 @@ export default function FestivalCard({ festival, onTagClick, isScrapped, onToggl
 
     return (
         <div className="festival-card" onClick={goDetail} role="button" tabIndex={0}
-             onKeyDown={(e) => { if (e.key === "Enter") goDetail(); }}>
+            onKeyDown={(e) => { if (e.key === "Enter") goDetail(); }}>
             <div className="festival-thumb">
                 <img
                     src={imageUrl}

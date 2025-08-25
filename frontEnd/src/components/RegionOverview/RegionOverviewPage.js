@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./RegionOverview.css";
 import { fetchFestivals, fetchFestivalsPage, REGIONS } from "../../api/regionFestival.js";
@@ -7,7 +7,6 @@ import RegionFilter from "./RegionFilter";
 import EmptyState from "./EmptyState";
 import MapView from "./MapView";
 import useScrap from "./useScrap";
-import { toMonthKey } from "../../util/date.js";
 
 const PAGE_SIZE = 20; // 페이지 크기 고정(드롭다운 제거)
 
@@ -17,35 +16,45 @@ export default function RegionOverviewPage() {
 
     // 상태
     const [query, setQuery] = useState("");
+    const [queryDraft, setQueryDraft] = useState(""); // 타이핑 버퍼(디바운스 원본)
+    const [isComposing, setIsComposing] = useState(false);         // IME 조합 상태
     const [region, setRegion] = useState("all");
-    const [sort, setSort] = useState("popular"); // 'popular' | 'latest'
+    const [sort, setSort] = useState("default"); // 기본: 진행중(종료일↑) → 예정(시작일↑)
     const [groupView, setGroupView] = useState(true); // 전체(그룹) / 단일
     const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'ongoing' | 'upcoming' | 'past'
-    const [monthFilter, setMonthFilter] = useState("all"); // 'all' | 'YYYY-MM'
-    const [selectedTags, setSelectedTags] = useState([]); // 다중 태그
-    const [viewMode, setViewMode] = useState("list"); // 'list' | 'map'
+    const [monthFilter, setMonthFilter] = useState("all");   // 'all' | '1'..'12'
+    const [selectedTags, setSelectedTags] = useState([]);    // 다중 태그
+    const [viewMode, setViewMode] = useState("list");        // 'list' | 'map'
+    const [includePast, setIncludePast] = useState(false); // 종료 포함 토글
+    const [filtersOpen, setFiltersOpen] = useState(true);
 
-    // 데이터 (단일 모드: 서버 페이징)
+    // 데이터
     const [loading, setLoading] = useState(false);
-    const [groupItems, setGroupItems] = useState([]);        // 그룹 모드용 전체(필터적용)
-    const [listItems, setListItems] = useState([]);          // 단일 모드 누적
-    const [page, setPage] = useState(0);                     // 0-based
-    const [hasNext, setHasNext] = useState(true);
-    const [total, setTotal] = useState(0);
+    const [groupItems, setGroupItems] = useState([]); // 그룹 모드용
+    const [items, setItems] = useState([]);           // 단일 모드: 현재 페이지 아이템
+    const [total, setTotal] = useState(0);            // 단일 모드: 필터 후 전체 개수
 
-    // URL → 상태 복원 (size 관련 로직 제거)
+    // 페이징
+    const [page, setPage] = useState(0);             // 0-based
+
+
+    const requestSeqRef = React.useRef(0);
+
+    // URL → 상태 복원
     useEffect(() => {
         const initQ = searchParams.get("q") ?? "";
         const initRegion = searchParams.get("region") ?? "all";
-        const initSort = searchParams.get("sort") ?? "popular";
+        const initSort = searchParams.get("sort") ?? "default";
         const initView = (searchParams.get("view") ?? "group") === "group";
         const initStatus = searchParams.get("status") ?? "all";
         const initMonth = searchParams.get("month") ?? "all";
         const initTags = (searchParams.get("tags") ?? "")
             .split(",").map(s => s.trim()).filter(Boolean);
         const initMode = searchParams.get("mode") ?? "list";
+        const initIncludePast = (searchParams.get("includePast") ?? "0") === "1"; //
 
         setQuery(initQ);
+        setQueryDraft(initQ);
         setRegion(initRegion);
         setSort(initSort);
         setGroupView(initView);
@@ -53,10 +62,10 @@ export default function RegionOverviewPage() {
         setMonthFilter(initMonth);
         setSelectedTags(initTags);
         setViewMode(initMode === "map" ? "map" : "list");
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        setIncludePast(initIncludePast);
     }, []);
 
-    // 상태 → URL 동기화 (size 파라미터 제거)
+    // 상태 → URL 동기화
     useEffect(() => {
         setSearchParams({
             q: query || "",
@@ -66,13 +75,18 @@ export default function RegionOverviewPage() {
             status: statusFilter,
             month: monthFilter,
             tags: selectedTags.join(","),
-            mode: viewMode
+            mode: viewMode,
+            includePast: includePast ? "1" : "0",
         });
-    }, [query, region, sort, groupView, statusFilter, monthFilter, selectedTags, viewMode, setSearchParams]);
+    }, [query, region, sort, groupView, statusFilter, monthFilter, selectedTags, viewMode, includePast, setSearchParams]);
 
     // 그룹(전체) 모드: 한 번에 가져와서 섹션별 8개씩
     useEffect(() => {
         if (!groupView) return;
+
+        const mySeq = ++requestSeqRef.current;
+        const ctrl = new AbortController();
+
         (async () => {
             setLoading(true);
             try {
@@ -82,71 +96,101 @@ export default function RegionOverviewPage() {
                     sort,
                     status: statusFilter,
                     month: monthFilter,
-                    tags: selectedTags
+                    tags: selectedTags,
+                    signal: ctrl.signal,
+                    includePast,
                 });
-                setGroupItems(data);
+                // ✅ 최신 요청만 반영
+                if (requestSeqRef.current === mySeq) {
+                    setGroupItems(data);
+                }
             } catch (e) {
-                console.error(e);
-                setGroupItems([]);
+                if (e?.name !== "CanceledError" && e?.name !== "AbortError") {
+                    console.error(e);
+                }
+                if (requestSeqRef.current === mySeq) {
+                    setGroupItems([]);
+                }
             } finally {
-                setLoading(false);
+                if (requestSeqRef.current === mySeq) {
+                    setLoading(false);
+                }
             }
         })();
-    }, [groupView, query, sort, statusFilter, monthFilter, selectedTags]);
 
-    // 단일 모드: 서버 페이징 기반(모의)으로 페이지 append
-    const resetAndLoadFirst = () => {
-        setListItems([]);
-        setPage(0);
-        setHasNext(true);
-        setTotal(0);
-        loadNextPage(0, true);
-    };
+        return () => {
+            ctrl.abort();
+        };
+    }, [groupView, query, sort, statusFilter, monthFilter, selectedTags, includePast]);
 
-    const loadNextPage = async (nextPage = page, isFirst = false) => {
-        if (loading || (!hasNext && !isFirst)) return;
-        setLoading(true);
-        try {
-            const res = await fetchFestivalsPage({
-                query,
-                region,
-                sort,
-                status: statusFilter,
-                month: monthFilter,
-                tags: selectedTags,
-                page: nextPage,
-                size: PAGE_SIZE
-            });
-            setListItems(prev => isFirst ? res.items : [...prev, ...res.items]);
-            setPage(res.page + 1);      // 다음 로딩을 위해 +1
-            setHasNext(res.hasNext);
-            setTotal(res.total ?? 0);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // 단일 모드에서 조건 바뀌면 초기화 후 첫 페이지 로드
+    // 단일(지역 선택) 모드: 페이지네이션 로드
     useEffect(() => {
         if (groupView) return;
-        resetAndLoadFirst();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [groupView, query, region, sort, statusFilter, monthFilter, selectedTags]);
 
-    // 월 옵션(데이터 기반, 그룹/단일 각각 현재 로드분 기준)
+        const mySeq = ++requestSeqRef.current; // 최신 요청 번호
+        const ctrl = new AbortController();
+
+        (async () => {
+            setLoading(true);
+            try {
+                const { items: pageItems, total } = await fetchFestivalsPage({
+                    query,
+                    region,
+                    sort,
+                    status: statusFilter,
+                    month: monthFilter,
+                    tags: selectedTags,
+                    page,
+                    size: PAGE_SIZE,
+                    signal: ctrl.signal,
+                    includePast,
+                });
+
+                if (requestSeqRef.current === mySeq) {
+                    setItems(pageItems);
+                    setTotal(total ?? 0);
+                }
+            } catch (e) {
+                if (e?.name !== "CanceledError" && e?.name !== "AbortError") {
+                    console.error(e);
+                }
+                if (requestSeqRef.current === mySeq) {
+                    setItems([]);
+                    setTotal(0);
+                }
+            } finally {
+                if (requestSeqRef.current === mySeq) {
+                    setLoading(false);
+                }
+            }
+        })();
+        return () => {
+            ctrl.abort();
+        };
+    }, [groupView, query, region, sort, statusFilter, monthFilter, selectedTags, page, includePast]);
+
+    // 필터 변경 시 페이지 초기화
+    useEffect(() => {
+        setPage(0);
+    }, [groupView, query, region, sort, statusFilter, monthFilter, selectedTags, includePast]);
+
+    useEffect(() => {
+        // 한글 조합 중에는 디바운스 정지
+        if (isComposing) return;
+        const t = setTimeout(() => {
+            setQuery(queryDraft.trim());
+        }, 250);
+        return () => clearTimeout(t);
+    }, [queryDraft, isComposing]);
+
+    // 월 옵션: 고정(간단)
     const monthOptions = useMemo(() => {
-        const source = groupView ? groupItems : listItems;
-        const set = new Set();
-        source.forEach(f => {
-            if (f.startDate) set.add(toMonthKey(f.startDate));
-        });
-        const arr = Array.from(set).filter(Boolean).sort();
-        return ["all", ...arr];
-    }, [groupView, groupItems, listItems]);
+        const arr = [{ value: "all", label: "전체 월" }];
+        for (let m = 1; m <= 12; m++) arr.push({ value: String(m), label: `${m}월` });
+        return arr;
+    }, []);
 
-    // 그룹 뷰 묶음
+    // 지역 그룹 묶음 (그룹 뷰용)
     const grouped = useMemo(() => {
         const map = new Map();
         REGIONS.forEach(r => map.set(r.key, []));
@@ -157,23 +201,24 @@ export default function RegionOverviewPage() {
         return map;
     }, [groupItems]);
 
-    // 무한 스크롤 센티넬
-    const sentinelRef = useRef(null);
-    useEffect(() => {
-        if (groupView || viewMode === "map") return; // 단일·리스트에서만
-        const node = sentinelRef.current;
-        if (!node) return;
-        const io = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    loadNextPage();
-                }
-            });
-        }, { rootMargin: "200px 0px" });
-        io.observe(node);
-        return () => io.disconnect();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [groupView, viewMode, loading, hasNext, page]);
+    // 페이징 계산
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const canPrev = page > 0;
+    const canNext = page + 1 < totalPages;
+
+    const goFirst = () => setPage(0);
+    const goPrev = () => setPage(p => Math.max(0, p - 1));
+    const goNext = () => setPage(p => (p + 1 < totalPages ? p + 1 : p));
+    const goLast = () => setPage(totalPages > 0 ? totalPages - 1 : 0);
+
+    const pageNumbers = useMemo(() => {
+        if (totalPages <= 1) return [0];
+        const start = Math.max(0, page - 2);
+        const end = Math.min(totalPages - 1, page + 2);
+        const arr = [];
+        for (let i = start; i <= end; i++) arr.push(i);
+        return arr;
+    }, [page, totalPages]);
 
     // 태그 토글
     const handleTagClick = (tag) => {
@@ -181,23 +226,48 @@ export default function RegionOverviewPage() {
             if (prev.includes(tag)) return prev.filter(t => t !== tag);
             return [...prev, tag];
         });
-        if (!groupView) resetAndLoadFirst();
     };
 
     // 그룹 → 단일 지역 점프
     const jumpToRegion = (k) => {
         setGroupView(false);
         setRegion(k);
-        resetAndLoadFirst();
+        setPage(0);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
+
+    // 날짜/상태 유틸
+    function parseYmdOrIso(s) {
+        const v = String(s || "").replaceAll("-", "");
+        if (/^\d{8}$/.test(v)) {
+            return new Date(Number(v.slice(0, 4)), Number(v.slice(4, 6)) - 1, Number(v.slice(6, 8)));
+        }
+        const d = new Date(s);
+        return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function isOngoing(item, today = new Date()) {
+        const s = parseYmdOrIso(item.startDate);
+        const e = parseYmdOrIso(item.endDate || item.startDate);
+        return !!(s && e && s <= today && today <= e);
+    }
+
+    function isUpcoming(item, today = new Date()) {
+        const s = parseYmdOrIso(item.startDate);
+        return !!(s && s > today);
+    }
+
+    function isPast(item, today = new Date()) {
+        const e = parseYmdOrIso(item.endDate || item.startDate);
+        return !!(e && e < today);
+    }
 
     return (
         <div className="overview-wrap">
             <div className="overview-header">
                 <h1>한눈에 보기</h1>
                 <p className="sub">
-                    지역별 축제를 빠르게 탐색하세요. (인기·최신, 상태/월/태그, 리스트·지도, 서버 페이징)
+                    지역별 축제를 빠르게 탐색하세요. (페이지네이션 / 인기·최신 / 상태·월 / 리스트·지도)
                 </p>
             </div>
 
@@ -205,8 +275,16 @@ export default function RegionOverviewPage() {
             <div className="toolbar">
                 <div className="search">
                     <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        value={queryDraft}
+                        onChange={(e) => {
+                            setQueryDraft(e.target.value);
+                        }}
+                        onCompositionStart={() => { setIsComposing(true); }}
+                        onCompositionEnd={(e) => {
+                            setIsComposing(false);
+                            // 조합 종료 문자열로 동기화 (동일값이어도 아래 useEffect가 재실행됨)
+                            setQueryDraft(e.target.value);
+                        }}
                         placeholder="축제명, 지역, 태그로 검색"
                         aria-label="축제 검색"
                     />
@@ -253,11 +331,11 @@ export default function RegionOverviewPage() {
                         onChange={(e) => setSort(e.target.value)}
                         aria-label="정렬"
                     >
-                        <option value="popular">인기순</option>
+                        <option value="default">기본</option>  {/* : 진행중(종료일↑) → 예정(시작일↑) */}
                         <option value="latest">최신순</option>
+                        <option value="popular">인기순</option>
                     </select>
 
-                    {/* 상태 드롭다운(버튼 탭 → select로 변경) */}
                     <select
                         className="select"
                         value={statusFilter}
@@ -271,7 +349,6 @@ export default function RegionOverviewPage() {
                         <option value="past">종료</option>
                     </select>
 
-                    {/* 월 필터 (퀵 버튼 제거, 드롭다운만 유지) */}
                     <select
                         className="select"
                         value={monthFilter}
@@ -280,13 +357,18 @@ export default function RegionOverviewPage() {
                         title="월별"
                     >
                         {monthOptions.map(m => (
-                            <option key={m} value={m}>
-                                {m === "all" ? "전체 월" : m}
-                            </option>
+                            <option key={m.value} value={m.value}>{m.label}</option>
                         ))}
                     </select>
-
-                    {/* 페이지 크기 드롭다운 제거됨 */}
+                    {/* ✅ 종료 포함 토글 */}
+                    <label className="toggle past-toggle" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                        <input
+                            type="checkbox"
+                            checked={includePast}
+                            onChange={(e) => setIncludePast(e.target.checked)}
+                        />
+                        종료 포함
+                    </label>
                 </div>
             </div>
 
@@ -318,60 +400,47 @@ export default function RegionOverviewPage() {
             )}
 
             {/* 본문 */}
-            {loading && groupView ? (
+            {loading && (
                 <div className="skeleton-grid">
                     {Array.from({ length: 8 }).map((_, i) => (
                         <div className="skeleton-card" key={i} />
                     ))}
                 </div>
-            ) : (
-                <>
-                    {groupView ? (
-                        <div className="group-stack">
-                            {REGIONS.map(r => {
-                                const list = (grouped.get(r.key) || []);
-                                if (list.length === 0) return null;
-                                return (
-                                    <section className="region-section" key={r.key} id={`section-${r.key}`}>
-                                        <div className="region-head">
-                                            <h2>{r.label} <span className="count-badge">{list.length}</span></h2>
-                                            <button className="link-more" onClick={() => jumpToRegion(r.key)}>
-                                                더 보기 →
-                                            </button>
-                                        </div>
-                                        {viewMode === "map" ? (
-                                            <MapView items={list} />
-                                        ) : (
-                                            <div className="card-grid">
-                                                {list.slice(0, 8).map(f => (
-                                                    <RegionFestivalCard
-                                                        key={f.id}
-                                                        festival={f}
-                                                        onTagClick={handleTagClick}
-                                                        isScrapped={isScrapped}
-                                                        onToggleScrap={toggleScrap}
-                                                    />
-                                                ))}
-                                            </div>
-                                        )}
-                                    </section>
-                                );
-                            })}
-                            {groupItems.length === 0 && (
-                                <EmptyState />
-                            )}
-                        </div>
-                    ) : (
-                        <>
-                            {/* 단일 모드 */}
-                            {listItems.length === 0 && !loading ? (
-                                <EmptyState />
-                            ) : viewMode === "map" ? (
-                                <MapView items={listItems} />
-                            ) : (
-                                <>
+            )}
+
+            {!loading && groupView && (
+                <div className="group-stack">
+                    {REGIONS.map(r => {
+                        const list = (grouped.get(r.key) || []);
+                        if (list.length === 0) return null;
+                        return (
+                            <section className="region-section" key={r.key} id={`section-${r.key}`}>
+                                <div className="region-head">
+                                    {(() => {
+                                        const ongoingCount = list.filter(it => isOngoing(it)).length;
+                                        const upcomingCount = list.filter(it => isUpcoming(it)).length;
+                                        const pastCount = includePast ? list.filter(it => isPast(it)).length : 0;
+                                        return (
+                                            <h2>
+                                                {r.label}
+                                                <span className="count-badge" title="전체">총 {list.length}</span>
+                                                <span className="count-badge ongoing" title="진행중">진행 {ongoingCount}</span>
+                                                <span className="count-badge upcoming" title="예정">예정 {upcomingCount}</span>
+                                                {includePast && (
+                                                    <span className="count-badge past" title="종료">종료 {pastCount}</span>
+                                                )}
+                                            </h2>
+                                        );
+                                    })()}
+                                    <button className="link-more" onClick={() => jumpToRegion(r.key)}>
+                                        더 보기 →
+                                    </button>
+                                </div>
+                                {viewMode === "map" ? (
+                                    <MapView items={list} />
+                                ) : (
                                     <div className="card-grid">
-                                        {listItems.map(f => (
+                                        {list.slice(0, 8).map(f => (
                                             <RegionFestivalCard
                                                 key={f.id}
                                                 festival={f}
@@ -381,30 +450,59 @@ export default function RegionOverviewPage() {
                                             />
                                         ))}
                                     </div>
+                                )}
+                            </section>
+                        );
+                    })}
+                    {groupItems.length === 0 && <EmptyState />}
+                </div>
+            )}
 
-                                    {/* 무한 스크롤 센티넬 */}
-                                    {hasNext && (
-                                        <div ref={sentinelRef} className="infinite-sentinel" aria-hidden />
-                                    )}
+            {!loading && !groupView && (
+                <>
+                    {items.length === 0 ? (
+                        <EmptyState />
+                    ) : viewMode === "map" ? (
+                        <MapView items={items} />
+                    ) : (
+                        <>
+                            <div className="card-grid">
+                                {items.map(f => (
+                                    <RegionFestivalCard
+                                        key={f.id}
+                                        festival={f}
+                                        onTagClick={handleTagClick}
+                                        isScrapped={isScrapped}
+                                        onToggleScrap={toggleScrap}
+                                    />
+                                ))}
+                            </div>
 
-                                    {/* 안전망: 더 보기 버튼 & 로딩 표시 */}
-                                    <div className="more-wrap">
-                                        {hasNext && (
-                                            <button className="btn ghost" onClick={() => loadNextPage()}>
-                                                더 보기
-                                            </button>
-                                        )}
-                                        {loading && (
-                                            <span style={{ marginLeft: 8, color: "#666" }}>불러오는 중…</span>
-                                        )}
-                                    </div>
+                            {/* 페이징 바 */}
+                            <nav className="pagination-bar">
+                                <button className="pg-btn" disabled={!canPrev} onClick={goFirst}>{'<<'}</button>
+                                <button className="pg-btn" disabled={!canPrev} onClick={goPrev}>{'<'}</button>
 
-                                    {/* 총 개수 안내(페이지 크기 표기 제거) */}
-                                    <div style={{ textAlign: "center", color: "#666", marginTop: 8 }}>
-                                        총 {total}개 중 {listItems.length}개 표시
-                                    </div>
-                                </>
-                            )}
+                                {pageNumbers[0] > 0 && <span className="pg-ellipsis">…</span>}
+                                {pageNumbers.map(pn => (
+                                    <button
+                                        key={pn}
+                                        className={`pg-num ${pn === page ? "active" : ""}`}
+                                        onClick={() => setPage(pn)}
+                                    >
+                                        {pn + 1}
+                                    </button>
+                                ))}
+                                {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && <span className="pg-ellipsis">…</span>}
+
+                                <button className="pg-btn" disabled={!canNext} onClick={goNext}>{'>'}</button>
+                                <button className="pg-btn" disabled={!canNext} onClick={goLast}>{'>>'}</button>
+                            </nav>
+
+                            {/* 총 개수 안내 */}
+                            <div className="total-hint">
+                                총 {total.toLocaleString()}개 중 {(items?.length ?? 0).toLocaleString()}개 표시
+                            </div>
                         </>
                     )}
                 </>
