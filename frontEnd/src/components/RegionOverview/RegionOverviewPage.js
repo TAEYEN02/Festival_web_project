@@ -9,6 +9,7 @@ import MapView from "./MapView";
 import useScrap from "./useScrap";
 
 const PAGE_SIZE = 20; // 페이지 크기 고정(드롭다운 제거)
+const DEBOUNCE_MS = 250; // 
 
 export default function RegionOverviewPage() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -26,7 +27,6 @@ export default function RegionOverviewPage() {
     const [selectedTags, setSelectedTags] = useState([]);    // 다중 태그
     const [viewMode, setViewMode] = useState("list");        // 'list' | 'map'
     const [includePast, setIncludePast] = useState(false); // 종료 포함 토글
-    const [filtersOpen, setFiltersOpen] = useState(true);
 
     // 데이터
     const [loading, setLoading] = useState(false);
@@ -37,8 +37,11 @@ export default function RegionOverviewPage() {
     // 페이징
     const [page, setPage] = useState(0);             // 0-based
 
-
     const requestSeqRef = React.useRef(0);
+    const [recentSearches, setRecentSearches] = useState([]);
+
+    const POPULAR_TAGS = ["야시장", "불꽃놀이", "벚꽃", "음악", "지역특산", "축제한정"];
+    const [recentTagChips, setRecentTagChips] = useState([]);
 
     // URL → 상태 복원
     useEffect(() => {
@@ -51,7 +54,7 @@ export default function RegionOverviewPage() {
         const initTags = (searchParams.get("tags") ?? "")
             .split(",").map(s => s.trim()).filter(Boolean);
         const initMode = searchParams.get("mode") ?? "list";
-        const initIncludePast = (searchParams.get("includePast") ?? "0") === "1"; //
+        const initIncludePast = (searchParams.get("includePast") ?? "0") === "1";
 
         setQuery(initQ);
         setQueryDraft(initQ);
@@ -77,7 +80,7 @@ export default function RegionOverviewPage() {
             tags: selectedTags.join(","),
             mode: viewMode,
             includePast: includePast ? "1" : "0",
-        });
+        }, { replace: true });    // ✅ 히스토리 덮어쓰기
     }, [query, region, sort, groupView, statusFilter, monthFilter, selectedTags, viewMode, includePast, setSearchParams]);
 
     // 그룹(전체) 모드: 한 번에 가져와서 섹션별 8개씩
@@ -175,13 +178,37 @@ export default function RegionOverviewPage() {
     }, [groupView, query, region, sort, statusFilter, monthFilter, selectedTags, includePast]);
 
     useEffect(() => {
-        // 한글 조합 중에는 디바운스 정지
-        if (isComposing) return;
+        const v = queryDraft.trim();
+
+        // ✅ 입력을 싹 지웠을 때는 지연 없이 즉시 반영
+        if (v === "") {
+            setQuery("");
+            return;
+        }
+
+        // ✅ 그 외에는 250ms 디바운스
         const t = setTimeout(() => {
-            setQuery(queryDraft.trim());
-        }, 250);
+            setQuery(v);
+        }, DEBOUNCE_MS);
+
         return () => clearTimeout(t);
-    }, [queryDraft, isComposing]);
+    }, [queryDraft]);
+
+    // mount 시 최근 태그 복원
+    useEffect(() => {
+        const saved = localStorage.getItem("recentTagChips");
+        if (saved) {
+            try { setRecentTagChips(JSON.parse(saved)); } catch (_) { }
+        }
+    }, []);
+
+    // mount 시 최근 검색어 복원
+    useEffect(() => {
+        const saved = localStorage.getItem("recentSearches");
+        if (saved) {
+            try { setRecentSearches(JSON.parse(saved)); } catch (_) { }
+        }
+    }, []);
 
     // 월 옵션: 고정(간단)
     const monthOptions = useMemo(() => {
@@ -223,8 +250,17 @@ export default function RegionOverviewPage() {
     // 태그 토글
     const handleTagClick = (tag) => {
         setSelectedTags((prev) => {
-            if (prev.includes(tag)) return prev.filter(t => t !== tag);
-            return [...prev, tag];
+            const on = prev.includes(tag);
+            const nextSel = on ? prev.filter(t => t !== tag) : [...prev, tag];
+            // 선택 ON 되는 순간에만 최근 태그 업데이트
+            if (!on) {
+                setRecentTagChips((prevChips) => {
+                    const next = [tag, ...prevChips.filter(x => x !== tag)].slice(0, 12);
+                    localStorage.setItem("recentTagChips", JSON.stringify(next));
+                    return next;
+                });
+            }
+            return nextSel;
         });
     };
 
@@ -262,6 +298,51 @@ export default function RegionOverviewPage() {
         return !!(e && e < today);
     }
 
+    const clearSearchNow = () => {
+        // 입력과 실제 검색어를 모두 즉시 클리어 → 결과 즉시 리셋
+        setQueryDraft("");
+        setQuery("");
+    };
+
+    const handleSearchKeyDown = (e) => {
+        if (e.key === "Enter") {
+            // IME 조합 중 Enter는 후보 확정이므로 검색 트리거 금지
+            if (isComposing) return;
+            e.preventDefault();
+
+            const v = queryDraft.trim();
+            setQuery(v); // 디바운스 무시 즉시 검색
+
+            // ✅ 최근 검색어 저장 (중복 제거, 최대 10개)
+            if (v) {
+                setRecentSearches((prev) => {
+                    const next = [v, ...prev.filter((x) => x !== v)].slice(0, 10);
+                    localStorage.setItem("recentSearches", JSON.stringify(next));
+                    return next;
+                });
+            }
+            return;
+        }
+        if (e.key === "Escape") {
+            // ESC로 즉시 비우고 결과도 즉시 초기화
+            e.preventDefault();
+            clearSearchNow();
+        }
+    };
+
+    // 태그 개별 삭제
+    const removeRecentSearch = (value) => {
+        setRecentSearches((prev) => {
+            const next = prev.filter((x) => x !== value);
+            if (next.length) {
+                localStorage.setItem("recentSearches", JSON.stringify(next));
+            } else {
+                localStorage.removeItem("recentSearches");
+            }
+            return next;
+        });
+    };
+
     return (
         <div className="overview-wrap">
             <div className="overview-header">
@@ -285,9 +366,64 @@ export default function RegionOverviewPage() {
                             // 조합 종료 문자열로 동기화 (동일값이어도 아래 useEffect가 재실행됨)
                             setQueryDraft(e.target.value);
                         }}
+                        onKeyDown={handleSearchKeyDown}
                         placeholder="축제명, 지역, 태그로 검색"
                         aria-label="축제 검색"
                     />
+                    {queryDraft && (
+                        <button
+                            type="button"
+                            className="search-clear-btn"
+                            onClick={clearSearchNow}
+                            aria-label="검색어 지우기"
+                            title="검색어 지우기"
+                            style={{ marginLeft: 8, display: queryDraft ? "inline-block" : "none" }}
+                        >
+                            ✕
+                        </button>
+                    )}
+                    {/* 🔄 미니 로딩 인디케이터 (요청 중일 때만 노출) */}
+                    {loading && (
+                        <span className="mini-loading" role="status" aria-live="polite" aria-label="검색 중">
+                            <i className="dot"></i><i className="dot"></i><i className="dot"></i>
+                        </span>
+                    )}
+                    {/* 최근 검색어 chip */}
+                    {recentSearches.length > 0 && (
+                        <div className="recent-searches">
+                            {recentSearches.map((s, i) => (
+                                <div key={i} className="chip recent" role="group" aria-label={`최근 검색어 ${s}`}>
+                                    <button
+                                        type="button"
+                                        className="chip-text"
+                                        onClick={() => { setQueryDraft(s); setQuery(s); }}
+                                        aria-label={`${s} 검색`}
+                                        title={`${s} 검색`}
+                                    >
+                                        {s}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="chip-x"
+                                        onClick={(e) => { e.stopPropagation(); removeRecentSearch(s); }}
+                                        aria-label={`최근 검색어 ${s} 삭제`}
+                                        title="삭제"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                className="chip clear"
+                                onClick={() => {
+                                    setRecentSearches([]);
+                                    localStorage.removeItem("recentSearches");
+                                }}
+                            >
+                                전체 삭제 ✕
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="controls">
@@ -372,6 +508,48 @@ export default function RegionOverviewPage() {
                 </div>
             </div>
 
+            <div className="tag-suggest">
+                <div className="tag-row">
+                    <strong className="tag-title">인기 태그</strong>
+                    <div className="tag-chips">
+                        {POPULAR_TAGS.map((t) => (
+                            <button
+                                key={`pop-${t}`}
+                                className={`chip ${selectedTags.includes(t) ? "on" : ""}`}
+                                onClick={() => handleTagClick(t)}
+                                title={`태그 '${t}' 적용`}
+                            >
+                                #{t}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                {recentTagChips.length > 0 && (
+                    <div className="tag-row">
+                        <strong className="tag-title">최근 태그</strong>
+                        <div className="tag-chips">
+                            {recentTagChips.map((t) => (
+                                <button
+                                    key={`recent-${t}`}
+                                    className={`chip ${selectedTags.includes(t) ? "on" : ""}`}
+                                    onClick={() => handleTagClick(t)}
+                                    title={`태그 '${t}' 적용`}
+                                >
+                                    #{t}
+                                </button>
+                            ))}
+                            <button
+                                className="chip clear"
+                                onClick={() => { setRecentTagChips([]); localStorage.removeItem("recentTagChips"); }}
+                                title="최근 태그 비우기"
+                            >
+                                최근 비우기 ✕
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {!groupView && (
                 <RegionFilter value={region} onChange={(v) => setRegion(v)} />
             )}
@@ -447,6 +625,7 @@ export default function RegionOverviewPage() {
                                                 onTagClick={handleTagClick}
                                                 isScrapped={isScrapped}
                                                 onToggleScrap={toggleScrap}
+                                                query={query}
                                             />
                                         ))}
                                     </div>
@@ -474,6 +653,7 @@ export default function RegionOverviewPage() {
                                         onTagClick={handleTagClick}
                                         isScrapped={isScrapped}
                                         onToggleScrap={toggleScrap}
+                                        query={query}
                                     />
                                 ))}
                             </div>

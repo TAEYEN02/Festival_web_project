@@ -1,5 +1,4 @@
 import axios from "axios";
-import { useEffect, useState, useRef } from "react";
 
 /* =========================
    0) axios 인스턴스 & 공통 파라미터
@@ -33,8 +32,7 @@ function buildCommonParams() {
         serviceKey,
         MobileOS: MOBILE_OS,
         MobileApp: "festivalGo",
-        _type: "json",
-        arrange: DEFAULT_ARRANGE
+        _type: "json"
     };
 }
 
@@ -168,23 +166,23 @@ function sortOngoingThenUpcoming(list) {
     return [...ongoing, ...upcoming];
 }
 
-// 시작일 오름차순
-function sortByStartDateAsc(list) {
-    return [...list].sort((a, b) => {
-        const ad = parseYmdOrIso(a.startDate || "9999-12-31");
-        const bd = parseYmdOrIso(b.startDate || "9999-12-31");
-        return (ad?.getTime() ?? Infinity) - (bd?.getTime() ?? Infinity);
-    });
-}
+// // 시작일 오름차순
+// function sortByStartDateAsc(list) {
+//     return [...list].sort((a, b) => {
+//         const ad = parseYmdOrIso(a.startDate || "9999-12-31");
+//         const bd = parseYmdOrIso(b.startDate || "9999-12-31");
+//         return (ad?.getTime() ?? Infinity) - (bd?.getTime() ?? Infinity);
+//     });
+// }
 
-// 종료일 오름차순
-function sortByEndDateAsc(list) {
-    return [...list].sort((a, b) => {
-        const ad = parseYmdOrIso(a.endDate || a.startDate || "9999-12-31");
-        const bd = parseYmdOrIso(b.endDate || b.startDate || "9999-12-31");
-        return (ad?.getTime() ?? Infinity) - (bd?.getTime() ?? Infinity);
-    });
-}
+// // 종료일 오름차순
+// function sortByEndDateAsc(list) {
+//     return [...list].sort((a, b) => {
+//         const ad = parseYmdOrIso(a.endDate || a.startDate || "9999-12-31");
+//         const bd = parseYmdOrIso(b.endDate || b.startDate || "9999-12-31");
+//         return (ad?.getTime() ?? Infinity) - (bd?.getTime() ?? Infinity);
+//     });
+// }
 
 // 기본 정렬: 진행중→예정(요구사항)
 function applyClientSort(list, sort, includePast = false) {
@@ -263,7 +261,6 @@ async function callSearchFestival({ arrange, dateRange, areaCode, numOfRows = 10
         ...(areaCode ? { areaCode } : {})
     };
     const res = await api.get("/searchFestival2", { params, signal });
-    console.log("res :::", res);
     const items = pickArraySafely(res.data);
 
     // ✅ 캐싱
@@ -297,7 +294,7 @@ function normalizeItem(raw) {
         ticketUrl: "",
         lat: Number.isNaN(lat) ? undefined : lat,
         lng: Number.isNaN(lng) ? undefined : lng,
-        description: "",
+        description: (raw.overview || "").trim(),
         tel: raw.tel || "",
         modified: toDateTimeStr(raw.modifiedtime)
     };
@@ -327,7 +324,7 @@ function toDateTimeStr(v) {
     return "";
 }
 
-function mapAreaCodeToRegion(areaCode, address = "") {
+function mapAreaCodeToRegion(areaCode) {
     const code = Number(areaCode);
     if (REGION_TO_AREA_CODES.seoul.includes(code)) return "seoul";
     if (REGION_TO_AREA_CODES.incheon.includes(code)) return "incheon";
@@ -429,7 +426,7 @@ export async function fetchFestivals({
     list = applyRegionFilter(list, region);
     list = applyTagsFilter(list, tags);
 
-    list = applyQueryFilter(list, query); 
+    list = applyQueryFilter(list, query);
 
     // 기본: 진행중(종료일↑) → 예정(시작일↑)
     list = applyClientSort(list, sort, includePast);
@@ -476,7 +473,7 @@ export async function fetchFestivalsPage({
     filtered = applyRegionFilter(filtered, region);
     filtered = applyTagsFilter(filtered, tags);
 
-    filtered = applyQueryFilter(filtered, query); 
+    filtered = applyQueryFilter(filtered, query);
 
     // 기본: 진행중(종료일↑) → 예정(시작일↑)
     filtered = applyClientSort(filtered, sort, includePast);
@@ -493,18 +490,30 @@ export async function fetchFestivalsPage({
    8) 상세 조회
    ========================= */
 export async function fetchFestivalById(id) {
-    const params = {
-        ...buildCommonParams(),
-        contentId: id,
-        defaultYN: "Y",
-        overviewYN: "Y",
-        addrinfoYN: "Y",
-        mapinfoYN: "Y",
-        imageYN: "N"
-    };
-    const res = await api.get("/detailCommon2", { params });
-    const item = pickOneSafely(res.data);
-    return item ? normalizeItem(item) : null;
+    // 1) 공통 상세(detailCommon2) + 날짜(detailIntro2) 병렬 호출
+    const paramsCommon = { ...buildCommonParams(), contentId: id };
+    const paramsIntro  = { ...buildCommonParams(), contentId: id, contentTypeId: 15 };
+
+    const [resCommon, resIntro] = await Promise.all([
+        api.get("/detailCommon2", { params: paramsCommon }),
+        api.get("/detailIntro2",  { params: paramsIntro })
+    ]);
+
+    // 2) 아이템 추출
+    const commonItem = pickOneSafely(resCommon.data);
+    const introItem  = pickOneSafely(resIntro.data);
+
+    console.log("regionFestival commonItem ::", commonItem);
+    console.log("regionFestival introItem ::", introItem);
+
+    if (!commonItem && !introItem) return null;
+
+    // 3) 병합(날짜 필드 포함)
+    //    normalizeItem은 eventstartdate/eventenddate를 우선 사용하므로 intro의 날짜를 우선 덮어씀
+    const mergedRaw = { ...(commonItem || {}), ...(introItem || {}) };
+
+    // 4) 매핑
+    return normalizeItem(mergedRaw);
 }
 
 /* =========================

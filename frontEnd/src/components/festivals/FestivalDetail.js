@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { fetchFestivalById, fetchRelatedFestivals } from "../../api/regionFestival";
-import { formatDateRange, isOngoing, isUpcoming, isPast } from "../../util/date"
-import "../RegionOverview/RegionOverview.css"; // 카드/버튼 재활용
+import { fetchFestivalById /*, fetchRelatedFestivals */ } from "../../api/regionFestival";
+import { formatDateRange, isOngoing, isUpcoming, isPast } from "../../util/date";
+import "../RegionOverview/RegionOverview.css";
 import "./FestivalDetail.css";
 import MapView from "../RegionOverview/MapView";
 import useScrap from "../RegionOverview/useScrap";
@@ -22,24 +22,36 @@ export default function FestivalDetail() {
         (async () => {
             try {
                 setLoading(true);
+
                 const data = await fetchFestivalById(id);
                 if (!mounted) return;
+
                 if (!data) {
                     setError("해당 ID의 축제 정보를 찾을 수 없어요.");
                     setFestival(null);
                     return;
                 }
-                setFestival(data);
+
+                // 이미지/좌표 등 안전 보정
+                const safe = {
+                    ...data,
+                    imageUrl: data.imageUrl || "",
+                    lat: typeof data.lat === "number" ? data.lat : undefined,
+                    lng: typeof data.lng === "number" ? data.lng : undefined,
+                    description: (data.description || "").trim(),
+                };
+
+                setFestival(safe);
                 setError("");
 
-                // 연관 축제
-                const rel = await fetchRelatedFestivals({ region: data.region, excludeId: data.id, limit: 8 });
-                if (!mounted) return;
-                setRelated(rel);
+                // 연관 축제는 필요 시 해제
+                // const rel = await fetchRelatedFestivals({ region: safe.region, excludeId: safe.id, limit: 8 });
+                // if (!mounted) return;
+                // setRelated(rel);
             } catch (e) {
-                console.error(e);
                 if (!mounted) return;
-                setError("축제 상세를 불러오는 중 문제가 발생했어요.");
+                setError(e?.message || "상세 조회 중 오류가 발생했습니다.");
+                setFestival(null);
             } finally {
                 if (mounted) setLoading(false);
             }
@@ -90,14 +102,21 @@ export default function FestivalDetail() {
         <div className="detail-wrap">
             {/* 히어로 영역 */}
             <div className="detail-hero">
-                <img
-                    src={festival.imageUrl}
-                    alt={festival.name}
-                    onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "https://placehold.co/1200x540?text=Festival";
-                    }}
-                />
+                {/* {festival.imageUrl ? (
+                    <img
+                        src={festival.imageUrl}
+                        alt={festival.name}
+                        onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "https://placehold.co/1200x540?text=Festival";
+                        }}
+                    />
+                ) : (
+                    <img
+                        src="https://placehold.co/1200x540?text=Festival"
+                        alt="Festival"
+                    />
+                )} */}
                 <button
                     className={`scrap-fab ${isScrapped(festival.id) ? "on" : ""}`}
                     onClick={() => toggleScrap(festival.id)}
@@ -112,7 +131,9 @@ export default function FestivalDetail() {
             <div className="detail-head">
                 <h1 className="detail-title">{festival.name}</h1>
                 <div className="detail-meta">
-                    <span className="detail-date">{formatDateRange(festival.startDate, festival.endDate)}</span>
+                    <span className="detail-date">
+                        {formatDateRange(festival.startDate, festival.endDate) || "일정 미정"}
+                    </span>
                     {status && <span className={`status-badge ${status.key}`}>{status.label}</span>}
                 </div>
                 <div className="detail-tags">
@@ -142,21 +163,51 @@ export default function FestivalDetail() {
                         )}
                     </div>
 
-                    {/* 댓글/리뷰 예정 자리 */}
+                    {/* 댓글/리뷰 + 지도 */}
                     <div className="detail-comments">
                         <h2>댓글/리뷰 (예정)</h2>
                         <div className="pending">
                             로그인 + 서버 API 연동 후 제공될 예정입니다.
                         </div>
+
+                        {/* ⬇️ 여기 지도 배치 */}
+                        {(festival.lat && festival.lng) ? (
+                            <div className="comments-map" style={{ marginTop: 16 }}>
+                                <h3 style={{ margin: "0 0 8px" }}>지도</h3>
+                                <div className="comments-map-box" style={{ height: 320 }}>
+                                    <MapView
+                                        lat={festival.lat}
+                                        lng={festival.lng}
+                                        markers={[{ lat: festival.lat, lng: festival.lng, label: festival.name }]}
+                                        height={320}
+                                        zoom={14}
+                                    />
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
                 </section>
 
-                {/* 우: 지도/기본정보 */}
+                {/* 우측 aside의 첫 번째 카드 교체: 지도 → 포스터 */}
                 <aside className="detail-aside">
                     <div className="aside-card">
-                        <h3>위치</h3>
-                        <div className="aside-map">
-                            <MapView items={[festival]} />
+                        <h3>포스터</h3>
+                        <div className="aside-poster">
+                            {festival.imageUrl ? (
+                                <img
+                                    src={festival.imageUrl}
+                                    alt={festival.name}
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = "https://placehold.co/480x320?text=Festival+Poster";
+                                    }}
+                                />
+                            ) : (
+                                <img
+                                    src="https://placehold.co/480x320?text=Festival+Poster"
+                                    alt="Festival Poster"
+                                />
+                            )}
                         </div>
                         <div className="aside-addr">{festival.address || "-"}</div>
                     </div>
@@ -165,8 +216,10 @@ export default function FestivalDetail() {
                         <h3>기본 정보</h3>
                         <ul className="kv">
                             <li><span>지역</span><b>{festival.region}</b></li>
-                            <li><span>기간</span><b>{formatDateRange(festival.startDate, festival.endDate)}</b></li>
+                            <li><span>기간</span><b>{formatDateRange(festival.startDate, festival.endDate) || "-"}</b></li>
                             <li><span>인기도</span><b>{festival.popularity ?? "-"}</b></li>
+                            {festival.tel ? <li><span>문의</span><b>{festival.tel}</b></li> : null}
+                            {festival.modified ? <li><span>수정일</span><b>{festival.modified}</b></li> : null}
                         </ul>
                     </div>
                 </aside>
@@ -191,7 +244,7 @@ export default function FestivalDetail() {
                             <Link key={r.id} to={`/festival/${r.id}`} className="related-card">
                                 <div className="thumb">
                                     <img
-                                        src={r.imageUrl}
+                                        src={r.imageUrl || "https://placehold.co/320x180?text=Festival"}
                                         alt={r.name}
                                         loading="lazy"
                                         onError={(e) => {

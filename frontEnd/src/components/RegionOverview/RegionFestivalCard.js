@@ -1,7 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { formatDateRange, isOngoing, isUpcoming, isPast } from "../../util/date.js";
 
-export default function FestivalCard({ festival, onTagClick, isScrapped, onToggleScrap }) {
+function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function highlightText(text, keyword) {
+    if (!keyword) return text;
+    const safe = escapeRegExp(String(keyword));
+    if (!safe) return text;
+    const re = new RegExp(`(${safe})`, "gi");
+    const parts = String(text ?? "").split(re);
+    return parts.map((part, i) => (re.test(part) ? <mark key={i}>{part}</mark> : part));
+}
+
+export default function FestivalCard({ festival, onTagClick, isScrapped, onToggleScrap, query = "" }) {
     const {
         id,
         name,
@@ -35,8 +47,13 @@ export default function FestivalCard({ festival, onTagClick, isScrapped, onToggl
     };
 
     return (
-        <div className="festival-card" onClick={goDetail} role="button" tabIndex={0}
-            onKeyDown={(e) => { if (e.key === "Enter") goDetail(); }}>
+        <div
+            className="festival-card"
+            onClick={goDetail}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === "Enter") goDetail(); }}
+        >
             <div className="festival-thumb">
                 <img
                     src={imageUrl}
@@ -73,13 +90,25 @@ export default function FestivalCard({ festival, onTagClick, isScrapped, onToggl
             </div>
 
             <div className="festival-body">
-                <h3 className="festival-title" title={name}>{name}</h3>
+                <h3 className="festival-title" title={name}>
+                    {highlightText(name, query)}
+                </h3>
                 <div className="festival-date">{formatDateRange(startDate, endDate)}</div>
-                {address && <div className="festival-addr" title={address}>{address}</div>}
+                {address && (
+                    <div className="festival-addr" title={address}>
+                        {highlightText(address, query)}
+                    </div>
+                )}
                 <div className="festival-actions">
                     <button className="btn ghost" onClick={handleDirections} aria-label="길찾기 열기">길찾기</button>
                     {ticketUrl && (
-                        <a className="btn primary" href={ticketUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                        <a
+                            className="btn primary"
+                            href={ticketUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             예매하기
                         </a>
                     )}
