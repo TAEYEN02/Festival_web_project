@@ -543,7 +543,7 @@ export async function fetchRelatedFestivals({ region, excludeId, limit = 8 } = {
 export async function fetchNearbyFestivals({
     lat,
     lng,
-    radius = 10000,
+    radius = 3000,
     excludeId,
     limit = 20,
     signal
