@@ -1,144 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { Search, Filter, MessageSquare, Clock, CheckCircle, Eye, Reply, RefreshCw, User, Calendar, AlertCircle, X, Send } from 'lucide-react';
+import {
+  Search, Filter, MessageSquare, Clock, CheckCircle, Eye, Reply, RefreshCw,
+  User, Calendar, AlertCircle, X, Send, Download, Trash2, MoreHorizontal
+} from 'lucide-react';
+import * as adminAPI from '../../api/admin';
 
-// 실제 API 호출 함수들
-const adminAPI = {
-  fetchInquiries: async (page = 0, size = 10, status = null) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다.');
-      }
-
-      let url = `/api/admin/inquiries?page=${page}&size=${size}&sort=createdAt,desc`;
-      
-      if (status && status !== 'all') {
-        url += `&status=${status}`;
-      }
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('문의 목록 조회 실패:', error);
-      throw error;
-    }
-  },
-
-  fetchInquiryDetail: async (id) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다.');
-      }
-
-      const response = await fetch(`/api/admin/inquiries/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        throw new Error('인증이 만료되었습니다.');
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('문의 상세 조회 실패:', error);
-      throw error;
-    }
-  },
-
-  answerInquiry: async (id, answer) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다.');
-      }
-
-      const response = await fetch(`/api/admin/inquiries/${id}/answer`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ answer })
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        throw new Error('인증이 만료되었습니다.');
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('문의 답변 등록 실패:', error);
-      throw error;
-    }
-  },
-
-  fetchDashboardStats: async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다.');
-      }
-
-      const response = await fetch('/api/admin/dashboard', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        throw new Error('인증이 만료되었습니다.');
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('대시보드 통계 조회 실패:', error);
-      throw error;
-    }
-  }
-};
-
-// Styled Components
+// Styled Components (기존과 동일하므로 생략...)
 const Container = styled.div`
   padding: 1.5rem;
   min-height: 100vh;
@@ -166,59 +34,92 @@ const HeaderLeft = styled.div``;
 const Title = styled.h1`
   font-size: 2rem;
   font-weight: bold;
-  color: black;
+  color: #1f2937;
   margin: 0 0 0.5rem 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 `;
 
 const Subtitle = styled.p`
-  color: black;
+  color: #6b7280;
   margin: 0;
   font-size: 1rem;
 `;
 
-const RefreshButton = styled.button`
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+`;
+
+const ActionButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(12px);
-  color: white;
-  border: 1px solid rgba(255,255,255,0.3);
-  cursor: pointer;
+  border-radius: 0.5rem;
   font-weight: 500;
+  cursor: pointer;
   transition: all 0.2s;
+  border: none;
   
-  &:hover {
-    background: rgba(255,255,255,0.3);
-    transform: translateY(-2px);
-  }
+  ${({ $variant }) => {
+    switch ($variant) {
+      case 'primary':
+        return `
+          background: #2563eb;
+          color: white;
+          &:hover { background: #1d4ed8; transform: translateY(-1px); }
+        `;
+      case 'secondary':
+        return `
+          background: white;
+          color: #374151;
+          border: 1px solid #d1d5db;
+          &:hover { background: #f9fafb; transform: translateY(-1px); }
+        `;
+      case 'danger':
+        return `
+          background: #dc2626;
+          color: white;
+          &:hover { background: #b91c1c; transform: translateY(-1px); }
+        `;
+      default:
+        return `
+          background: #f3f4f6;
+          color: #374151;
+          &:hover { background: #e5e7eb; transform: translateY(-1px); }
+        `;
+    }
+  }}
   
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
   }
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 `;
 
 const StatCard = styled.div`
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(12px);
+  background: white;
   border-radius: 1rem;
   padding: 1.5rem;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   display: flex;
   align-items: center;
   gap: 1rem;
+  transition: all 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  }
 `;
 
 const StatIcon = styled.div`
@@ -226,10 +127,10 @@ const StatIcon = styled.div`
   border-radius: 0.75rem;
   background: ${({ $color }) => {
     switch ($color) {
-      case 'blue': return 'linear-gradient(to right, #60a5fa, #3b82f6)';
-      case 'yellow': return 'linear-gradient(to right, #fbbf24, #f59e0b)';
-      case 'green': return 'linear-gradient(to right, #34d399, #10b981)';
-      default: return 'linear-gradient(to right, #9ca3af, #6b7280)';
+      case 'blue': return 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+      case 'yellow': return 'linear-gradient(135deg, #f59e0b, #d97706)';
+      case 'green': return 'linear-gradient(135deg, #10b981, #059669)';
+      default: return 'linear-gradient(135deg, #6b7280, #4b5563)';
     }
   }};
   color: white;
@@ -251,12 +152,11 @@ const StatLabel = styled.div`
 `;
 
 const FilterSection = styled.div`
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(12px);
+  background: white;
   border-radius: 1rem;
   padding: 1.5rem;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   margin-bottom: 1.5rem;
 `;
 
@@ -270,23 +170,22 @@ const FilterRow = styled.div`
 const SearchContainer = styled.div`
   position: relative;
   flex: 1;
-  min-width: 100px;
-  gap: 100px;
+  min-width: 250px;
 `;
 
 const SearchInput = styled.input`
-  width: 95%;
+  width: 100%;
   padding: 0.75rem 0.75rem 0.75rem 2.5rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
   background: white;
-  margin-right: 10px;
+  transition: all 0.2s;
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
 `;
 
@@ -301,24 +200,24 @@ const SearchIcon = styled.div`
 const Select = styled.select`
   padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
   min-width: 140px;
   background: white;
+  transition: all 0.2s;
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
 `;
 
 const TableContainer = styled.div`
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(12px);
+  background: white;
   border-radius: 1rem;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   overflow: hidden;
 `;
 
@@ -328,8 +227,8 @@ const Table = styled.table`
 `;
 
 const TableHeader = styled.thead`
-  background: linear-gradient(to right, #f8fafc, #f1f5f9);
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
 `;
 
 const TableHeaderCell = styled.th`
@@ -338,18 +237,17 @@ const TableHeaderCell = styled.th`
   font-weight: 600;
   color: #374151;
   font-size: 0.875rem;
-  border-bottom: 1px solid #e5e7eb;
 `;
 
 const TableBody = styled.tbody``;
 
 const TableRow = styled.tr`
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid #f3f4f6;
   transition: all 0.2s;
   cursor: pointer;
   
   &:hover {
-    background: rgba(99,102,241,0.05);
+    background: #f8fafc;
     transform: translateY(-1px);
   }
   
@@ -362,7 +260,6 @@ const TableCell = styled.td`
   padding: 1rem;
   font-size: 0.875rem;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
 `;
 
 const InquiryInfo = styled.div`
@@ -403,7 +300,7 @@ const CategoryBadge = styled.span`
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
-  background: linear-gradient(to right, #e0e7ff, #c7d2fe);
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
   color: #3730a3;
 `;
 
@@ -419,65 +316,19 @@ const StatusBadge = styled.span`
   ${({ $status }) => {
     if ($status === 'PENDING') {
       return `
-        background: linear-gradient(to right, #fef3c7, #fde68a);
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
         color: #92400e;
       `;
     } else if ($status === 'ANSWERED') {
       return `
-        background: linear-gradient(to right, #d1fae5, #a7f3d0);
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
         color: #065f46;
       `;
     } else {
       return `
-        background: linear-gradient(to right, #f3f4f6, #e5e7eb);
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
         color: #6b7280;
       `;
-    }
-  }}
-`;
-
-const ActionButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  
-  ${({ $variant }) => {
-    switch ($variant) {
-      case 'primary':
-        return `
-          background: linear-gradient(to right, #6366f1, #a855f7);
-          color: white;
-          &:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(99,102,241,0.3);
-          }
-        `;
-      case 'secondary':
-        return `
-          background: rgba(255,255,255,0.9);
-          color: #374151;
-          border: 1px solid #d1d5db;
-          &:hover { 
-            background: #f9fafb;
-            transform: translateY(-1px);
-          }
-        `;
-      default:
-        return `
-          background: #f3f4f6;
-          color: #374151;
-          &:hover { 
-            background: #e5e7eb;
-            transform: translateY(-1px);
-          }
-        `;
     }
   }}
 `;
@@ -498,7 +349,56 @@ const LoadingState = styled.div`
   gap: 0.5rem;
 `;
 
-// Modal Styles
+const ErrorState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border-radius: 0.5rem;
+  margin: 1rem;
+`;
+
+const Pagination = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+`;
+
+const PaginationInfo = styled.div`
+  color: #6b7280;
+  font-size: 0.875rem;
+`;
+
+const PaginationButtons = styled.div`
+  display: flex;
+  gap: 0.25rem;
+`;
+
+const PageButton = styled.button`
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  background: ${({ $active }) => ($active ? '#2563eb' : 'white')};
+  color: ${({ $active }) => ($active ? 'white' : '#374151')};
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  
+  &:hover:not(:disabled) {
+    background: ${({ $active }) => ($active ? '#1d4ed8' : '#f9fafb')};
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+// Modal Components (기존과 동일)
 const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
@@ -512,25 +412,22 @@ const ModalOverlay = styled.div`
 `;
 
 const Modal = styled.div`
-  background: rgba(255,255,255,0.98);
-  backdrop-filter: blur(12px);
+  background: white;
   border-radius: 1rem;
   max-width: 800px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255,255,255,0.2);
 `;
 
 const ModalHeader = styled.div`
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to right, #f8fafc, #f1f5f9);
-  border-radius: 1rem 1rem 0 0;
+  background: #f8fafc;
 `;
 
 const ModalTitle = styled.h2`
@@ -550,7 +447,7 @@ const CloseButton = styled.button`
   transition: all 0.2s;
   
   &:hover {
-    background: rgba(0,0,0,0.1);
+    background: #f3f4f6;
     color: #374151;
   }
 `;
@@ -581,18 +478,18 @@ const DetailValue = styled.div`
 `;
 
 const InquiryContent = styled.div`
-  background: linear-gradient(to right, #f9fafb, #f3f4f6);
+  background: #f8fafc;
   border-radius: 0.75rem;
   padding: 1.5rem;
   margin: 1rem 0;
   line-height: 1.6;
   color: #374151;
   white-space: pre-wrap;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
 `;
 
 const AnswerContent = styled.div`
-  background: linear-gradient(to right, #f0f9ff, #e0f2fe);
+  background: #f0f9ff;
   border-radius: 0.75rem;
   padding: 1.5rem;
   margin: 1rem 0;
@@ -604,7 +501,7 @@ const AnswerContent = styled.div`
 `;
 
 const AnswerSection = styled.div`
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid #e5e7eb;
   padding-top: 1.5rem;
   margin-top: 1.5rem;
 `;
@@ -619,11 +516,12 @@ const TextArea = styled.textarea`
   resize: vertical;
   font-family: inherit;
   background: white;
+  transition: all 0.2s;
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
 `;
 
@@ -632,49 +530,14 @@ const ModalActions = styled.div`
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(0,0,0,0.1);
-  background: linear-gradient(to right, #f8fafc, #f1f5f9);
-  border-radius: 0 0 1rem 1rem;
-`;
-
-const Pagination = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 2rem;
-`;
-
-const PaginationButton = styled.button`
-  padding: 0.5rem 0.75rem;
-  border: 1px solid rgba(255,255,255,0.3);
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(12px);
-  color: white;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover:not(:disabled) {
-    background: rgba(255,255,255,0.3);
-    transform: translateY(-1px);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  &.active {
-    background: rgba(255,255,255,0.9);
-    color: #6366f1;
-    font-weight: 600;
-  }
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
 `;
 
 const InquiryManagement = () => {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [answerText, setAnswerText] = useState('');
@@ -686,6 +549,8 @@ const InquiryManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ total: 0, pending: 0, answered: 0 });
   const [refreshing, setRefreshing] = useState(false);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortDir, setSortDir] = useState('desc');
 
   const pageSize = 10;
 
@@ -693,46 +558,67 @@ const InquiryManagement = () => {
   const loadInquiries = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const statusValue = statusFilter === 'all' ? null : statusFilter;
-      const response = await adminAPI.fetchInquiries(page, pageSize, statusValue);
+      const response = await adminAPI.fetchInquiries(
+        page,
+        pageSize,
+        statusValue,
+        searchTerm,
+        sortBy,
+        sortDir
+      );
+
       setInquiries(response.content || []);
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
     } catch (error) {
       console.error('문의 목록 로드 실패:', error);
-      // 오류 발생 시 사용자에게 알림
-      alert('문의 목록을 불러오는데 실패했습니다. 다시 시도해주세요.');
+      setError(error.message);
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter]);
+  }, [page, statusFilter, searchTerm, sortBy, sortDir]);
 
   // 통계 데이터 로드
   const loadStats = useCallback(async () => {
     try {
       const dashboardData = await adminAPI.fetchDashboardStats();
-      
-      // 백엔드 AdminDashboardDTO 구조에 맞게 설정
       setStats({
         total: dashboardData.totalInquiries || 0,
         pending: dashboardData.pendingInquiries || 0,
         answered: dashboardData.answeredInquiries || 0
       });
     } catch (error) {
-      console.error('대시보드 통계 로드 실패:', error);
-      // 통계는 실패해도 기본값 유지
-      setStats({ total: 0, pending: 0, answered: 0 });
+      console.error('통계 로드 실패:', error);
     }
   }, []);
 
   // 새로고침
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadInquiries(), loadStats()]);
-    setRefreshing(false);
+    try {
+      await Promise.all([loadInquiries(), loadStats()]);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  // 초기 로드 및 의존성 변경 시 로드
+  // 데이터 내보내기
+  const handleExport = async () => {
+    try {
+      await adminAPI.exportData('inquiries', 'excel', {
+        status: statusFilter === 'all' ? null : statusFilter,
+        search: searchTerm
+      });
+    } catch (error) {
+      console.error('데이터 내보내기 실패:', error);
+      alert('데이터 내보내기에 실패했습니다.');
+    }
+  };
+
+  // 초기 로드
   useEffect(() => {
     loadInquiries();
   }, [loadInquiries]);
@@ -740,6 +626,14 @@ const InquiryManagement = () => {
   useEffect(() => {
     loadStats();
   }, [loadStats]);
+
+  // 검색 핸들러
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' || e.type === 'click') {
+      setPage(0);
+      loadInquiries();
+    }
+  };
 
   // 문의 상세보기/답변하기
   const handleInquiryClick = async (inquiry) => {
@@ -750,7 +644,7 @@ const InquiryManagement = () => {
       setAnswerText('');
     } catch (error) {
       console.error('문의 상세 정보 로드 실패:', error);
-      alert('문의 정보를 불러오는데 실패했습니다. 다시 시도해주세요.');
+      alert('문의 정보를 불러오는데 실패했습니다.');
     }
   };
 
@@ -761,21 +655,17 @@ const InquiryManagement = () => {
     try {
       setAnswering(true);
       const updatedInquiry = await adminAPI.answerInquiry(selectedInquiry.id, answerText);
-      
-      // 성공 후 상태 업데이트
-      setSelectedInquiry(updatedInquiry);
 
-      // 목록에서도 상태 업데이트
-      setInquiries(prev => prev.map(inquiry => 
-        inquiry.id === selectedInquiry.id 
+      setSelectedInquiry(updatedInquiry);
+      setInquiries(prev => prev.map(inquiry =>
+        inquiry.id === selectedInquiry.id
           ? { ...inquiry, status: 'ANSWERED' }
           : inquiry
       ));
 
-      // 통계 업데이트
       setStats(prev => ({
         ...prev,
-        pending: prev.pending - 1,
+        pending: Math.max(0, prev.pending - 1),
         answered: prev.answered + 1
       }));
 
@@ -783,24 +673,31 @@ const InquiryManagement = () => {
       setShowModal(false);
       setSelectedInquiry(null);
       setAnswerText('');
-      
-      // 목록 새로고침
-      loadInquiries();
+
     } catch (error) {
       console.error('답변 등록 실패:', error);
-      alert('답변 등록에 실패했습니다. 다시 시도해주세요.');
+      alert('답변 등록에 실패했습니다: ' + error.message);
     } finally {
       setAnswering(false);
     }
   };
 
-  // 검색어로 필터링
-  const filteredInquiries = inquiries.filter(inquiry =>
-    (inquiry.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (inquiry.userNickname || inquiry.userName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (inquiry.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (inquiry.content || inquiry.message || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // 문의 삭제
+  const handleDeleteInquiry = async (inquiryId) => {
+    // eslint-disable-next-line no-restricted-globals
+    if (!confirm('이 문의를 삭제하시겠습니까?')) return;
+
+    try {
+      await adminAPI.deleteInquiry(inquiryId);
+      setInquiries(prev => prev.filter(inquiry => inquiry.id !== inquiryId));
+      setStats(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+      alert('문의가 삭제되었습니다.');
+    } catch (error) {
+      console.error('문의 삭제 실패:', error);
+      alert('문의 삭제에 실패했습니다: ' + error.message);
+    }
+  };
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -821,22 +718,39 @@ const InquiryManagement = () => {
     }
   };
 
+  if (error) {
+    return (
+      <Container>
+        <ErrorState>
+          <AlertCircle size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+          <h3>오류 발생</h3>
+          <p>{error}</p>
+          <ActionButton $variant="primary" onClick={() => window.location.reload()}>
+            페이지 새로고침
+          </ActionButton>
+        </ErrorState>
+      </Container>
+    );
+  }
+
   return (
     <Container>
       <MainContent>
-        {/* 헤더 */}
         <Header>
           <HeaderLeft>
             <Title>1:1 문의 관리</Title>
             <Subtitle>사용자 문의에 신속하게 답변하고 관리합니다</Subtitle>
           </HeaderLeft>
-          <RefreshButton
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-            새로고침
-          </RefreshButton>
+          <HeaderActions>
+            <ActionButton onClick={handleExport} disabled={loading}>
+              <Download size={16} />
+              데이터 내보내기
+            </ActionButton>
+            <ActionButton $variant="primary" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+              새로고침
+            </ActionButton>
+          </HeaderActions>
         </Header>
 
         {/* 통계 카드 */}
@@ -846,27 +760,27 @@ const InquiryManagement = () => {
               <MessageSquare size={24} />
             </StatIcon>
             <StatInfo>
-              <StatValue>{stats.total}</StatValue>
+              <StatValue>{stats.total.toLocaleString()}</StatValue>
               <StatLabel>전체 문의</StatLabel>
             </StatInfo>
           </StatCard>
-          
+
           <StatCard>
             <StatIcon $color="yellow">
               <Clock size={24} />
             </StatIcon>
             <StatInfo>
-              <StatValue>{stats.pending}</StatValue>
+              <StatValue>{stats.pending.toLocaleString()}</StatValue>
               <StatLabel>답변 대기</StatLabel>
             </StatInfo>
           </StatCard>
-          
+
           <StatCard>
             <StatIcon $color="green">
               <CheckCircle size={24} />
             </StatIcon>
             <StatInfo>
-              <StatValue>{stats.answered}</StatValue>
+              <StatValue>{stats.answered.toLocaleString()}</StatValue>
               <StatLabel>답변 완료</StatLabel>
             </StatInfo>
           </StatCard>
@@ -884,9 +798,10 @@ const InquiryManagement = () => {
                 placeholder="문의 제목, 사용자명, 카테고리로 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleSearch}
               />
             </SearchContainer>
-            
+
             <Select
               value={statusFilter}
               onChange={(e) => {
@@ -897,7 +812,26 @@ const InquiryManagement = () => {
               <option value="all">전체 상태</option>
               <option value="PENDING">답변 대기</option>
               <option value="ANSWERED">답변 완료</option>
+              <option value="CLOSED">종료</option>
             </Select>
+
+            <Select
+              value={`${sortBy},${sortDir}`}
+              onChange={(e) => {
+                const [field, direction] = e.target.value.split(',');
+                setSortBy(field);
+                setSortDir(direction);
+                setPage(0);
+              }}
+            >
+              <option value="createdAt,desc">최신순</option>
+              <option value="createdAt,asc">등록순</option>
+              <option value="status,asc">상태순</option>
+            </Select>
+
+            <ActionButton onClick={handleSearch}>
+              검색
+            </ActionButton>
           </FilterRow>
         </FilterSection>
 
@@ -924,7 +858,7 @@ const InquiryManagement = () => {
                     </LoadingState>
                   </TableCell>
                 </tr>
-              ) : filteredInquiries.length === 0 ? (
+              ) : inquiries.length === 0 ? (
                 <tr>
                   <TableCell colSpan={6}>
                     <EmptyState>
@@ -935,9 +869,9 @@ const InquiryManagement = () => {
                   </TableCell>
                 </tr>
               ) : (
-                filteredInquiries.map((inquiry) => (
-                  <TableRow key={inquiry.id} onClick={() => handleInquiryClick(inquiry)}>
-                    <TableCell>
+                inquiries.map((inquiry) => (
+                  <TableRow key={inquiry.id}>
+                    <TableCell onClick={() => handleInquiryClick(inquiry)}>
                       <InquiryInfo>
                         <InquiryTitle>{inquiry.title || '제목 없음'}</InquiryTitle>
                         <InquiryPreview>
@@ -963,57 +897,93 @@ const InquiryManagement = () => {
                     </TableCell>
                     <TableCell>{formatDate(inquiry.createdAt)}</TableCell>
                     <TableCell>
-                      <ActionButton
-                        $variant="primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleInquiryClick(inquiry);
-                        }}
-                      >
-                        <Eye size={14} />
-                        {inquiry.status === 'PENDING' ? '답변하기' : '보기'}
-                      </ActionButton>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <ActionButton
+                          $variant="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleInquiryClick(inquiry);
+                          }}
+                        >
+                          <Eye size={14} />
+                          {inquiry.status === 'PENDING' ? '답변' : '보기'}
+                        </ActionButton>
+                        <ActionButton
+                          $variant="danger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteInquiry(inquiry.id);
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </ActionButton>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
-        </TableContainer>
 
-        {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <Pagination>
-            <PaginationButton
-              onClick={() => setPage(Math.max(0, page - 1))}
-              disabled={page === 0}
-            >
-              이전
-            </PaginationButton>
-            
-            {Array.from({ length: totalPages }, (_, i) => (
-              <PaginationButton
-                key={i}
-                onClick={() => setPage(i)}
-                className={page === i ? 'active' : ''}
-              >
-                {i + 1}
-              </PaginationButton>
-            ))}
-            
-            <PaginationButton
-              onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-              disabled={page === totalPages - 1}
-            >
-              다음
-            </PaginationButton>
-          </Pagination>
-        )}
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationInfo>
+                총 {totalElements.toLocaleString()}개 중 {Math.min(page * pageSize + 1, totalElements)}-{Math.min((page + 1) * pageSize, totalElements)}번째
+              </PaginationInfo>
+              <PaginationButtons>
+                <PageButton
+                  onClick={() => setPage(0)}
+                  disabled={page === 0}
+                >
+                  처음
+                </PageButton>
+                <PageButton
+                  onClick={() => setPage(Math.max(0, page - 1))}
+                  disabled={page === 0}
+                >
+                  이전
+                </PageButton>
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const startPage = Math.max(0, Math.min(page - 2, totalPages - 5));
+                  const pageNum = startPage + i;
+                  if (pageNum >= totalPages) return null;
+
+                  return (
+                    <PageButton
+                      key={pageNum}
+                      $active={page === pageNum}
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum + 1}
+                    </PageButton>
+                  );
+                })}
+
+                <PageButton
+                  onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                  disabled={page >= totalPages - 1}
+                >
+                  다음
+                </PageButton>
+                <PageButton
+                  onClick={() => setPage(totalPages - 1)}
+                  disabled={page >= totalPages - 1}
+                >
+                  마지막
+                </PageButton>
+              </PaginationButtons>
+            </Pagination>
+          )}
+        </TableContainer>
 
         {/* 문의 상세/답변 모달 */}
         {showModal && selectedInquiry && (
-          <ModalOverlay onClick={() => setShowModal(false)}>
-            <Modal onClick={(e) => e.stopPropagation()}>
+          <ModalOverlay onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}>
+            <Modal>
               <ModalHeader>
                 <ModalTitle>
                   {selectedInquiry.status === 'PENDING' ? '문의 답변하기' : '문의 상세보기'}
@@ -1022,7 +992,7 @@ const InquiryManagement = () => {
                   <X size={20} />
                 </CloseButton>
               </ModalHeader>
-              
+
               <ModalBody>
                 <DetailRow>
                   <DetailLabel>문의자:</DetailLabel>
@@ -1048,7 +1018,7 @@ const InquiryManagement = () => {
                     </StatusBadge>
                   </DetailValue>
                 </DetailRow>
-                
+
                 <DetailLabel style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>문의 내용:</DetailLabel>
                 <InquiryContent>
                   {selectedInquiry.content || selectedInquiry.message || '문의 내용이 없습니다.'}
@@ -1060,10 +1030,12 @@ const InquiryManagement = () => {
                     <AnswerContent>
                       {selectedInquiry.answer}
                     </AnswerContent>
-                    <DetailRow>
-                      <DetailLabel>답변일:</DetailLabel>
-                      <DetailValue>{selectedInquiry.answeredAt && formatDate(selectedInquiry.answeredAt)}</DetailValue>
-                    </DetailRow>
+                    {selectedInquiry.answeredAt && (
+                      <DetailRow>
+                        <DetailLabel>답변일:</DetailLabel>
+                        <DetailValue>{formatDate(selectedInquiry.answeredAt)}</DetailValue>
+                      </DetailRow>
+                    )}
                   </>
                 )}
 
@@ -1080,10 +1052,7 @@ const InquiryManagement = () => {
               </ModalBody>
 
               <ModalActions>
-                <ActionButton
-                  $variant="secondary"
-                  onClick={() => setShowModal(false)}
-                >
+                <ActionButton onClick={() => setShowModal(false)}>
                   닫기
                 </ActionButton>
                 {selectedInquiry.status === 'PENDING' && (

@@ -80,8 +80,10 @@ public class MyPageController {
     @GetMapping("/inquiries/{id}")
     public ResponseEntity<InquiryDto> getInquiry(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
+    	
         InquiryDto inquiry = inquiryService.getInquiry(userDetails.getUsername(), id);
+        
         return ResponseEntity.ok(inquiry);
     }
     
@@ -106,8 +108,8 @@ public class MyPageController {
     @DeleteMapping("/wishlist/{itemType}/{itemId}")
     public ResponseEntity<Void> removeFromWishlist(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String itemType,
-            @PathVariable Long itemId) {
+            @PathVariable("itemType") String itemType,
+            @PathVariable("itemId") Long itemId) {
         wishlistService.removeFromWishlist(userDetails.getUsername(), itemType, itemId);
         return ResponseEntity.ok().build();
     }
@@ -123,8 +125,8 @@ public class MyPageController {
     @GetMapping("/wishlist/check/{itemType}/{itemId}")
     public ResponseEntity<Map<String, Boolean>> checkWishlist(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String itemType,
-            @PathVariable Long itemId) {
+            @PathVariable("itemType") String itemType,
+            @PathVariable("itemId") Long itemId) {
         boolean isInWishlist = wishlistService.isInWishlist(userDetails.getUsername(), itemType, itemId);
         return ResponseEntity.ok(Map.of("isInWishlist", isInWishlist));
     }
@@ -141,7 +143,7 @@ public class MyPageController {
     
     @GetMapping("/regional-chat/{region}")
     public ResponseEntity<Page<RegionalChatDto>> getRegionalMessages(
-            @PathVariable String region,
+            @PathVariable("region") String region,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<RegionalChatDto> messages = regionalChatService.getRegionalMessages(region, pageable);
         return ResponseEntity.ok(messages);
@@ -158,7 +160,7 @@ public class MyPageController {
     @DeleteMapping("/regional-chat/{messageId}")
     public ResponseEntity<Void> deleteMessage(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long messageId) {
+            @PathVariable("messageId") Long messageId) {
         regionalChatService.deleteMessage(userDetails.getUsername(), messageId);
         return ResponseEntity.ok().build();
     }
