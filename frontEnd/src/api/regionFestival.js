@@ -280,6 +280,11 @@ function normalizeItem(raw) {
     const imageUrl = raw.firstimage || raw.firstimage2 || raw.imageUrl || null;
     const lat = parseFloat(raw.mapy ?? raw.lat ?? NaN);
     const lng = parseFloat(raw.mapx ?? raw.lng ?? NaN);
+    const distance = raw.dist ? Number(raw.dist) : undefined; // m 단위(문자→숫자)
+
+    // detailInfo2 infotext의 <br> / \u003Cbr\u003E 를 개행으로 통일
+    const rawDetail = (raw.infotext || "").trim();
+    const detailText = rawDetail.replace(/\\u003Cbr\\u003E|<br\s*\/?>/gi, "\n");
 
     return {
         id,
@@ -294,8 +299,12 @@ function normalizeItem(raw) {
         ticketUrl: "",
         lat: Number.isNaN(lat) ? undefined : lat,
         lng: Number.isNaN(lng) ? undefined : lng,
-        description: (raw.overview || "").trim(),
-        tel: raw.tel || "",
+        distance,
+        description: (raw.overview || "").trim(),     // detailCommon2
+        detailText,
+        infoName: raw.infoname || "",                 // (옵션) “행사소개/행사내용” 라벨
+        tel: raw.tel || raw.sponsor1tel || "",
+        infotext: raw.infotext,
         modified: toDateTimeStr(raw.modifiedtime)
     };
 }
@@ -492,25 +501,31 @@ export async function fetchFestivalsPage({
 export async function fetchFestivalById(id) {
     // 1) 공통 상세(detailCommon2) + 날짜(detailIntro2) 병렬 호출
     const paramsCommon = { ...buildCommonParams(), contentId: id };
-    const paramsIntro  = { ...buildCommonParams(), contentId: id, contentTypeId: 15 };
+    const paramsIntro = { ...buildCommonParams(), contentId: id, contentTypeId: 15 };
 
-    const [resCommon, resIntro] = await Promise.all([
+    const [resCommon, resIntro, resInfo] = await Promise.all([
         api.get("/detailCommon2", { params: paramsCommon }),
-        api.get("/detailIntro2",  { params: paramsIntro })
+        api.get("/detailIntro2", { params: paramsIntro }),
+        api.get("/detailInfo2", { params: paramsIntro }),
     ]);
 
     // 2) 아이템 추출
     const commonItem = pickOneSafely(resCommon.data);
-    const introItem  = pickOneSafely(resIntro.data);
+    const introItem = pickOneSafely(resIntro.data);
 
-    console.log("regionFestival commonItem ::", commonItem);
-    console.log("regionFestival introItem ::", introItem);
+    // info는 배열에서 "행사내용"만 선택
+    const infoItems = pickArraySafely(resInfo.data);
+    const infoItem =
+        infoItems.find(it => String(it.serialnum) === "1")
+        ?? infoItems.find(it => (it.infoname || "").includes("행사내용"))
+        ?? infoItems.find(it => String(it.fldgubun) === "1")
+        ?? null;
 
-    if (!commonItem && !introItem) return null;
+    if (!commonItem && !introItem && !infoItem) return null;
 
     // 3) 병합(날짜 필드 포함)
     //    normalizeItem은 eventstartdate/eventenddate를 우선 사용하므로 intro의 날짜를 우선 덮어씀
-    const mergedRaw = { ...(commonItem || {}), ...(introItem || {}) };
+    const mergedRaw = { ...(commonItem || {}), ...(introItem || {}), ...(infoItem || {}) };
 
     // 4) 매핑
     return normalizeItem(mergedRaw);
@@ -522,6 +537,55 @@ export async function fetchFestivalById(id) {
 export async function fetchRelatedFestivals({ region, excludeId, limit = 8 } = {}) {
     const pool = await fetchFestivals({ region, status: "all" });
     return pool.filter(f => f.id !== excludeId).slice(0, limit);
+}
+
+// 현위치 주변 축제(포스터용)
+export async function fetchNearbyFestivals({
+    lat,
+    lng,
+    radius = 10000,
+    excludeId,
+    limit = 20,
+    signal
+} = {}) {
+    if (typeof lat !== "number" || typeof lng !== "number") return [];
+
+    const params = {
+        ...buildCommonParams(),
+        mapX: lng,                 // API는 X=lng, Y=lat
+        mapY: lat,
+        radius,                    // m 단위(1000=1km)
+        contentTypeId: 15,         // 행사/공연/축제
+        arrange: "S",              // 거리순
+        numOfRows: Math.min(limit * 3, 100), // 여유로 더 받아서 exclude 필터 후 자르기
+        pageNo: 1
+    };
+
+    const res = await api.get("/locationBasedList2", { params, signal });
+    const raws = pickArraySafely(res.data);
+    const items = raws
+        .map(normalizeItem)
+        .filter(it => it.id !== String(excludeId))   // 현재 상세 제외
+        .slice(0, limit);
+
+    // ✅ 날짜 보강(detailIntro2) — 진행/예정/종료 판정을 위해 필요
+    await Promise.all(items.map(async (it) => {
+        try {
+            const introRes = await api.get("/detailIntro2", {
+                params: { ...buildCommonParams(), contentId: it.id, contentTypeId: 15 },
+                signal
+            });
+            const intro = pickOneSafely(introRes.data);
+            if (intro) {
+                it.startDate = toDateStr(intro.eventstartdate);
+                it.endDate = toDateStr(intro.eventenddate);
+            }
+        } catch (_) {
+            // 무시: 날짜 없음
+        }
+    }));
+
+    return items;
 }
 
 /* =========================

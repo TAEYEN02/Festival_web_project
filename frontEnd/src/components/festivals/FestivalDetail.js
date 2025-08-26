@@ -1,11 +1,82 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { fetchFestivalById /*, fetchRelatedFestivals */ } from "../../api/regionFestival";
+import { fetchFestivalById, fetchNearbyFestivals /*, fetchRelatedFestivals */ } from "../../api/regionFestival";
 import { formatDateRange, isOngoing, isUpcoming, isPast } from "../../util/date";
 import "../RegionOverview/RegionOverview.css";
 import "./FestivalDetail.css";
 import MapView from "../RegionOverview/MapView";
 import useScrap from "../RegionOverview/useScrap";
+
+// 파일 상단 import 아래(컴포넌트 바깥) 또는 컴포넌트 안 최상단에 추가
+function renderEventText(text) {
+    if (!text) return null;
+
+    const normalized = String(text)
+        .replace(/\\u003Cbr\\u003E|<br\s*\/?>/gi, "\n")
+        .replace(/\r/g, "");
+    const lines = normalized.split(/\n+/).map(s => s.trim()).filter(Boolean);
+
+    const sections = [];
+    let current = { title: null, items: [] };
+
+    const isHeading = (s) =>
+        (/^(메인프로그램|행사소개|행사내용)$/).test(s) || /공간$|무대$/.test(s) || /:$/.test(s);
+
+    for (const l of lines) {
+        // 1) 소제목 감지
+        if (isHeading(l)) {
+            if (current.title || current.items.length) sections.push(current);
+            current = { title: l.replace(/:$/, ""), items: [] };
+            continue;
+        }
+        // 2) 번호/불릿 → 리스트
+        if (/^\d+[.)]\s/.test(l) || /^[-•]\s/.test(l)) {
+            current.items.push(l.replace(/^\d+[.)]\s+|^[-•]\s+/, ""));
+            continue;
+        }
+        // 3) "라벨: 내용" → <b>라벨</b>: 내용
+        const m = l.match(/^([^:]+):\s*(.+)$/);
+        if (m) {
+            current.items.push({ label: m[1].trim(), text: m[2].trim() });
+            continue;
+        }
+        // 4) 일반 문장
+        current.items.push(l);
+    }
+    if (current.title || current.items.length) sections.push(current);
+
+    return (
+        <div className="detail-eventtext">
+            {sections.map((sec, i) => (
+                <div key={i} className="et-section">
+                    {sec.title ? <h3 className="et-title">{sec.title}</h3> : null}
+                    <ul className="et-list">
+                        {sec.items.map((it, j) => (
+                            <li key={j}>
+                                {typeof it === "string"
+                                    ? it
+                                    : (<><b>{it.label}</b>: {it.text}</>)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// 헬퍼 + 배지 렌더
+function formatDistance(m) {
+    if (typeof m !== "number" || Number.isNaN(m)) return "";
+    if (m < 1000) return `${Math.round(m)}m`;
+    return `${(m / 1000).toFixed(1)}km`;
+}
+
+function walkMinutes(m) {
+    if (typeof m !== "number" || Number.isNaN(m)) return "";
+    const minutes = Math.max(1, Math.round(m / 70)); // 약 70m/분
+    return `도보 ${minutes}분`;
+}
 
 export default function FestivalDetail() {
     const { id } = useParams();
@@ -16,6 +87,8 @@ export default function FestivalDetail() {
     const [festival, setFestival] = useState(null);
     const [error, setError] = useState("");
     const [related, setRelated] = useState([]);
+
+    const [nearby, setNearby] = useState([]);
 
     useEffect(() => {
         let mounted = true;
@@ -32,7 +105,6 @@ export default function FestivalDetail() {
                     return;
                 }
 
-                // 이미지/좌표 등 안전 보정
                 const safe = {
                     ...data,
                     imageUrl: data.imageUrl || "",
@@ -44,10 +116,21 @@ export default function FestivalDetail() {
                 setFestival(safe);
                 setError("");
 
-                // 연관 축제는 필요 시 해제
-                // const rel = await fetchRelatedFestivals({ region: safe.region, excludeId: safe.id, limit: 8 });
-                // if (!mounted) return;
-                // setRelated(rel);
+                // ⬇️ 주변 축제 호출
+                if (safe.lat && safe.lng) {
+                    try {
+                        const list = await fetchNearbyFestivals({
+                            lat: safe.lat,
+                            lng: safe.lng,
+                            excludeId: safe.id,
+                            limit: 20
+                        });
+                        if (mounted) setNearby(list);
+                    } catch (_) {
+                        if (mounted) setNearby([]);
+                    }
+                }
+
             } catch (e) {
                 if (!mounted) return;
                 setError(e?.message || "상세 조회 중 오류가 발생했습니다.");
@@ -58,6 +141,12 @@ export default function FestivalDetail() {
         })();
         return () => { mounted = false; };
     }, [id]);
+
+    const activeNearby = useMemo(() => {
+        return (nearby || []).filter(n =>
+            isOngoing(n.startDate, n.endDate) || isUpcoming(n.startDate)
+        );
+    }, [nearby]);
 
     const status = useMemo(() => {
         if (!festival) return null;
@@ -89,6 +178,12 @@ export default function FestivalDetail() {
         );
     }
 
+    function getBadge(n) {
+        if (isOngoing(n.startDate, n.endDate)) return { key: "ongoing", label: "진행중" };
+        if (isUpcoming(n.startDate)) return { key: "upcoming", label: "예정" };
+        return null;
+    }
+
     if (error || !festival) {
         return (
             <div className="detail-wrap">
@@ -102,21 +197,6 @@ export default function FestivalDetail() {
         <div className="detail-wrap">
             {/* 히어로 영역 */}
             <div className="detail-hero">
-                {/* {festival.imageUrl ? (
-                    <img
-                        src={festival.imageUrl}
-                        alt={festival.name}
-                        onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "https://placehold.co/1200x540?text=Festival";
-                        }}
-                    />
-                ) : (
-                    <img
-                        src="https://placehold.co/1200x540?text=Festival"
-                        alt="Festival"
-                    />
-                )} */}
                 <button
                     className={`scrap-fab ${isScrapped(festival.id) ? "on" : ""}`}
                     onClick={() => toggleScrap(festival.id)}
@@ -147,67 +227,55 @@ export default function FestivalDetail() {
 
             {/* 본문 그리드 */}
             <div className="detail-grid">
-                {/* 좌: 설명/액션 */}
+                {/* 좌측 섹션 */}
                 <section className="detail-section">
                     <h2>소개</h2>
-                    <p className="detail-desc">
-                        {festival.description || "상세 설명이 준비 중입니다."}
-                    </p>
+                    {festival.description
+                        ? renderEventText(festival.description)
+                        : <p className="detail-desc">상세 설명이 준비 중입니다.</p>}
 
-                    <div className="detail-actions">
-                        <button className="btn ghost" onClick={handleDirections}>길찾기</button>
-                        {festival.ticketUrl && (
-                            <a className="btn primary" href={festival.ticketUrl} target="_blank" rel="noreferrer">
-                                예매하기(YES24)
-                            </a>
-                        )}
-                    </div>
+                    <h2>행사내용</h2>
+                    {festival.detailText
+                        ? renderEventText(festival.detailText)
+                        : <p className="detail-desc">행사내용 정보가 없습니다.</p>}
 
-                    {/* 댓글/리뷰 + 지도 */}
-                    <div className="detail-comments">
-                        <h2>댓글/리뷰 (예정)</h2>
-                        <div className="pending">
-                            로그인 + 서버 API 연동 후 제공될 예정입니다.
+                    <h2>지도</h2>
+                    {(festival.lat && festival.lng) ? (
+                        <div className="map-card">
+                            <button className="btn ghost" onClick={handleDirections}>길찾기</button>
+                            <MapView
+                                items={[{
+                                    id: festival.id,
+                                    name: festival.name,
+                                    address: festival.address,
+                                    lat: festival.lat,
+                                    lng: festival.lng
+                                }]}
+                            />
                         </div>
+                    ) : (
+                        <p className="detail-desc">위치 정보가 없습니다.</p>
+                    )}
 
-                        {/* ⬇️ 여기 지도 배치 */}
-                        {(festival.lat && festival.lng) ? (
-                            <div className="comments-map" style={{ marginTop: 16 }}>
-                                <h3 style={{ margin: "0 0 8px" }}>지도</h3>
-                                <div className="comments-map-box" style={{ height: 320 }}>
-                                    <MapView
-                                        lat={festival.lat}
-                                        lng={festival.lng}
-                                        markers={[{ lat: festival.lat, lng: festival.lng, label: festival.name }]}
-                                        height={320}
-                                        zoom={14}
-                                    />
-                                </div>
-                            </div>
-                        ) : null}
+                    <h2>댓글/리뷰 (예정)</h2>
+                    <div className="pending">
+                        로그인 + 서버 API 연동 후 제공될 예정입니다.
                     </div>
                 </section>
 
-                {/* 우측 aside의 첫 번째 카드 교체: 지도 → 포스터 */}
+                {/* 우측 aside */}
                 <aside className="detail-aside">
                     <div className="aside-card">
                         <h3>포스터</h3>
                         <div className="aside-poster">
-                            {festival.imageUrl ? (
-                                <img
-                                    src={festival.imageUrl}
-                                    alt={festival.name}
-                                    onError={(e) => {
-                                        e.currentTarget.onerror = null;
-                                        e.currentTarget.src = "https://placehold.co/480x320?text=Festival+Poster";
-                                    }}
-                                />
-                            ) : (
-                                <img
-                                    src="https://placehold.co/480x320?text=Festival+Poster"
-                                    alt="Festival Poster"
-                                />
-                            )}
+                            <img
+                                src={festival.imageUrl || "https://placehold.co/480x320?text=Festival+Poster"}
+                                alt={festival.name}
+                                onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = "https://placehold.co/480x320?text=Festival+Poster";
+                                }}
+                            />
                         </div>
                         <div className="aside-addr">{festival.address || "-"}</div>
                     </div>
@@ -217,7 +285,6 @@ export default function FestivalDetail() {
                         <ul className="kv">
                             <li><span>지역</span><b>{festival.region}</b></li>
                             <li><span>기간</span><b>{formatDateRange(festival.startDate, festival.endDate) || "-"}</b></li>
-                            <li><span>인기도</span><b>{festival.popularity ?? "-"}</b></li>
                             {festival.tel ? <li><span>문의</span><b>{festival.tel}</b></li> : null}
                             {festival.modified ? <li><span>수정일</span><b>{festival.modified}</b></li> : null}
                         </ul>
@@ -225,40 +292,51 @@ export default function FestivalDetail() {
                 </aside>
             </div>
 
-            {/* 연관 축제 */}
+            {/* 연관(주변) 축제 */}
             <section className="detail-related">
                 <div className="related-head">
-                    <h2>이 지역의 다른 축제</h2>
+                    <h2>이 근처의 다른 축제</h2>
                     <Link className="link-more" to={`/overview?region=${encodeURIComponent(festival.region)}&view=single`}>
                         해당 지역 더 보기 →
                     </Link>
                 </div>
-                {related.length === 0 ? (
+
+                {activeNearby.length === 0 ? (
                     <div className="empty-state" style={{ marginTop: 8 }}>
                         <div className="empty-emoji" aria-hidden>🗺️</div>
-                        <div className="empty-text">연관 축제가 없어요.</div>
+                        <div className="empty-text">주변에 진행/예정 축제가 없어요.</div>
                     </div>
                 ) : (
-                    <div className="related-row">
-                        {related.map(r => (
-                            <Link key={r.id} to={`/festival/${r.id}`} className="related-card">
-                                <div className="thumb">
-                                    <img
-                                        src={r.imageUrl || "https://placehold.co/320x180?text=Festival"}
-                                        alt={r.name}
-                                        loading="lazy"
-                                        onError={(e) => {
-                                            e.currentTarget.onerror = null;
-                                            e.currentTarget.src = "https://placehold.co/320x180?text=Festival";
-                                        }}
-                                    />
-                                </div>
-                                <div className="body">
-                                    <div className="name" title={r.name}>{r.name}</div>
-                                    <div className="date">{formatDateRange(r.startDate, r.endDate)}</div>
-                                </div>
-                            </Link>
-                        ))}
+                    <div className="poster-scroll">
+                        {activeNearby.map(n => {
+                            const badge = getBadge(n);
+                            return (
+                                <Link key={n.id} to={`/festival/${n.id}`} className="poster-card">
+                                    <div className="poster-thumb">
+                                        {badge && <span className={`poster-badge ${badge.key}`}>{badge.label}</span>}
+                                        {typeof n.distance === "number" && (
+                                            <>
+                                                <span className="poster-dist">{formatDistance(n.distance)}</span>
+                                                <span className="poster-walk">{walkMinutes(n.distance)}</span>
+                                            </>
+                                        )}
+                                        <img
+                                            src={n.imageUrl || "https://placehold.co/200x260?text=Poster"}
+                                            alt={n.name}
+                                            loading="lazy"
+                                            onError={(e) => {
+                                                e.currentTarget.onerror = null;
+                                                e.currentTarget.src = "https://placehold.co/200x260?text=Poster";
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="poster-meta">
+                                        <div className="poster-name" title={n.name}>{n.name}</div>
+                                        <div className="poster-date">{formatDateRange(n.startDate, n.endDate)}</div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
                     </div>
                 )}
             </section>
