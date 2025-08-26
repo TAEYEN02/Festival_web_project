@@ -38,4 +38,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @Query("SELECT u FROM User u WHERE u.createdAt >= :startDate ORDER BY u.createdAt DESC")
     List<User> findRecentUsers(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+    
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles LEFT JOIN FETCH u.inquiries LEFT JOIN FETCH u.wishlists LEFT JOIN FETCH u.regionalChats")
+    Page<User> findAllWithRelations(Pageable pageable);
+    
+    @Query("SELECT u FROM User u WHERE " +
+    	       "(u.username LIKE %:search% OR u.nickname LIKE %:search% OR u.email LIKE %:search%) " +
+    	       "AND (:isActive IS NULL OR u.isActive = :isActive) " +
+    	       "ORDER BY u.createdAt DESC")
+    	Page<User> findUsersWithSearch(@Param("search") String search, 
+    	                               @Param("isActive") Boolean isActive, 
+    	                               Pageable pageable);
 }

@@ -246,12 +246,12 @@ const InquirySection = ({ userId }) => {
 
   const handleCreateInquiry = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       setError('제목을 입력해주세요.');
       return;
     }
-    
+
     if (!formData.content.trim()) {
       setError('내용을 입력해주세요.');
       return;
@@ -274,6 +274,11 @@ const InquirySection = ({ userId }) => {
   };
 
   const handleInquiryClick = async (inquiry) => {
+    if (!inquiry || !inquiry.id) {
+      console.error('유효하지 않은 문의 ID:', inquiry);
+      return;
+    }
+
     try {
       const detailData = await getInquiry(inquiry.id);
       setSelectedInquiry(detailData);
@@ -281,6 +286,8 @@ const InquirySection = ({ userId }) => {
     } catch (err) {
       console.error('문의 상세 조회 실패:', err);
     }
+
+    console.log('조회할 문의 ID:', inquiry.id);
   };
 
   const formatDate = (dateString) => {
@@ -389,7 +396,7 @@ const InquirySection = ({ userId }) => {
               <div style={{ padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '1rem' }}>
                 {selectedInquiry.content}
               </div>
-              
+
               {selectedInquiry.answer && (
                 <div>
                   <h5 style={{ color: '#1f2937', marginBottom: '0.5rem' }}>관리자 답변</h5>

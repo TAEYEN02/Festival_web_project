@@ -1,6 +1,7 @@
 package com.korea.festival.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -40,7 +41,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String nickname;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
     
     @Column(unique = true, nullable = false)
@@ -78,4 +79,5 @@ public class User {
 
     @Column
     private String providerId; // OAuth 공급자 고유 ID
+    
 }

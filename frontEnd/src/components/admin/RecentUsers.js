@@ -1,4 +1,3 @@
-// src/components/RecentUsers.js
 import React from 'react';
 import styled from 'styled-components';
 import { Users } from 'lucide-react';
@@ -77,6 +76,7 @@ const TableCell = styled.td`
   font-weight: ${({ $bold }) => ($bold ? '500' : '400')};
 `;
 
+// Transient prop ($status) 사용으로 DOM에 전달되지 않도록 수정
 const StatusBadge = styled.span`
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;

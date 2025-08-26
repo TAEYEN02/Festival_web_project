@@ -75,6 +75,15 @@ const Spinner = styled.div`
   }
 `;
 
+const ErrorContainer = styled.div`
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem;
+  color: #dc2626;
+`;
+
 const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [loading, setLoading] = useState(true);
@@ -101,38 +110,50 @@ const AdminDashboard = () => {
       
       console.log('대시보드 데이터 로딩 시작...');
       
-      // 병렬로 데이터 로드 - 개별 에러는 각 함수에서 처리됨
-      const [statsData, usersData, inquiriesData] = await Promise.allSettled([
-        fetchDashboardStats(),
-        fetchUsers(0, 5),
-        fetchInquiries(0, 5)
-      ]);
-
-      console.log('API 호출 결과:', {
-        stats: statsData.status,
-        users: usersData.status,
-        inquiries: inquiriesData.status
-      });
-
-      // 성공한 데이터만 설정 (실패해도 더미 데이터가 반환됨)
-      if (statsData.status === 'fulfilled') {
-        setDashboardStats(statsData.value);
-        console.log('Stats 데이터 설정:', statsData.value);
+      // 1. 먼저 대시보드 통계 로드 (가장 중요)
+      let statsData = null;
+      try {
+        statsData = await fetchDashboardStats();
+        setDashboardStats(statsData);
+        console.log('Stats 데이터 로드 성공:', statsData);
+      } catch (statsError) {
+        console.warn('Stats 데이터 로드 실패:', statsError);
+        // 기본값 유지
       }
-      if (usersData.status === 'fulfilled') {
-        setRecentUsers(usersData.value.content || []);
-        console.log('Users 데이터 설정:', usersData.value.content?.length || 0, '개');
+
+      // 2. 최근 사용자 로드 (실패해도 계속 진행)
+      let usersData = [];
+      try {
+        const usersResponse = await fetchUsers(0, 5);
+        if (usersResponse && usersResponse.content) {
+          usersData = usersResponse.content;
+          setRecentUsers(usersData);
+          console.log('Users 데이터 로드 성공:', usersData.length, '개');
+        }
+      } catch (usersError) {
+        console.warn('Users 데이터 로드 실패:', usersError);
+        setRecentUsers([]);
       }
-      if (inquiriesData.status === 'fulfilled') {
-        setRecentInquiries(inquiriesData.value.content || []);
-        console.log('Inquiries 데이터 설정:', inquiriesData.value.content?.length || 0, '개');
+
+      // 3. 최근 문의 로드 (실패해도 계속 진행)
+      let inquiriesData = [];
+      try {
+        const inquiriesResponse = await fetchInquiries(0, 5);
+        if (inquiriesResponse && inquiriesResponse.content) {
+          inquiriesData = inquiriesResponse.content;
+          setRecentInquiries(inquiriesData);
+          console.log('Inquiries 데이터 로드 성공:', inquiriesData.length, '개');
+        }
+      } catch (inquiriesError) {
+        console.warn('Inquiries 데이터 로드 실패:', inquiriesError);
+        setRecentInquiries([]);
       }
       
       console.log('대시보드 데이터 로딩 완료');
       
     } catch (err) {
-      console.warn('Dashboard load warning:', err);
-      // 모든 API가 더미 데이터를 반환하므로 여기서는 에러 처리하지 않음
+      console.error('Dashboard load error:', err);
+      setError('데이터를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -143,7 +164,11 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = () => {
+    // 토큰 제거
     localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    
+    // 로그인 페이지로 리다이렉트
     window.location.href = '/login';
   };
 
@@ -157,6 +182,12 @@ const AdminDashboard = () => {
     }
   };
 
+  // 전체 대시보드 새로고침
+  const handleRefresh = async () => {
+    await loadDashboardData();
+  };
+
+  // 로딩 상태
   if (loading) {
     return (
       <LoadingContainer>
@@ -165,6 +196,42 @@ const AdminDashboard = () => {
           <p style={{ color: '#6b7280' }}>데이터를 불러오는 중...</p>
         </LoadingContent>
       </LoadingContainer>
+    );
+  }
+
+  // 에러 상태 (치명적인 에러만 표시)
+  if (error) {
+    return (
+      <Container>
+        <Sidebar 
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          onLogout={handleLogout}
+        />
+        <Main>
+          <TopBar stats={dashboardStats} onRefresh={handleRefresh} />
+          <ContentSection>
+            <ErrorContainer>
+              <h3>오류 발생</h3>
+              <p>{error}</p>
+              <button 
+                onClick={handleRefresh}
+                style={{
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  marginTop: '0.5rem'
+                }}
+              >
+                다시 시도
+              </button>
+            </ErrorContainer>
+          </ContentSection>
+        </Main>
+      </Container>
     );
   }
 
@@ -177,8 +244,14 @@ const AdminDashboard = () => {
             <StatsCards stats={dashboardStats} />
             
             <ContentGrid>
-              <RecentInquiries inquiries={recentInquiries} onViewAll={() => handleViewAll('inquiries')} />
-              <RecentUsers users={recentUsers} onViewAll={() => handleViewAll('users')} />
+              <RecentInquiries 
+                inquiries={recentInquiries} 
+                onViewAll={() => handleViewAll('inquiries')} 
+              />
+              <RecentUsers 
+                users={recentUsers} 
+                onViewAll={() => handleViewAll('users')} 
+              />
             </ContentGrid>
             
             <ChartSection />
@@ -213,7 +286,10 @@ const AdminDashboard = () => {
       />
 
       <Main>
-        <TopBar stats={dashboardStats} />
+        <TopBar 
+          stats={dashboardStats} 
+          onRefresh={handleRefresh}
+        />
         {renderContent()}
       </Main>
     </Container>

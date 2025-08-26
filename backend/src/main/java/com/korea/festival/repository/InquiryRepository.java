@@ -26,5 +26,13 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     
     @Query("SELECT COUNT(i) FROM Inquiry i WHERE i.createdAt >= :startDate AND i.createdAt < :endDate")
     Long countInquiriesByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT i FROM Inquiry i WHERE " +
+    	       "(i.title LIKE %:search% OR i.content LIKE %:search%) " +
+    	       "AND (:status IS NULL OR i.status = :status) " +
+    	       "ORDER BY i.createdAt DESC")
+    	Page<Inquiry> findInquiriesWithSearch(@Param("search") String search, 
+    	                                      @Param("status") InquiryStatus status, 
+    	                                      Pageable pageable);
 }
 
