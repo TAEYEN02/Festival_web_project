@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.4'
+    id 'org.springframework.boot' version '3.3.3'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -23,14 +23,23 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
     // Mail 의존성 (명시적으로 추가)
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework:spring-context-support'
     implementation 'jakarta.mail:jakarta.mail-api'
-    
+
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // 실시간 채팅을 위한 추가 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework:spring-messaging'
+    implementation 'org.springframework:spring-websocket'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -45,8 +54,13 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    // 모니터링 및 관리 (선택사항)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // 테스트
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webflux'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

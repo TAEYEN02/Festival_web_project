@@ -15,19 +15,86 @@ import com.korea.festival.entity.User;
 
 @Repository
 public interface RegionalChatRepository extends JpaRepository<RegionalChat, Long> {
-    Page<RegionalChat> findByRegionAndIsActiveTrueOrderByCreatedAtDesc(String region, Pageable pageable);
+
+    Page<RegionalChat> findByRegionOrderByCreatedAtDesc(String region, Pageable pageable);
+
+    Page<RegionalChat> findByRegionAndIsHiddenFalseOrderByCreatedAtDesc(String region, Pageable pageable);
+
     Page<RegionalChat> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
-    
-    // 관리자용 쿼리
-    @Query("SELECT COUNT(DISTINCT r.user) FROM RegionalChat r WHERE r.createdAt >= :startDate AND r.isActive = true")
-    Long countActiveChatUsers(@Param("startDate") LocalDateTime startDate);
-    
+
+    @Query("SELECT r FROM RegionalChat r WHERE " +
+           "(:region IS NULL OR r.region = :region) AND " +
+           "r.isHidden = false " +
+           "ORDER BY r.createdAt DESC")
+    Page<RegionalChat> findByRegionWithFilters(@Param("region") String region, Pageable pageable);
+
+    boolean existsByUserAndMessageAndRegionAndCreatedAtAfter(
+        User user, String message, String region, LocalDateTime after);
+
+    // 지역별 통계 (주간 데이터)
     @Query("SELECT r.region, COUNT(r), COUNT(DISTINCT r.user), " +
-           "SUM(CASE WHEN r.createdAt >= :todayStart THEN 1 ELSE 0 END) " +
-           "FROM RegionalChat r WHERE r.isActive = true " +
+           "COUNT(CASE WHEN r.createdAt >= :today THEN 1 END) " +
+           "FROM RegionalChat r WHERE r.createdAt >= :weekAgo AND r.isHidden = false " +
+           "GROUP BY r.region")
+    List<Object[]> getRegionalMessageStats(@Param("today") LocalDateTime today,
+                                          @Param("weekAgo") LocalDateTime weekAgo);
+
+    // 지역별 통계 (전체 데이터)
+    @Query("SELECT r.region, COUNT(r), COUNT(DISTINCT r.user), " +
+           "COUNT(CASE WHEN r.createdAt >= :today THEN 1 END) " +
+           "FROM RegionalChat r WHERE r.isHidden = false " +
            "GROUP BY r.region ORDER BY COUNT(r) DESC")
-    List<Object[]> getRegionalChatStats(@Param("todayStart") LocalDateTime todayStart);
+    List<Object[]> getRegionalMessageStats(@Param("today") LocalDateTime today);
+
+    @Query("SELECT COUNT(r) FROM RegionalChat r WHERE " +
+           "r.region = :region AND r.createdAt >= :since")
+    Long countByRegionAndCreatedAtAfter(@Param("region") String region,
+                                       @Param("since") LocalDateTime since);
+
+    @Query("SELECT COUNT(DISTINCT r.user) FROM RegionalChat r WHERE " +
+           "r.region = :region AND r.createdAt >= :since")
+    Long countUniqueUsersByRegionAndCreatedAtAfter(@Param("region") String region,
+                                                  @Param("since") LocalDateTime since);
+
+    List<RegionalChat> findByUserAndCreatedAtAfterOrderByCreatedAtDesc(
+        User user, LocalDateTime after);
+
+    // StatisticsService에서 사용할 메서드들 추가
     
-    @Query("SELECT COUNT(r) FROM RegionalChat r WHERE r.createdAt >= :startDate AND r.isActive = true")
-    Long countTodayMessages(@Param("startDate") LocalDateTime startDate);
+    /**
+     * 특정 날짜의 메시지 수 조회
+     */
+    @Query("SELECT COUNT(r) FROM RegionalChat r WHERE " +
+           "r.createdAt >= :startDate AND r.createdAt < :endDate AND r.isHidden = false")
+    Long countTodayMessages(@Param("startDate") LocalDateTime startDate, 
+                           @Param("endDate") LocalDateTime endDate);
+    
+    /**
+     * 단일 날짜 기준 메시지 수 조회 (하루치)
+     */
+    @Query("SELECT COUNT(r) FROM RegionalChat r WHERE " +
+           "r.createdAt >= :date AND r.createdAt < :nextDate AND r.isHidden = false")
+    Long countMessagesByDate(@Param("date") LocalDateTime date, 
+                            @Param("nextDate") LocalDateTime nextDate);
+    
+    /**
+     * 활성 채팅 사용자 수 조회 (특정 시점 이후 채팅한 사용자)
+     */
+    @Query("SELECT COUNT(DISTINCT r.user) FROM RegionalChat r WHERE " +
+           "r.createdAt >= :since AND r.isHidden = false")
+    Long countActiveChatUsers(@Param("since") LocalDateTime since);
+    
+    /**
+     * 전체 메시지 수 조회 (숨겨지지 않은 메시지만)
+     */
+    @Query("SELECT COUNT(r) FROM RegionalChat r WHERE r.isHidden = false")
+    Long countAllActiveMessages();
+    
+    /**
+     * 특정 기간 동안의 메시지 수 조회
+     */
+    @Query("SELECT COUNT(r) FROM RegionalChat r WHERE " +
+           "r.createdAt >= :startDate AND r.createdAt <= :endDate AND r.isHidden = false")
+    Long countMessagesBetweenDates(@Param("startDate") LocalDateTime startDate,
+                                  @Param("endDate") LocalDateTime endDate);
 }

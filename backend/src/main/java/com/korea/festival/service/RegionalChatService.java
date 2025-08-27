@@ -1,43 +1,42 @@
 package com.korea.festival.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.korea.festival.dto.RegionalChatDto;
+import com.korea.festival.dto.RegionalChatReportDto;
+import com.korea.festival.dto.RegionalChatStatsDTO;
 import com.korea.festival.entity.RegionalChat;
+import com.korea.festival.entity.RegionalChatReport;
+import com.korea.festival.entity.ReportStatus;
 import com.korea.festival.entity.User;
+import com.korea.festival.repository.RegionalChatReportRepository;
 import com.korea.festival.repository.RegionalChatRepository;
 import com.korea.festival.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class RegionalChatService {
     
     private final RegionalChatRepository regionalChatRepository;
+    private final RegionalChatReportRepository reportRepository;
     private final UserRepository userRepository;
-    
-    public RegionalChatDto sendMessage(String username, RegionalChatDto chatDTO) {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
-        
-        RegionalChat chat = new RegionalChat();
-        chat.setUser(user);
-        chat.setRegion(chatDTO.getRegion());
-        chat.setMessage(chatDTO.getMessage());
-        
-        RegionalChat saved = regionalChatRepository.save(chat);
-        return convertToDTO(saved);
-    }
     
     @Transactional(readOnly = true)
     public Page<RegionalChatDto> getRegionalMessages(String region, Pageable pageable) {
-        return regionalChatRepository.findByRegionAndIsActiveTrueOrderByCreatedAtDesc(region, pageable)
-            .map(this::convertToDTO);
+        Page<RegionalChat> messages = regionalChatRepository.findByRegionOrderByCreatedAtDesc(region, pageable);
+        return messages.map(chat -> convertToDto(chat)); // 또는 messages.<RegionalChatDto>map(this::convertToDto)
     }
     
     @Transactional(readOnly = true)
@@ -45,32 +44,176 @@ public class RegionalChatService {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
         
-        return regionalChatRepository.findByUserOrderByCreatedAtDesc(user, pageable)
-            .map(this::convertToDTO);
+        Page<RegionalChat> messages = regionalChatRepository.findByUserOrderByCreatedAtDesc(user, pageable);
+        return messages.map(chat -> convertToDto(chat));
+    }
+    
+    public RegionalChatDto sendMessage(String username, RegionalChatDto chatDto) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+        
+        // 메시지 길이 및 내용 검증
+        if (chatDto.getMessage().length() > 500) {
+            throw new RuntimeException("메시지는 500자를 초과할 수 없습니다");
+        }
+        
+        // 스팸 방지 (1분 내 동일한 메시지 체크)
+        if (isDuplicateMessage(user, chatDto.getMessage(), chatDto.getRegion())) {
+            throw new RuntimeException("동일한 메시지를 너무 자주 보낼 수 없습니다");
+        }
+        
+        RegionalChat chat = RegionalChat.builder()
+            .user(user)
+            .region(chatDto.getRegion())
+            .message(chatDto.getMessage())
+            .build();
+        
+        RegionalChat saved = regionalChatRepository.save(chat);
+        log.info("새 메시지 저장: 사용자={}, 지역={}", username, chatDto.getRegion());
+        
+        return convertToDto(saved);
     }
     
     public void deleteMessage(String username, Long messageId) {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
         
-        RegionalChat chat = regionalChatRepository.findById(messageId)
+        RegionalChat message = regionalChatRepository.findById(messageId)
             .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다"));
         
-        if (!chat.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("삭제 권한이 없습니다");
+        // 본인의 메시지만 삭제 가능
+        if (!message.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("본인의 메시지만 삭제할 수 있습니다");
         }
         
-        chat.setIsActive(false);
-        regionalChatRepository.save(chat);
+        regionalChatRepository.delete(message);
+        log.info("메시지 삭제: 사용자={}, 메시지ID={}", username, messageId);
     }
     
-    private RegionalChatDto convertToDTO(RegionalChat chat) {
-        return new RegionalChatDto(
-            chat.getId(),
-            chat.getRegion(),
-            chat.getMessage(),
-            chat.getUser().getNickname(),
-            chat.getCreatedAt()
-        );
+    // 관리자용 메시지 삭제
+    public void deleteMessageByAdmin(Long messageId, String adminUsername) {
+        User admin = userRepository.findByUsername(adminUsername)
+            .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다"));
+        
+        RegionalChat message = regionalChatRepository.findById(messageId)
+            .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다"));
+        
+        regionalChatRepository.delete(message);
+        log.info("관리자 메시지 삭제: 관리자={}, 메시지ID={}", adminUsername, messageId);
+    }
+    
+    // 신고 기능
+    public void reportMessage(Long messageId, Long reporterId, String reporterNickname, String reason) {
+        RegionalChat message = regionalChatRepository.findById(messageId)
+            .orElseThrow(() -> new RuntimeException("신고할 메시지를 찾을 수 없습니다"));
+
+        User reporter = userRepository.findById(reporterId)
+            .orElseThrow(() -> new RuntimeException("신고자를 찾을 수 없습니다"));
+
+        // 중복 신고 방지
+        if (reportRepository.existsByMessageIdAndReporterId(messageId, reporterId)) {
+            throw new RuntimeException("이미 신고한 메시지입니다");
+        }
+
+        RegionalChatReport report = RegionalChatReport.builder()
+            .message(message)
+            .reporter(reporter)
+            .reason(reason)
+            .status(ReportStatus.PENDING)
+            .build();
+
+        reportRepository.save(report);
+        log.info("메시지 신고: 신고자={}, 메시지ID={}, 사유={}", reporterNickname, messageId, reason);
+
+        // 신고가 일정 수 이상이면 자동으로 메시지 숨김 처리
+        long reportCount = reportRepository.countReportsByMessageId(messageId);
+        if (reportCount >= 5) {
+            message.setIsHidden(true); // setHidden 대신 setIsHidden 사용
+            regionalChatRepository.save(message);
+            log.info("메시지 자동 숨김 처리: 메시지ID={}, 신고수={}", messageId, reportCount);
+        }
+    }
+    
+    // 관리자용 신고 조회
+    @Transactional(readOnly = true)
+    public Page<RegionalChatReportDto> getReports(ReportStatus status, String region, Pageable pageable) {
+        Page<RegionalChatReport> reports = reportRepository.findByFilters(status, region, pageable);
+        return reports.map(report -> convertToReportDto(report));
+    }
+    
+    // 신고 처리
+    public void resolveReport(Long reportId, String adminUsername, ReportStatus status, String adminNotes) {
+        User admin = userRepository.findByUsername(adminUsername)
+            .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다"));
+        
+        RegionalChatReport report = reportRepository.findById(reportId)
+            .orElseThrow(() -> new RuntimeException("신고를 찾을 수 없습니다"));
+        
+        report.setStatus(status);
+        report.setResolvedAt(LocalDateTime.now());
+        report.setResolvedBy(admin);
+        report.setAdminNotes(adminNotes);
+        
+        reportRepository.save(report);
+        
+        // 신고가 승인되면 메시지 삭제
+        if (status == ReportStatus.RESOLVED) {
+            deleteMessageByAdmin(report.getMessage().getId(), adminUsername);
+        }
+        
+        log.info("신고 처리 완료: 관리자={}, 신고ID={}, 처리결과={}", adminUsername, reportId, status);
+    }
+    
+    // 지역별 통계
+    @Transactional(readOnly = true)
+    public List<RegionalChatStatsDTO> getRegionalStats() {
+        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime weekAgo = today.minusDays(7);  // weekAgo 매개변수 추가
+        
+        List<Object[]> results = regionalChatRepository.getRegionalMessageStats(today, weekAgo);
+
+        return results.stream()
+            .map((Object[] row) -> {
+                return RegionalChatStatsDTO.builder()
+                    .region((String) row[0])
+                    .messageCount((Long) row[1])
+                    .activeUsers((Long) row[2])
+                    .todayMessages((Long) row[3])
+                    .build();
+            })
+            .collect(Collectors.toList());
+    }
+    
+    private boolean isDuplicateMessage(User user, String message, String region) {
+        LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(1);
+        return regionalChatRepository.existsByUserAndMessageAndRegionAndCreatedAtAfter(
+            user, message, region, oneMinuteAgo);
+    }
+    
+    private RegionalChatDto convertToDto(RegionalChat chat) {
+        RegionalChatDto dto = new RegionalChatDto();
+        dto.setId(chat.getId());
+        dto.setRegion(chat.getRegion());
+        dto.setMessage(chat.getMessage());
+        dto.setUserNickname(chat.getUser().getNickname());
+        dto.setCreatedAt(chat.getCreatedAt());
+        return dto;
+    }
+    
+    private RegionalChatReportDto convertToReportDto(RegionalChatReport report) {
+        return RegionalChatReportDto.builder()
+            .id(report.getId())
+            .messageId(report.getMessage().getId())
+            .messageContent(report.getMessage().getMessage())
+            .messageAuthor(report.getMessage().getUser().getNickname())
+            .region(report.getMessage().getRegion())
+            .reporterNickname(report.getReporter().getNickname())
+            .reason(report.getReason())
+            .description(report.getDescription())
+            .status(report.getStatus().name())
+            .reportedAt(report.getReportedAt())
+            .resolvedAt(report.getResolvedAt())
+            .adminNotes(report.getAdminNotes())
+            .build();
     }
 }

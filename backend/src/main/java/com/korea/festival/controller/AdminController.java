@@ -1,6 +1,7 @@
 package com.korea.festival.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -9,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,15 +22,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.korea.festival.dto.AdminDashboardDTO;
 import com.korea.festival.dto.AdminInquiryDTO;
 import com.korea.festival.dto.AdminUserDTO;
 import com.korea.festival.dto.InquiryAnswerDTO;
+import com.korea.festival.dto.RegionalChatReportDto;
 import com.korea.festival.dto.RegionalChatStatsDTO;
+import com.korea.festival.dto.ReportResolutionDto;
 import com.korea.festival.dto.UserGrowthDTO;
 import com.korea.festival.entity.InquiryStatus;
+import com.korea.festival.entity.ReportStatus;
+import com.korea.festival.handler.ChatWebSocketHandler;
 import com.korea.festival.service.AdminService;
+import com.korea.festival.service.RegionalChatService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +51,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AdminController {
     
     private final AdminService adminService;
+    private final RegionalChatService regionalChatService;
+    private final ChatWebSocketHandler chatWebSocketHandler;
     
     // ===== 대시보드 =====
     
@@ -66,7 +77,6 @@ public class AdminController {
             @RequestParam(name = "search", required = false) String search) {
         
         try {
-            // 검색어 로깅
             if (search != null && !search.trim().isEmpty()) {
                 log.info("Searching users with keyword: {}", search);
             }
@@ -126,7 +136,6 @@ public class AdminController {
                 }
             }
             
-            // 검색어 로깅
             if (search != null && !search.trim().isEmpty()) {
                 log.info("Searching inquiries with keyword: {}", search);
             }
@@ -205,5 +214,123 @@ public class AdminController {
             log.error("Error retrieving regional chat stats", e);
             throw e;
         }
+    }
+    
+    // ===== 실시간 채팅 관리 =====
+    
+    /**
+     * 실시간 통계 조회
+     */
+    @GetMapping("/chat/stats/realtime")
+    public ResponseEntity<Map<String, Object>> getRealTimeChatStats() {
+        try {
+            Map<String, Integer> regionUserCounts = chatWebSocketHandler.getRegionUserCounts();
+            
+            int totalOnlineUsers = regionUserCounts.values().stream()
+                .mapToInt(Integer::intValue).sum();
+            
+            Map<String, Object> stats = Map.of(
+                "totalOnlineUsers", totalOnlineUsers,
+                "activeRegions", regionUserCounts.size(),
+                "regionUserCounts", regionUserCounts,
+                "timestamp", System.currentTimeMillis()
+            );
+            
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Error retrieving real-time chat stats", e);
+            throw e;
+        }
+    }
+    
+    /**
+     * 채팅 신고 목록 조회
+     */
+    @GetMapping("/chat/reports")
+    public ResponseEntity<Page<RegionalChatReportDto>> getChatReports(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String region,
+            @PageableDefault(size = 20, sort = "reportedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        
+        try {
+            ReportStatus reportStatus = null;
+            if (status != null && !status.equals("all")) {
+                try {
+                    reportStatus = ReportStatus.valueOf(status.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().build();
+                }
+            }
+            
+            String regionFilter = region != null && !region.equals("all") ? region : null;
+            
+            Page<RegionalChatReportDto> reports = regionalChatService.getReports(
+                reportStatus, regionFilter, pageable);
+            
+            return ResponseEntity.ok(reports);
+        } catch (Exception e) {
+            log.error("Error retrieving chat reports", e);
+            throw e;
+        }
+    }
+    
+    /**
+     * 채팅 신고 처리
+     */
+    @PutMapping("/chat/reports/{reportId}/resolve")
+    public ResponseEntity<?> resolveChatReport(
+            @PathVariable("reportId") Long reportId,
+            @Valid @RequestBody ReportResolutionDto resolutionDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            ReportStatus status = ReportStatus.valueOf(resolutionDto.getStatus().toUpperCase());
+            regionalChatService.resolveReport(
+                reportId, 
+                userDetails.getUsername(), 
+                status, 
+                resolutionDto.getAdminNotes()
+            );
+            
+            return ResponseEntity.ok(Map.of("message", "신고가 처리되었습니다"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("잘못된 상태값입니다");
+        } catch (Exception e) {
+            log.error("Error resolving chat report: reportId=" + reportId, e);
+            return ResponseEntity.internalServerError().body("신고 처리에 실패했습니다");
+        }
+    }
+    
+    /**
+     * 채팅 메시지 강제 삭제
+     */
+    @DeleteMapping("/chat/messages/{messageId}")
+    public ResponseEntity<?> deleteChatMessage(
+            @PathVariable("messageId") Long messageId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            regionalChatService.deleteMessageByAdmin(messageId, userDetails.getUsername());
+            return ResponseEntity.ok(Map.of("message", "메시지가 삭제되었습니다"));
+        } catch (Exception e) {
+            log.error("Error deleting chat message: messageId=" + messageId, e);
+            return ResponseEntity.internalServerError().body("메시지 삭제에 실패했습니다");
+        }
+    }
+    
+    /**
+     * 실시간 이벤트 스트림 (Server-Sent Events)
+     */
+    @GetMapping(value = "/chat/events", produces = "text/event-stream")
+    public SseEmitter streamChatEvents() {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        
+        try {
+            emitter.send("연결되었습니다");
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+        
+        return emitter;
     }
 }

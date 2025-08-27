@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,43 +20,45 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "regional_chats")
+@Table(name = "regional_chat_reports")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegionalChat {
+public class RegionalChatReport {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "message_id", nullable = false)
+    private RegionalChat message;
     
-    @Column(nullable = false, length = 50)
-    private String region;
+    @ManyToOne
+    @JoinColumn(name = "reporter_id", nullable = false)
+    private User reporter;
     
-    @Column(nullable = false, length = 500)
-    private String message;
+    @Column(nullable = false, length = 100)
+    private String reason;
+    
+    @Column(length = 500)
+    private String description;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private ReportStatus status = ReportStatus.PENDING;
     
     @CreationTimestamp
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime reportedAt;
     
-    // 관리자에 의해 숨겨진 메시지 여부
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean isHidden = false;
+    private LocalDateTime resolvedAt;
     
-    // 신고 횟수
-    @Column(nullable = false)
-    @Builder.Default
-    private Integer reportCount = 0;
+    @ManyToOne
+    @JoinColumn(name = "resolved_by")
+    private User resolvedBy;
     
-    // 메시지 유형 (일반, 공지사항 등)
-    @Column(length = 20)
-    @Builder.Default
-    private String messageType = "NORMAL";
+    private String adminNotes;
 }

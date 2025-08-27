@@ -14,7 +14,7 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
-  # Gmail SMTP 설정 추가
+  # Gmail SMTP 설정
   mail:
     host: smtp.gmail.com
     port: 587
@@ -32,8 +32,26 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-    protocol: smtp
-    test-connection: false
+      protocol: smtp
+      test-connection: false
+
+  # Redis 설정 (실시간 채팅 세션 관리용)
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 10
+        min-idle: 1
+
+  # WebSocket 메시징 설정
+  websocket:
+    allowed-origins: 
+      - "http://localhost:3000"
+      - "http://localhost:3001"
+      - "http://localhost:8081"
 
   # 비동기 처리 설정
   task:
@@ -42,7 +60,7 @@ spring:
         core-size: 2
         max-size: 5
         queue-capacity: 100
-      thread-name-prefix: email-
+        thread-name-prefix: email-
 
 server:
   port: 8081
@@ -53,34 +71,114 @@ app:
   jwtExpirationInMs: 604800000 # 7일
   name: Festival App # 이메일에서 사용할 앱 이름
 
-logging:
-  level:
-    com.korea.festival: DEBUG
-    org.springframework.security: DEBUG
-    # 이메일 관련 로그 추가
-    com.korea.festival.service.EmailService: DEBUG
-    org.springframework.mail: INFO
-    org.springframework.mail.javamail: DEBUG
-
+# Kakao 설정
 kakao:
   client-id: 053daa073678f270e103f9f9add52992
   client-secret: MNDZVunCq1OO9mirfTYEM1S8YixLbZrT
 
-# 이메일 설정 (선택사항 - 추가 커스터마이징)
+# 이메일 설정
 email:
   # 발신자 정보
   from:
     name: Festival App
     address: xodus2331@naver.com
-  
   # 템플릿 설정
   templates:
     temp-password:
       subject: "[Festival App] 임시 비밀번호 발송"
     welcome:
       subject: "[Festival App] 회원가입을 환영합니다!"
-  
   # 재시도 설정
   retry:
     max-attempts: 3
     delay: 1000
+
+# 실시간 채팅 설정
+chat:
+  websocket:
+    # WebSocket 연결 설정
+    max-sessions-per-user: 3
+    heartbeat-interval: 30000
+    connection-timeout: 60000
+    allowed-origins:
+      - "http://localhost:3000"
+      - "http://localhost:3001"
+      - "http://localhost:8081"
+  
+  # 메시지 관련 설정
+  message:
+    max-length: 500
+    rate-limit:
+      messages-per-minute: 20
+      duplicate-check-minutes: 1
+      cooldown-seconds: 2
+    
+  # 지역별 채팅방 설정
+  region:
+    max-users-per-region: 1000
+    cleanup-interval: 300000 # 5분마다 비활성 세션 정리
+    
+  # 자동 조치 설정
+  moderation:
+    auto-hide-report-threshold: 5 # 신고 5건 이상 시 자동 숨김
+    auto-ban-report-threshold: 10 # 신고 10건 이상 시 자동 차단
+    banned-words:
+      - "스팸"
+      - "광고"
+      - "도박"
+      - "불법"
+    
+  # 메시지 보관 정책
+  retention:
+    message-days: 30 # 메시지 30일 보관
+    report-days: 90 # 신고 기록 90일 보관
+
+# 로깅 설정
+logging:
+  level:
+    com.korea.festival: DEBUG
+    org.springframework.security: DEBUG
+    # 이메일 관련 로그
+    com.korea.festival.service.EmailService: DEBUG
+    org.springframework.mail: INFO
+    org.springframework.mail.javamail: DEBUG
+    # WebSocket 관련 로그
+    com.korea.festival.handler.ChatWebSocketHandler: DEBUG
+    org.springframework.web.socket: INFO
+    org.springframework.messaging: INFO
+  
+  # 로그 파일 설정
+  file:
+    name: logs/festival-app.log
+    max-size: 100MB
+    max-history: 30
+  
+  pattern:
+    file: "[%d{yyyy-MM-dd HH:mm:ss}] [%level] [%logger{36}] - %msg%n"
+    console: "[%d{HH:mm:ss}] [%level] %logger{36} - %msg%n"
+
+# 관리자 알림 설정 
+admin:
+  notification:
+    email: admin@festival.com
+    alert-thresholds:
+      concurrent-users: 500
+      reports-per-hour: 20
+      error-rate: 0.05
+
+# CORS 설정 (전역)
+cors:
+  allowed-origins:
+    - "http://localhost:3000"
+    - "http://localhost:3001"
+    - "http://localhost:8081"
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true
+  max-age: 3600
