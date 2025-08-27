@@ -1,58 +1,203 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
-import { Send, Users, MapPin, Settings, Smile, Trash2 } from 'lucide-react';
-import { sendChatMessage, fetchRegionalMessages } from '../../api/mypage';
-import ConfirmModal from '../common/ConfirmModal';
+import { Send, Users, MapPin, AlertTriangle, Trash2, Flag, X, Shield } from 'lucide-react';
+import { getCurrentUser } from '../../api/auth';
 
-const ChatContainer = styled.div`
+const Container = styled.div`
   display: flex;
-  flex-direction: column;
-  height: 600px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: hidden;
 `;
 
-const Header = styled.div`
+const MapSection = styled.div`
+  width: 400px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  
+  @media (max-width: 1024px) {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: ${({ $showMap }) => $showMap ? '0' : '-100%'};
+    z-index: 10;
+    transition: left 0.3s ease;
+  }
+`;
+
+const MapHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(to right, #6366f1, #a855f7);
-  border-top-left-radius: 1rem;
-  border-top-right-radius: 1rem;
-  color: #fff;
+  margin-bottom: 1.5rem;
 `;
 
-const HeaderLeft = styled.div`
+const MapTitle = styled.h2`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 `;
 
-const HeaderRight = styled.div`
+const CloseButton = styled.button`
+  display: none;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  
+  &:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+  
+  @media (max-width: 1024px) {
+    display: block;
+  }
+`;
+
+const KoreaMapContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const MapSVG = styled.svg`
+  width: 100%;
+  height: 300px;
+  cursor: pointer;
+`;
+
+const RegionPath = styled.path`
+  fill: ${({ $selected, $hasUsers }) => {
+    if ($selected) return '#3b82f6';
+    if ($hasUsers) return '#10b981';
+    return '#e5e7eb';
+  }};
+  stroke: #ffffff;
+  stroke-width: 1;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    fill: ${({ $selected }) => $selected ? '#2563eb' : '#6366f1'};
+    stroke-width: 2;
+  }
+`;
+
+const RegionInfo = styled.div`
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+`;
+
+const SelectedRegion = styled.div`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const RegionStats = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+`;
+
+const Stat = styled.div`
+  text-align: center;
+`;
+
+const StatValue = styled.div`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #3b82f6;
+`;
+
+const StatLabel = styled.div`
+  font-size: 0.875rem;
+  color: #6b7280;
+`;
+
+const ChatSection = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+`;
+
+const ChatHeader = styled.div`
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const ChatHeaderLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
 `;
 
-const RegionSelector = styled.select`
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  background: white;
-  color: #1f2937;
-  font-size: 0.875rem;
+const ChatTitle = styled.h2`
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
 `;
 
-const StatusDot = styled.div`
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background-color: ${({ connected }) => (connected ? '#34d399' : '#f87171')};
+const ChatSubtitle = styled.div`
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin-top: 0.25rem;
+`;
+
+const ChatHeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const MapToggle = styled.button`
+  display: none;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 0.5rem;
+  color: white;
+  cursor: pointer;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  @media (max-width: 1024px) {
+    display: block;
+  }
+`;
+
+const OnlineUsers = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
 `;
 
 const MessagesContainer = styled.div`
@@ -62,90 +207,135 @@ const MessagesContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background: #f8fafc;
 `;
 
 const MessageWrapper = styled.div`
   display: flex;
-  justify-content: ${({ isOwn }) => (isOwn ? 'flex-end' : 'flex-start')};
+  justify-content: ${({ $isOwn }) => $isOwn ? 'flex-end' : 'flex-start'};
   position: relative;
+  margin-bottom: 0.5rem;
 `;
 
 const MessageBox = styled.div`
-  max-width: 18rem;
-  background: ${({ isOwn }) =>
-    isOwn ? 'linear-gradient(to right, #6366f1, #a855f7)' : '#f3f4f6'};
-  color: ${({ isOwn }) => (isOwn ? '#fff' : '#1f2937')};
-  padding: 0.5rem 1rem;
+  max-width: 70%;
+  background: ${({ $isOwn }) =>
+    $isOwn ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : '#ffffff'};
+  color: ${({ $isOwn }) => $isOwn ? '#ffffff' : '#1f2937'};
+  padding: 1rem;
   border-radius: 1rem;
   position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: ${({ $isOwn }) => $isOwn ? 'none' : '1px solid #e5e7eb'};
+  
+  ${({ $isOwn }) => !$isOwn && `
+    border-bottom-left-radius: 0.25rem;
+  `}
+  
+  ${({ $isOwn }) => $isOwn && `
+    border-bottom-right-radius: 0.25rem;
+  `}
 `;
 
 const MessageMeta = styled.div`
-  font-size: 0.625rem;
-  color: #9ca3af;
-  margin-top: 0.25rem;
-  text-align: ${({ isOwn }) => (isOwn ? 'right' : 'left')};
+  font-size: 0.75rem;
+  color: ${({ $isOwn }) => $isOwn ? 'rgba(255, 255, 255, 0.7)' : '#9ca3af'};
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
-const DeleteButton = styled.button`
+const MessageContent = styled.div`
+  word-wrap: break-word;
+  line-height: 1.5;
+`;
+
+const MessageActions = styled.div`
   position: absolute;
   top: -0.5rem;
-  right: -0.5rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  background: #ef4444;
-  color: white;
-  border: none;
-  cursor: pointer;
+  right: ${({ $isOwn }) => $isOwn ? '-2.5rem' : 'auto'};
+  left: ${({ $isOwn }) => $isOwn ? 'auto' : '-2.5rem'};
   display: none;
+  flex-direction: column;
+  gap: 0.25rem;
   
   ${MessageWrapper}:hover & {
     display: flex;
-    align-items: center;
-    justify-content: center;
+  }
+`;
+
+const ActionButton = styled.button`
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  background: ${({ $danger }) => $danger ? '#ef4444' : '#6b7280'};
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 `;
 
 const InputContainer = styled.div`
   padding: 1rem;
+  background: white;
   border-top: 1px solid #e5e7eb;
 `;
 
 const InputWrapper = styled.div`
   display: flex;
   gap: 0.75rem;
+  align-items: flex-end;
 `;
 
 const MessageInput = styled.textarea`
   flex: 1;
-  padding: 0.75rem 3rem 0.75rem 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
   border-radius: 1rem;
-  border: 1px solid #e5e7eb;
-  outline: none;
   resize: none;
   font-size: 0.875rem;
+  font-family: inherit;
+  transition: all 0.2s;
+  
   &:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
   }
 `;
 
 const SendButton = styled.button`
-  padding: 0.75rem;
-  border-radius: 1rem;
-  background: ${({ disabled }) => (disabled ? '#e5e7eb' : 'linear-gradient(to right, #6366f1, #a855f7)')};
-  color: ${({ disabled }) => (disabled ? '#9ca3af' : '#fff')};
-  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
+  padding: 1rem;
+  background: ${({ $disabled }) => $disabled ? '#e5e7eb' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)'};
+  color: ${({ $disabled }) => $disabled ? '#9ca3af' : 'white'};
   border: none;
+  border-radius: 1rem;
+  cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
   &:hover {
-    transform: ${({ disabled }) => (disabled ? 'none' : 'translateY(-2px)')};
-    box-shadow: ${({ disabled }) => (disabled ? 'none' : '0 4px 6px rgba(0,0,0,0.1)')};
+    transform: ${({ $disabled }) => $disabled ? 'none' : 'translateY(-2px)'};
+    box-shadow: ${({ $disabled }) => $disabled ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.3)'};
   }
 `;
 
-const InfoRow = styled.div`
+const InputInfo = styled.div`
   display: flex;
   justify-content: space-between;
   margin-top: 0.5rem;
@@ -153,267 +343,473 @@ const InfoRow = styled.div`
   color: #6b7280;
 `;
 
-const LoadingState = styled.div`
+// 신고 모달
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100%;
-  color: #6b7280;
+  justify-content: center;
+  z-index: 1000;
 `;
 
-const regions = [
-  { code: 'seoul', name: '서울' },
-  { code: 'busan', name: '부산' },
-  { code: 'daegu', name: '대구' },
-  { code: 'incheon', name: '인천' },
-  { code: 'gwangju', name: '광주' },
-  { code: 'daejeon', name: '대전' },
-  { code: 'ulsan', name: '울산' },
+const ModalContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+`;
+
+const ModalTitle = styled.h3`
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 0;
+`;
+
+const ModalCloseButton = styled.button`
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  
+  &:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+`;
+
+const ReportReasonList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+`;
+
+const ReportReasonButton = styled.button`
+  padding: 1rem;
+  border: 2px solid ${({ $selected }) => $selected ? '#3b82f6' : '#e5e7eb'};
+  background: ${({ $selected }) => $selected ? '#eff6ff' : 'white'};
+  color: ${({ $selected }) => $selected ? '#1d4ed8' : '#374151'};
+  border-radius: 0.5rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  
+  &:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+`;
+
+const ModalButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  ${({ $variant }) => {
+    if ($variant === 'danger') {
+      return `
+        background: #dc2626;
+        color: white;
+        &:hover { background: #b91c1c; }
+      `;
+    }
+    return `
+      background: #f3f4f6;
+      color: #374151;
+      &:hover { background: #e5e7eb; }
+    `;
+  }}
+`;
+
+// 한국 지도 데이터 (간소화된 SVG 경로)
+const koreaRegions = [
+  { id: 'seoul', name: '서울특별시', path: 'M120,80 L140,75 L145,85 L135,95 L120,90 Z', users: 1247 },
+  { id: 'busan', name: '부산광역시', path: 'M180,140 L195,135 L200,145 L190,155 L180,150 Z', users: 892 },
+  { id: 'daegu', name: '대구광역시', path: 'M160,120 L175,115 L180,125 L170,135 L160,130 Z', users: 634 },
+  { id: 'incheon', name: '인천광역시', path: 'M100,85 L115,80 L120,90 L110,100 L100,95 Z', users: 456 },
+  { id: 'gwangju', name: '광주광역시', path: 'M140,150 L155,145 L160,155 L150,165 L140,160 Z', users: 378 },
+  { id: 'daejeon', name: '대전광역시', path: 'M130,110 L145,105 L150,115 L140,125 L130,120 Z', users: 523 },
+  { id: 'ulsan', name: '울산광역시', path: 'M190,130 L205,125 L210,135 L200,145 L190,140 Z', users: 289 },
+  { id: 'gyeonggi', name: '경기도', path: 'M90,70 L140,65 L145,85 L120,90 L100,95 L85,85 Z', users: 2156 },
+  { id: 'gangwon', name: '강원도', path: 'M145,50 L200,45 L205,75 L180,80 L145,85 Z', users: 234 },
+  { id: 'chungbuk', name: '충청북도', path: 'M130,85 L165,80 L170,105 L145,110 L130,105 Z', users: 187 },
+  { id: 'chungnam', name: '충청남도', path: 'M105,95 L145,90 L150,115 L120,120 L105,115 Z', users: 312 },
+  { id: 'jeonbuk', name: '전라북도', path: 'M120,120 L155,115 L160,140 L130,145 L120,140 Z', users: 278 },
+  { id: 'jeonnam', name: '전라남도', path: 'M115,140 L160,135 L165,165 L125,170 L115,160 Z', users: 201 },
+  { id: 'gyeongbuk', name: '경상북도', path: 'M150,85 L195,80 L200,125 L170,130 L150,105 Z', users: 445 },
+  { id: 'gyeongnam', name: '경상남도', path: 'M160,130 L205,125 L210,155 L175,160 L160,150 Z', users: 389 },
+  { id: 'jeju', name: '제주특별자치도', path: 'M90,180 L120,175 L125,190 L100,195 L90,190 Z', users: 156 }
 ];
 
-const RealtimeChat = ({ userId, userNickname }) => {
+const reportReasons = [
+  '스팸 또는 광고',
+  '욕설 및 비방',
+  '개인정보 노출',
+  '불법적인 내용',
+  '성적인 내용',
+  '기타 부적절한 내용'
+];
+
+const RealtimeChat = ({ userId = 1, userNickname = "사용자" }) => {
+  const [selectedRegion, setSelectedRegion] = useState('seoul');
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('seoul');
-  const [participants, setParticipants] = useState(0);
-  const [isConnected, setIsConnected] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [messageToDelete, setMessageToDelete] = useState(null);
-
+  const [websocket, setWebsocket] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(0);
+  const [showMap, setShowMap] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportingMessage, setReportingMessage] = useState(null);
+  const [selectedReportReason, setSelectedReportReason] = useState('');
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  
 
+  const { token } = getCurrentUser();
+
+  // WebSocket 연결
   useEffect(() => {
-    loadMessages();
-  }, [selectedRegion]);
+    if (!token) {
+      console.error("토큰 없음, WebSocket 연결 불가");
+      return;
+    }
 
+    const ws = new WebSocket(`ws://localhost:8081/ws/chat?token=${token}`);
+
+    ws.onopen = () => {
+      console.log('WebSocket 연결됨');
+      ws.send(JSON.stringify({
+        type: 'JOIN_REGION',
+        region: selectedRegion,
+        userId,
+        nickname: userNickname
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      switch (data.type) {
+        case 'NEW_MESSAGE':
+          setMessages(prev => [...prev, {
+            id: data.id,
+            content: data.content,
+            nickname: data.nickname,
+            userId: data.userId,
+            timestamp: data.timestamp,
+            isOwn: data.userId === userId
+          }]);
+          break;
+        case 'USER_COUNT':
+          setOnlineUsers(data.count);
+          break;
+        case 'REGION_MESSAGES':
+          setMessages(data.messages.map(msg => ({ ...msg, isOwn: msg.userId === userId })));
+          break;
+        default:
+          break;
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket 연결 종료');
+      // 재연결 시도
+      setTimeout(() => setWebsocket(null), 3000);
+    };
+
+    ws.onerror = (error) => console.error('WebSocket 오류:', error);
+
+    setWebsocket(ws);
+
+    return () => {
+      ws.close();
+    };
+  }, [token, selectedRegion, userId, userNickname]);
+
+  // 메시지 자동 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const loadMessages = async () => {
-    try {
-      setLoading(true);
-      const currentRegion = regions.find(r => r.code === selectedRegion);
-      const response = await fetchRegionalMessages(currentRegion.name, 0, 50);
+  // 지역 변경
+  const handleRegionChange = (regionId) => {
+    setSelectedRegion(regionId);
+    setMessages([]);
 
-      // 백엔드 응답이 없으면 샘플 데이터 사용
-      if (response.content && response.content.length > 0) {
-        setMessages(response.content.reverse()); // 최신 메시지가 아래로 오도록
-        setParticipants(response.totalElements);
-      } else {
-        // 샘플 데이터
-        const sampleMessages = [
-          {
-            id: 1,
-            userNickname: '축제마니아',
-            message: `${regions.find(r => r.code === selectedRegion).name} 지역 축제 정보 궁금해요!`,
-            createdAt: new Date(Date.now() - 300000).toISOString(),
-            isOwn: false
-          },
-          {
-            id: 2,
-            userNickname: '현지인',
-            message: '이번 주말에 좋은 축제 있어요!',
-            createdAt: new Date(Date.now() - 240000).toISOString(),
-            isOwn: false
-          }
-        ];
-        setMessages(sampleMessages);
-        setParticipants(25);
-      }
-    } catch (err) {
-      console.error('메시지 로드 실패:', err);
-      // 오류 시 샘플 데이터 표시
-      setMessages([]);
-      setParticipants(0);
-    } finally {
-      setLoading(false);
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      websocket.send(JSON.stringify({ type: 'LEAVE_REGION' }));
+      websocket.send(JSON.stringify({
+        type: 'JOIN_REGION',
+        region: regionId,
+        userId,
+        nickname: userNickname
+      }));
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+  // 메시지 전송
+  const sendMessage = () => {
+    if (!newMessage.trim() || !websocket || websocket.readyState !== WebSocket.OPEN) return;
 
-    const tempMessage = {
-      id: Date.now(),
-      userNickname: userNickname || '나',
-      message: newMessage.trim(),
-      createdAt: new Date().toISOString(),
-      isOwn: true
-    };
+    websocket.send(JSON.stringify({
+      type: 'SEND_MESSAGE',
+      content: newMessage.trim(),
+      region: selectedRegion,
+      userId,
+      nickname: userNickname,
+      timestamp: new Date().toISOString()
+    }));
 
-    // 즉시 UI 업데이트
-    setMessages(prev => [...prev, tempMessage]);
     setNewMessage('');
+  };
 
-    try {
-      const currentRegion = regions.find(r => r.code === selectedRegion);
-      await sendChatMessage({
-        region: currentRegion.name,
-        message: newMessage.trim()
-      });
+  // 메시지 삭제
+  const deleteMessage = (messageId) => {
+    if (!websocket || websocket.readyState !== WebSocket.OPEN) return;
 
-      // 성공 시 실제 메시지로 교체하거나 다시 로드
-      setTimeout(() => {
-        loadMessages();
-      }, 1000);
-    } catch (err) {
-      console.error('메시지 전송 실패:', err);
-      // 실패 시 임시 메시지 제거
-      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+    websocket.send(JSON.stringify({
+      type: 'DELETE_MESSAGE',
+      messageId,
+      userId
+    }));
+  };
+
+  // 메시지 신고
+  const reportMessage = (message) => {
+    setReportingMessage(message);
+    setShowReportModal(true);
+  };
+
+  const submitReport = () => {
+    if (!selectedReportReason || !reportingMessage) return;
+
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      websocket.send(JSON.stringify({
+        type: 'REPORT_MESSAGE',
+        messageId: reportingMessage.id,
+        reason: selectedReportReason,
+        reporterId: userId,
+        reporterNickname: userNickname
+      }));
+    }
+
+    setShowReportModal(false);
+    setReportingMessage(null);
+    setSelectedReportReason('');
+    alert('신고가 접수되었습니다.');
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
-  const handleDeleteMessage = async (messageId) => {
-    // 커스텀 모달로 변경
-    setMessageToDelete(messageId);
-    setShowDeleteConfirm(true);
-  };
-
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const confirmDeleteMessage = async () => {
-    if (!messageToDelete) return;
-
-    try {
-      // await deleteChatMessage(messageToDelete);
-      setMessages(prev => prev.filter(m => m.id !== messageToDelete));
-    } catch (err) {
-      console.error('메시지 삭제 실패:', err);
-    } finally {
-      setMessageToDelete(null);
-    }
-  };
-
-  const getCurrentRegionName = () => {
-    return regions.find(r => r.code === selectedRegion)?.name || '서울';
-  };
+  const selectedRegionData = koreaRegions.find(r => r.id === selectedRegion);
+  const formatTime = (timestamp) => new Date(timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <ChatContainer>
-      <Header>
-        <HeaderLeft>
-          <MapPin size={20} />
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h3>지역 실시간 채팅</h3>
-              <RegionSelector
-                value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-              >
-                {regions.map(region => (
-                  <option key={region.code} value={region.code}>
-                    {region.name}
-                  </option>
-                ))}
-              </RegionSelector>
-            </div>
-            <p style={{ fontSize: '0.75rem', opacity: 0.9 }}>
-              {getCurrentRegionName()} 지역 정보를 공유해보세요
-            </p>
-          </div>
-        </HeaderLeft>
-        <HeaderRight>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <StatusDot connected={isConnected} />
-            <span style={{ fontSize: '0.75rem' }}>
-              {isConnected ? '연결됨' : '연결 중...'}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Users size={16} />
-            <span style={{ fontSize: '0.75rem' }}>{participants}명</span>
-          </div>
-        </HeaderRight>
-      </Header>
+    <Container>
+      <MapSection $showMap={showMap}>
+        <MapHeader>
+          <MapTitle>
+            <MapPin size={20} />
+            지역 선택
+          </MapTitle>
+          <CloseButton onClick={() => setShowMap(false)}>
+            <X size={20} />
+          </CloseButton>
+        </MapHeader>
 
-      <MessagesContainer>
-        {loading ? (
-          <LoadingState>메시지를 불러오는 중...</LoadingState>
-        ) : (
-          <>
-            {messages.map((msg) => (
-              <MessageWrapper key={msg.id} isOwn={msg.isOwn}>
-                <div style={{ maxWidth: '18rem' }}>
-                  {!msg.isOwn && (
-                    <div style={{
-                      fontSize: '0.625rem',
-                      color: '#6b7280',
-                      marginBottom: '0.25rem'
-                    }}>
-                      {msg.userNickname}
-                    </div>
-                  )}
-                  <MessageBox isOwn={msg.isOwn}>
-                    {msg.message}
-                    {msg.isOwn && (
-                      <DeleteButton onClick={() => handleDeleteMessage(msg.id)}>
-                        <Trash2 size={10} />
-                      </DeleteButton>
-                    )}
-                  </MessageBox>
-                  <MessageMeta isOwn={msg.isOwn}>
-                    {formatTime(msg.createdAt)}
-                  </MessageMeta>
-                </div>
-              </MessageWrapper>
+        <KoreaMapContainer>
+          <MapSVG viewBox="0 0 250 220">
+            {koreaRegions.map((region) => (
+              <RegionPath
+                key={region.id}
+                d={region.path}
+                $selected={selectedRegion === region.id}
+                $hasUsers={region.users > 0}
+                onClick={() => handleRegionChange(region.id)}
+                title={`${region.name} (${region.users}명 접속)`}
+              />
             ))}
-            <div ref={messagesEndRef} />
+          </MapSVG>
 
-            {/* 삭제 확인 모달 */}
-            <ConfirmModal
-              isOpen={showDeleteConfirm}
-              onClose={() => {
-                setShowDeleteConfirm(false);
-                setMessageToDelete(null);
-              }}
-              onConfirm={confirmDeleteMessage}
-              title="메시지 삭제"
-              message="이 메시지를 삭제하시겠습니까? 삭제된 메시지는 복구할 수 없습니다."
-              confirmText="삭제"
-              cancelText="취소"
-              variant="danger"
-            />
-          </>
-        )}
-      </MessagesContainer>
+          {selectedRegionData && (
+            <RegionInfo>
+              <SelectedRegion>
+                <MapPin size={16} />
+                {selectedRegionData.name}
+              </SelectedRegion>
+              <RegionStats>
+                <Stat>
+                  <StatValue>{onlineUsers}</StatValue>
+                  <StatLabel>실시간 접속자</StatLabel>
+                </Stat>
+                <Stat>
+                  <StatValue>{selectedRegionData.users}</StatValue>
+                  <StatLabel>총 사용자</StatLabel>
+                </Stat>
+              </RegionStats>
+            </RegionInfo>
+          )}
+        </KoreaMapContainer>
+      </MapSection>
 
-      <InputContainer>
-        <InputWrapper>
-          <div style={{ flex: 1, position: 'relative' }}>
+      <ChatSection>
+        <ChatHeader>
+          <ChatHeaderLeft>
+            <MapToggle onClick={() => setShowMap(true)}>
+              <MapPin size={20} />
+            </MapToggle>
+            <div>
+              <ChatTitle>{selectedRegionData?.name} 채팅방</ChatTitle>
+              <ChatSubtitle>지역 주민들과 실시간으로 소통해보세요</ChatSubtitle>
+            </div>
+          </ChatHeaderLeft>
+
+          <ChatHeaderRight>
+            <OnlineUsers>
+              <Users size={16} />
+              {onlineUsers}명 접속 중
+            </OnlineUsers>
+          </ChatHeaderRight>
+        </ChatHeader>
+
+        <MessagesContainer>
+          {messages.map((message) => (
+            <MessageWrapper key={message.id} $isOwn={message.isOwn}>
+              <MessageBox $isOwn={message.isOwn}>
+                <MessageMeta $isOwn={message.isOwn}>
+                  <span>{message.isOwn ? '나' : message.nickname}</span>
+                  <span>{formatTime(message.timestamp)}</span>
+                </MessageMeta>
+                <MessageContent>{message.content}</MessageContent>
+
+                <MessageActions $isOwn={message.isOwn}>
+                  {!message.isOwn && (
+                    <ActionButton
+                      onClick={() => reportMessage(message)}
+                      title="신고"
+                    >
+                      <Flag size={12} />
+                    </ActionButton>
+                  )}
+                  {message.isOwn && (
+                    <ActionButton
+                      $danger
+                      onClick={() => deleteMessage(message.id)}
+                      title="삭제"
+                    >
+                      <Trash2 size={12} />
+                    </ActionButton>
+                  )}
+                </MessageActions>
+              </MessageBox>
+            </MessageWrapper>
+          ))}
+          <div ref={messagesEndRef} />
+        </MessagesContainer>
+
+        <InputContainer>
+          <InputWrapper>
             <MessageInput
-              rows={1}
+              ref={inputRef}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder="메시지를 입력하세요..."
+              onKeyPress={handleKeyPress}
+              placeholder="메시지를 입력하세요... (Shift + Enter로 줄바꿈)"
+              rows={1}
               maxLength={500}
             />
-          </div>
-          <SendButton
-            disabled={!newMessage.trim() || !isConnected}
-            onClick={handleSendMessage}
-          >
-            <Send size={20} />
-          </SendButton>
-        </InputWrapper>
-        <InfoRow>
-          <span>Shift + Enter로 줄바꿈</span>
-          <span>{newMessage.length}/500</span>
-        </InfoRow>
-      </InputContainer>
-    </ChatContainer>
+            <SendButton
+              $disabled={!newMessage.trim()}
+              onClick={sendMessage}
+            >
+              <Send size={20} />
+            </SendButton>
+          </InputWrapper>
+          <InputInfo>
+            <span>Shift + Enter로 줄바꿈</span>
+            <span>{newMessage.length}/500</span>
+          </InputInfo>
+        </InputContainer>
+      </ChatSection>
+
+      {/* 신고 모달 */}
+      {showReportModal && (
+        <Modal onClick={() => setShowReportModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>메시지 신고</ModalTitle>
+              <ModalCloseButton onClick={() => setShowReportModal(false)}>
+                <X size={20} />
+              </ModalCloseButton>
+            </ModalHeader>
+
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+              <strong>{reportingMessage?.nickname}</strong>: {reportingMessage?.content}
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.75rem' }}>
+                신고 사유를 선택해주세요:
+              </label>
+              <ReportReasonList>
+                {reportReasons.map((reason) => (
+                  <ReportReasonButton
+                    key={reason}
+                    $selected={selectedReportReason === reason}
+                    onClick={() => setSelectedReportReason(reason)}
+                  >
+                    {reason}
+                  </ReportReasonButton>
+                ))}
+              </ReportReasonList>
+            </div>
+
+            <ModalActions>
+              <ModalButton onClick={() => setShowReportModal(false)}>
+                취소
+              </ModalButton>
+              <ModalButton
+                $variant="danger"
+                onClick={submitReport}
+                disabled={!selectedReportReason}
+              >
+                신고하기
+              </ModalButton>
+            </ModalActions>
+          </ModalContent>
+        </Modal>
+      )}
+    </Container>
   );
 };
 

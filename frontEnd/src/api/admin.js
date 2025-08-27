@@ -386,3 +386,105 @@ export const formatNumber = (number) => {
   if (typeof number !== 'number' || isNaN(number)) return '0';
   return number.toLocaleString('ko-KR');
 };
+
+// ===== 실시간 채팅 관리 =====
+
+export const fetchRealTimeChatStats = async () => {
+  try {
+    const response = await axiosInstance.get('/api/admin/chat/stats/realtime');
+    return response.data;
+  } catch (error) {
+    console.error('Real-time chat stats fetch failed:', error);
+    return {
+      totalOnlineUsers: 0,
+      activeRegions: 0,
+      regionUserCounts: {},
+      timestamp: Date.now()
+    };
+  }
+};
+
+export const fetchChatReports = async (page = 0, size = 20, status = 'all', region = 'all') => {
+  try {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    
+    if (status !== 'all') params.append('status', status);
+    if (region !== 'all') params.append('region', region);
+    
+    const response = await axiosInstance.get(`/api/admin/chat/reports?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Chat reports fetch failed:', error);
+    return {
+      content: [],
+      totalPages: 0,
+      totalElements: 0,
+      size: size,
+      number: page
+    };
+  }
+};
+
+export const resolveChatReport = async (reportId, status, adminNotes = '') => {
+  try {
+    const response = await axiosInstance.put(`/api/admin/chat/reports/${reportId}/resolve`, {
+      status,
+      adminNotes
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Chat report resolve failed:', error);
+    throw new Error(error.response?.data?.message || '신고 처리에 실패했습니다.');
+  }
+};
+
+export const deleteChatMessageByAdmin = async (messageId) => {
+  try {
+    const response = await axiosInstance.delete(`/api/admin/chat/messages/${messageId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Admin chat message delete failed:', error);
+    throw new Error(error.response?.data?.message || '메시지 삭제에 실패했습니다.');
+  }
+};
+
+export const blockChatUserByAdmin = async (userId, reason = '부적절한 행동') => {
+  try {
+    const response = await axiosInstance.post(`/api/admin/chat/users/${userId}/block`, {
+      reason
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Chat user block failed:', error);
+    throw new Error(error.response?.data?.message || '사용자 차단에 실패했습니다.');
+  }
+};
+
+// Server-Sent Events 구독
+export const subscribeToChatEvents = (onDataReceived, onError) => {
+  try {
+    const eventSource = new EventSource('/api/admin/chat/events');
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onDataReceived(data);
+      } catch (err) {
+        console.error('SSE data parse error:', err);
+      }
+    };
+    
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+      if (onError) onError(error);
+    };
+    
+    return eventSource;
+  } catch (error) {
+    console.error('SSE subscription failed:', error);
+    if (onError) onError(error);
+    return null;
+  }
+};

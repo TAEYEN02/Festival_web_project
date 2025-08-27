@@ -18,7 +18,10 @@ export const login = async (username, password) => {
     localStorage.setItem("username", user);
     localStorage.setItem("role", role);
 
+    console.log("로그인 응답:", response.data);
     return { token: accessToken, username: user, role };
+
+    
   } catch (error) {
     console.error("Login error:", error);
     throw error.response?.data || "로그인 실패";
