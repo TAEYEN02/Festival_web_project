@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.korea.festival.dto.BoardCommentRequestDTO;
+import com.korea.festival.dto.BoardCommentResponseDTO;
 import com.korea.festival.dto.BoardRequestDTO;
 import com.korea.festival.dto.BoardResponseDTO;
 import com.korea.festival.service.BoardService;
@@ -57,7 +59,7 @@ public class BoardController {
 	//d
 	@DeleteMapping("/{boardId}")
 	public ResponseEntity<?> boardDelete(@PathVariable Long boardId,@RequestParam Long userId){
-		BoardResponseDTO result = boardService.boardDelete(boardId,userId);
+		boolean result = boardService.boardDelete(boardId,userId);
 		return ResponseEntity.ok().body(result);
 	}
 	
@@ -67,5 +69,40 @@ public class BoardController {
 		BoardResponseDTO result = boardService.likeToggle(boardId,userId);
 		return ResponseEntity.ok().body(result);
 	}
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+    // 댓글 작성
+    @PostMapping("/comment")
+    public ResponseEntity<BoardCommentResponseDTO> commentWrite(@RequestBody BoardCommentRequestDTO requestDTO) {
+        return ResponseEntity.ok(boardService.commentWrite(requestDTO));
+    }
+
+    // 댓글 수정
+    @PutMapping("/comment/{id}")
+    public ResponseEntity<BoardCommentResponseDTO> commentUpdate(
+            @PathVariable Long id,
+            @RequestBody BoardCommentRequestDTO requestDTO) {
+        return ResponseEntity.ok(boardService.commentUpdate(id, requestDTO));
+    }
+
+    // 댓글 삭제
+    @DeleteMapping("/comment/{id}")
+    public ResponseEntity<Void> commentDelete(@PathVariable Long id) {
+        boardService.commentDelete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 단일 댓글 조회
+    @GetMapping("/comment/{id}")
+    public ResponseEntity<BoardCommentResponseDTO> commentFindOne(@PathVariable Long id) {
+        return ResponseEntity.ok(boardService.commentFindOne(id));
+    }
+
+    // 게시글 댓글 전체 조회
+    @GetMapping("/comment/{boardId}")
+    public ResponseEntity<List<BoardCommentResponseDTO>> commentFindAll(@PathVariable Long boardId) {
+        return ResponseEntity.ok(boardService.commentFindAll(boardId));
+    }
 
 }

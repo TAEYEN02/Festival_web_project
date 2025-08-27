@@ -6,11 +6,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.korea.festival.dto.BoardCommentRequestDTO;
+import com.korea.festival.dto.BoardCommentResponseDTO;
 import com.korea.festival.dto.BoardRequestDTO;
 import com.korea.festival.dto.BoardResponseDTO;
 import com.korea.festival.entity.Board;
+import com.korea.festival.entity.BoardComment;
 import com.korea.festival.entity.BoardLikes;
 import com.korea.festival.entity.User;
+import com.korea.festival.repository.BoardCommentRepository;
 import com.korea.festival.repository.BoardLikesRepository;
 import com.korea.festival.repository.BoardRepository;
 import com.korea.festival.repository.UserRepository;
@@ -22,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BoardService {
 	
+	private final BoardCommentRepository commentRepository;
 	private final BoardRepository boardRepository;
 	private final BoardLikesRepository boardLikesRepository;
 	private final UserRepository userRepository;
@@ -82,12 +87,32 @@ public class BoardService {
 		board.setCategory(dto.getCategory());
 		board.setTags(dto.getTags());
 		board.setUpdatedAt(LocalDateTime.now());
+		//내가 추가함
+		boardRepository.save(board);
 		
 		return toDTO(board, userId);
 	}
 	
 	//d
-	public BoardResponseDTO boardDelete()
+	public boolean boardDelete(Long boardId,Long userId) {
+		userRepository.findById(userId)
+		.orElseThrow(()->new RuntimeException("유저가 없습니다"));
+		
+		Board board = boardRepository.findById(boardId)
+				.orElseThrow(()->new RuntimeException("게시글 없음"));
+		
+		if(!board.getUser().getId().equals(userId)) {
+			throw new RuntimeException("작성자가 아닙니다.");
+		}
+		
+		if(!boardRepository.existsById(boardId)) {
+			return false;
+		}
+		
+		boardRepository.deleteById(boardId);
+		
+		return !boardRepository.existsById(boardId);
+	}
 	
 	
 	//like
@@ -134,5 +159,79 @@ public class BoardService {
 				.updatedAt(board.getUpdatedAt())
 				.build();
 	}
+	
+	///////////////////////////////////////////////////////////////////////////////////////////
 
+	// 댓글 생성
+    public BoardCommentResponseDTO commentWrite(BoardCommentRequestDTO requestDTO) {
+        Board board = boardRepository.findById(requestDTO.getBoardId())
+                .orElseThrow(() -> new RuntimeException("게시글 없음"));
+
+        User user = userRepository.findById(requestDTO.getUserId())
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+        BoardComment parent = null;
+        if(requestDTO.getParentId() != null) {
+            parent = commentRepository.findById(requestDTO.getParentId())
+                    .orElseThrow(() -> new RuntimeException("부모 댓글 없음"));
+        }
+
+        BoardComment comment = BoardComment.builder()
+                .board(board)
+                .user(user)
+                .content(requestDTO.getContent())
+                .parent(parent)
+                .build();
+
+        BoardComment saved = commentRepository.save(comment);
+        return toDTO(saved);
+    }
+
+    // 댓글 수정
+    public BoardCommentResponseDTO commentUpdate(Long commentId, BoardCommentRequestDTO requestDTO) {
+        BoardComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글 없음"));
+
+        comment.setContent(requestDTO.getContent());
+        BoardComment updated = commentRepository.save(comment);
+        return toDTO(updated);
+    }
+
+    // 댓글 삭제
+    public void commentDelete(Long commentId) {
+        commentRepository.deleteById(commentId);
+    }
+
+    // 단일 댓글 조회
+    public BoardCommentResponseDTO commentFindOne(Long commentId) {
+        BoardComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글 없음"));
+        return toDTO(comment);
+    }
+
+    // 게시글 댓글 전체 조회 (최상위 + 대댓글)
+    public List<BoardCommentResponseDTO> commentFindAll(Long boardId) {
+        List<BoardComment> comments = commentRepository.findByBoardIdAndParentIsNull(boardId);
+        return comments.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    // DTO 변환 (재귀)
+    private BoardCommentResponseDTO toDTO(BoardComment comment) {
+        BoardCommentResponseDTO dto = BoardCommentResponseDTO.builder()
+                .id(comment.getId())
+                .userId(comment.getUser().getId())
+                .userNickname(comment.getUser().getNickname())
+                .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
+                .build();
+
+        dto.setReplies(
+            comment.getReplies().stream()
+                   .map(this::toDTO)
+                   .collect(Collectors.toList())
+        );
+
+        return dto;
+    }
+	
 }
