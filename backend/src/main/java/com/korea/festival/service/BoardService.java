@@ -68,8 +68,27 @@ public class BoardService {
 	}
 	
 	//u
+	public BoardResponseDTO boardUpdate(BoardRequestDTO dto,Long userId) {
+		Board board = boardRepository.findById(dto.getId())
+				.orElseThrow(()->new RuntimeException("게시글 없음"));
+		
+		//작성자 확인
+		if(!board.getUser().getId().equals(userId)) {
+			throw new RuntimeException("작성자가 아닙니다.");
+		}
+		
+		board.setTitle(dto.getTitle());
+		board.setContent(dto.getContent());
+		board.setCategory(dto.getCategory());
+		board.setTags(dto.getTags());
+		board.setUpdatedAt(LocalDateTime.now());
+		
+		return toDTO(board, userId);
+	}
 	
 	//d
+	public BoardResponseDTO boardDelete()
+	
 	
 	//like
 	@Transactional

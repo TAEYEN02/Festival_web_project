@@ -19,6 +19,22 @@ export default function AITestPage() {
         language: "ko",
     });
 
+/*
+원래 생각한 기능은
+한눈에 보기에 있는 축제 리스트들이 있는데
+이 축제 리스트를 도착지로 설정을 했을때
+출발지에서 도착지를 세팅을 하고
+도착지 주변 근처에 다른 축제(진행중) 거를 탐색을 해서
+일정을 짜주는것 (축제만이 아니더라도 
+12:관광지, 14:문화시설, 15:축제공연행사, 25:여행코스, 28:레포츠, 32:숙박, 38:쇼핑, 39:음식점)
+있어서 이거를 불러와서 일정을 짜주는 그런 화면인거죠
+
+슬라이드 넘기는 방식
+
+출발지, 도착지(기준 축제), 기간, 예산(x), 동행, 예정
+
+*/ 
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [result, setResult] = useState(null);

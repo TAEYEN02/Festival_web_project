@@ -9,6 +9,7 @@ import lombok.Data;
 @Builder
 public class BoardRequestDTO {
 	
+	private Long id;
 	private String category;
 	private String title;
 	private String content;

@@ -47,19 +47,19 @@ public class BoardController {
 		return ResponseEntity.ok().body(result);
 	}
 	
-//	//u
-//	@PutMapping
-//	public ResponseEntity<?> boardUpdate(@RequestBody BoardRequestDTO dto){
-//		BoardResponseDTO result = boardService.boardUpdate(dto);
-//		return ResponseEntity.ok().body(result);
-//	}
-//	
-//	//d
-//	@DeleteMapping("/{boardId}")
-//	public ResponseEntity<?> boardDelete(@RequestParam Long boardId){
-//		BoardResponseDTO result = boardService.boardDelete(boardId);
-//		return ResponseEntity.ok().body(result);
-//	}
+	//u
+	@PutMapping
+	public ResponseEntity<?> boardUpdate(@RequestBody BoardRequestDTO dto,@RequestParam Long userId){
+		BoardResponseDTO result = boardService.boardUpdate(dto,userId);
+		return ResponseEntity.ok().body(result);
+	}
+	
+	//d
+	@DeleteMapping("/{boardId}")
+	public ResponseEntity<?> boardDelete(@PathVariable Long boardId,@RequestParam Long userId){
+		BoardResponseDTO result = boardService.boardDelete(boardId,userId);
+		return ResponseEntity.ok().body(result);
+	}
 	
 	//like
 	@PostMapping("/{boardId}/like")
