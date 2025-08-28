@@ -37,14 +37,14 @@ public class BoardController {
 	
 	//r-all
 	@GetMapping
-	public ResponseEntity<?> boardFindAll(@RequestParam(required = false)Long userId){
+	public ResponseEntity<?> boardFindAll(@RequestParam(name = "userId",required = false)Long userId){
 		List<BoardResponseDTO> result = boardService.boardFindAll(userId);
 		return ResponseEntity.ok().body(result);
 	}
 	
 	//r-detail
 	@GetMapping("/{boardId}")
-	public ResponseEntity<?> boardFindOne(@PathVariable Long boardId,@RequestParam(required = false)Long userId){
+	public ResponseEntity<?> boardFindOne(@PathVariable Long boardId,@RequestParam(name = "userId",required = false)Long userId){
 		BoardResponseDTO result = boardService.boardFindOne(boardId,userId); 
 		return ResponseEntity.ok().body(result);
 	}

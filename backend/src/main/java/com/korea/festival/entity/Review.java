@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedDate;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -22,18 +21,18 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
 @Entity
-@Table(name="board")
-public class Board {
-	
+@Builder
+@Table(name = "review")
+public class Review {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	private String category;
+	private String location;
 	
-	private String title;
+	private String title;	
 	
 	@Column(columnDefinition = "TEXT")
 	private String content;
@@ -44,17 +43,23 @@ public class Board {
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 	
-	private int likes=0;
+	private int likes = 0;
 	
-	private int view=0;
+	private int view = 0;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id",nullable = false)
 	private User user;
 	
 	@ElementCollection
-	@CollectionTable(name = "board_tags",joinColumns = @JoinColumn(name="board_id"))
+	@CollectionTable(name = "review_tags",joinColumns = @JoinColumn(name="review_id"))
 	@Column(name = "tag")
 	private List<String> tags;
-
+	
+	@ElementCollection
+	@CollectionTable(name = "review_images",joinColumns = @JoinColumn(name="review_id"))
+	@Column(name = "image")
+	private List<String> images;
+	
+	
 }

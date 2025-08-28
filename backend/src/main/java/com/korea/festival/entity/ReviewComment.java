@@ -21,28 +21,30 @@ import lombok.Data;
 @Data
 @Entity
 @Builder
-@Table(name = "board_comment")
-public class BoardComment {
+@Table(name = "review_comment")
+public class ReviewComment {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
 	@ManyToOne
-	private Board board;
+	private Review review;
 	
 	@ManyToOne
 	private User user;
 	
 	private String content;
+	
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 	
 	//대댓글
 	@ManyToOne
 	@JoinColumn(name = "parent_id")
-	private BoardComment parent;
+	private ReviewComment parent;
 	
 	@OneToMany(mappedBy = "parent",cascade = CascadeType.ALL)
-	private List<BoardComment> replies = new ArrayList<>();
-	
+	private List<ReviewComment> replies = new ArrayList<>();
+
 }

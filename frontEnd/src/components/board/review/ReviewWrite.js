@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom"
 import { useState } from "react";
+import {BASE_URL} from '../../../api/baseUrl'
 import './ReviewWrite.css';
 
 export const ReviewWrtie = () => {
@@ -10,11 +11,7 @@ export const ReviewWrtie = () => {
         content: '',
         location: '',
         date: new Date(),
-        author: 'userNickname',
-        likes: 0,
-        comments: 0,
         tags: [],
-        user : 1
     });
     const [tagInput, setTagInput] = useState('');
     const [images, setImages] = useState([]);
@@ -87,6 +84,27 @@ export const ReviewWrtie = () => {
     //[POST]작성 완료 버튼 클릭시
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // const option = {
+        //     method: 'POST',                
+        //     headers: {
+        //         'Content-Type': 'application/json',   
+        //         'Authorization': `Bearer ${token}`    
+        //     },
+        //     body: JSON.stringify(formData)          
+        // }
+
+        const apiPost = async() =>{
+            try {
+                const response = await fetch(`${BASE_URL}/api/review/`)
+                const data = await response.json();
+                console.log(data);
+            } catch (error) {
+                console.log(error);
+            }
+        } 
+        apiPost();
+
         console.log('게시글 데이터:', { ...formData, images });
         alert('리뷰글이 작성되었습니다! 🎉');
     };

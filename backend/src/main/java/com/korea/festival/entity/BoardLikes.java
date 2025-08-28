@@ -2,6 +2,8 @@ package com.korea.festival.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,6 +35,7 @@ public class BoardLikes {
 	@JoinColumn(name = "user_id",nullable = false)
 	private User user;
 	
-	private LocalDateTime createAt = LocalDateTime.now();
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 
 }
