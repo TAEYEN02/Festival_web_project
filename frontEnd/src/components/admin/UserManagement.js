@@ -751,18 +751,6 @@ const UserManagement = () => {
             />
           </SearchContainer>
 
-          <Select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(0);
-            }}
-          >
-            <option value="all">전체 상태</option>
-            <option value="active">활성</option>
-            <option value="inactive">비활성</option>
-          </Select>
-
           <ActionButton onClick={handleSearch}>
             검색
           </ActionButton>
@@ -776,7 +764,6 @@ const UserManagement = () => {
             <tr>
               <TableHeaderCell>사용자</TableHeaderCell>
               <TableHeaderCell>가입일</TableHeaderCell>
-              <TableHeaderCell>상태</TableHeaderCell>
               <TableHeaderCell>마지막 접속</TableHeaderCell>
               <TableHeaderCell>작업</TableHeaderCell>
             </tr>
@@ -815,11 +802,6 @@ const UserManagement = () => {
                   </TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell>
-                    <StatusBadge $status={user.isActive}>
-                      {user.isActive ? '활성' : '비활성'}
-                    </StatusBadge>
-                  </TableCell>
-                  <TableCell>
                     {user.lastLogin ? formatDate(user.lastLogin) : '정보 없음'}
                   </TableCell>
                   <TableCell>
@@ -837,21 +819,6 @@ const UserManagement = () => {
                           <DropdownItem onClick={() => handleViewUser(user)}>
                             <Eye size={14} />
                             상세보기
-                          </DropdownItem>
-                          <DropdownItem
-                            onClick={() => handleToggleStatus(user.id, user.isActive)}
-                          >
-                            {user.isActive ? (
-                              <>
-                                <UserX size={14} />
-                                비활성화
-                              </>
-                            ) : (
-                              <>
-                                <UserCheck size={14} />
-                                활성화
-                              </>
-                            )}
                           </DropdownItem>
                           <DropdownItem
                             $danger
@@ -953,14 +920,6 @@ const UserManagement = () => {
                 <DetailLabel>마지막 접속</DetailLabel>
                 <DetailValue>
                   {selectedUser.lastLogin ? formatDate(selectedUser.lastLogin) : '정보 없음'}
-                </DetailValue>
-              </DetailRow>
-              <DetailRow>
-                <DetailLabel>상태</DetailLabel>
-                <DetailValue>
-                  <StatusBadge $status={selectedUser.isActive}>
-                    {selectedUser.isActive ? '활성' : '비활성'}
-                  </StatusBadge>
                 </DetailValue>
               </DetailRow>
               {selectedUser.region && (
