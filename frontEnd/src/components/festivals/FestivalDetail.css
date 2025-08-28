@@ -141,17 +141,6 @@
     line-height: 1.6;
 }
 
-/* pending block */
-.pending {
-    margin-top: 8px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: #f9fafb;
-    border: 1px solid #eef0f2;
-    color: #475569;
-    font-size: 14px;
-}
-
 /* --- Aside --- */
 .detail-aside {
     display: flex;
@@ -314,6 +303,56 @@
     color: #666;
     margin-top: 4px;
 }
+
+/* === Poster Lightbox === */
+.poster-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.poster-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.poster-dialog {
+    position: relative;
+    z-index: 1;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+
+.poster-dialog img {
+    display: block;
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    background: #000;
+}
+
+.poster-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 18px;
+    background: rgba(255,255,255,.9);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+
 
 /* --- Empty state --- */
 .empty-state {

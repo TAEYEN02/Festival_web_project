@@ -6,6 +6,7 @@ import "../RegionOverview/RegionOverview.css";
 import "./FestivalDetail.css";
 import MapView from "../RegionOverview/MapView";
 import useScrap from "../RegionOverview/useScrap";
+import festivalImg from "../../asset/icons/festivalImg.png";
 
 // 파일 상단 import 아래(컴포넌트 바깥) 또는 컴포넌트 안 최상단에 추가
 function renderEventText(text) {
@@ -86,9 +87,10 @@ export default function FestivalDetail() {
     const [loading, setLoading] = useState(true);
     const [festival, setFestival] = useState(null);
     const [error, setError] = useState("");
-    const [related, setRelated] = useState([]);
 
     const [nearby, setNearby] = useState([]);
+    const [posterOpen, setPosterOpen] = useState(false);
+    const [posterSrc, setPosterSrc] = useState("");
 
     useEffect(() => {
         let mounted = true;
@@ -142,6 +144,14 @@ export default function FestivalDetail() {
         return () => { mounted = false; };
     }, [id]);
 
+    // ESC 닫기
+    useEffect(() => {
+        if (!posterOpen) return;
+        const onKey = (e) => { if (e.key === "Escape") closePoster(); };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [posterOpen]);
+
     const activeNearby = useMemo(() => {
         return (nearby || []).filter(n =>
             isOngoing(n.startDate, n.endDate) || isUpcoming(n.startDate)
@@ -183,6 +193,13 @@ export default function FestivalDetail() {
         if (isUpcoming(n.startDate)) return { key: "upcoming", label: "예정" };
         return null;
     }
+
+    const openPoster = () => {
+        setPosterSrc(festival.imageUrl || "https://placehold.co/800x1200?text=Poster");
+        setPosterOpen(true);
+    };
+    const closePoster = () => setPosterOpen(false);
+
 
     if (error || !festival) {
         return (
@@ -256,11 +273,6 @@ export default function FestivalDetail() {
                     ) : (
                         <p className="detail-desc">위치 정보가 없습니다.</p>
                     )}
-
-                    <h2>댓글/리뷰 (예정)</h2>
-                    <div className="pending">
-                        로그인 + 서버 API 연동 후 제공될 예정입니다.
-                    </div>
                 </section>
 
                 {/* 우측 aside */}
@@ -269,12 +281,14 @@ export default function FestivalDetail() {
                         <h3>포스터</h3>
                         <div className="aside-poster">
                             <img
-                                src={festival.imageUrl || "https://placehold.co/480x320?text=Festival+Poster"}
+                                src={festival.imageUrl || festivalImg}
                                 alt={festival.name}
                                 onError={(e) => {
                                     e.currentTarget.onerror = null;
-                                    e.currentTarget.src = "https://placehold.co/480x320?text=Festival+Poster";
+                                    e.currentTarget.src = festivalImg;
                                 }}
+                                onClick={openPoster}                 // ← 추가
+                                style={{ cursor: "zoom-in" }}        // ← 선택 사항
                             />
                         </div>
                         <div className="aside-addr">{festival.address || "-"}</div>
@@ -340,6 +354,15 @@ export default function FestivalDetail() {
                     </div>
                 )}
             </section>
+            {posterOpen && (
+                <div className="poster-modal" role="dialog" aria-modal="true" onClick={closePoster}>
+                    <div className="poster-backdrop"></div>
+                    <div className="poster-dialog" onClick={(e) => e.stopPropagation()}>
+                        <button className="poster-close" onClick={closePoster} aria-label="닫기">✕</button>
+                        <img src={posterSrc} alt={`${festival.name} 포스터 확대`} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

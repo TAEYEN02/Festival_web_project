@@ -35,13 +35,14 @@
     border-radius: 12px;
     padding: 12px;
     margin-bottom: 16px;
-    overflow: hidden; /* 둥근 모서리 밖 자식 클립 */
+    overflow: visible; /* 둥근 모서리 밖 자식 클립 */
 }
 
 .search {
     flex: 1 1 220px;
     min-width: 220px;
     position: relative;
+    z-index: 2;
 }
 
 .search input {
@@ -244,7 +245,7 @@
 }
 
 /* ===== Card ===== */
-.festival-card {
+.festival-card-info {
     border: 1px solid #eee;
     border-radius: 12px;
     overflow: hidden;
@@ -255,7 +256,7 @@
     transition: transform .08s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
-.festival-card:hover {
+.festival-card-info:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 26px rgba(0, 0, 0, 0.06);
     border-color: #e7e7ff;
@@ -704,7 +705,6 @@
 
 /* 최근 검색어 드롭다운 (기본 숨김 → 포커스 시 표시) */
 .recent-searches {
-    display: none; /* 기본 숨김 */
     position: absolute;
     left: 0;
     right: 0;
@@ -714,7 +714,6 @@
     border-radius: 10px;
     padding: 8px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    z-index: 10;
 
     /* 리스트 레이아웃 및 스크롤 */
     display: none;           /* 중복 제거: 숨김 유지 */
@@ -722,6 +721,8 @@
     overflow-x: auto;        /* 가로 스크롤 허용 */
     gap: 6px;
     scrollbar-width: thin;   /* Firefox */
+    z-index: 999;
+    align-items: center;
 }
 
 .search:focus-within .recent-searches {
@@ -826,52 +827,4 @@ mark {
 @keyframes mini-bounce {
     0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
     40% { transform: translateY(-3px); opacity: 1; }
-}
-
-/* 태그 추천 섹션 (기존 .chip과 공존: 별도 스타일 유지) */
-.tag-suggest {
-    margin: 10px 0 14px;
-    display: grid;
-    gap: 8px;
-}
-
-.tag-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.tag-title {
-    font-size: 13px;
-    color: #555;
-    min-width: 66px;
-}
-
-.tag-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-/* (2) 태그 추천용 chip (의도된 별도 룰 유지) */
-.tag-suggest .chip {
-    padding: 6px 10px;
-    border: 1px solid #ddd;
-    border-radius: 16px;
-    background: #fafafa;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.tag-suggest .chip.on {
-    background: #eef6ff;
-    border-color: #99c5ff;
-    color: rgb(143, 143, 143);
-}
-
-.tag-suggest .chip.clear {
-    background: #fff0f0;
-    border-color: #f5bcbc;
-    color: #c44;
 }

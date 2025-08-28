@@ -7,7 +7,7 @@ import RegionOverviewPage from "./components/RegionOverview/RegionOverviewPage";
 import MainHeader from "./components/main/MainHeader";
 import FestivalDetail from "./components/festivals/FestivalDetail";
 import MainPage from "./components/main/MainPage";
-import AITestPage from "./components/festivalAI/AITestPage";
+// import AITestPage from "./components/festivalAI/AITestPage";
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // 게시판 관련
@@ -19,6 +19,9 @@ import { BoardDetail } from "./components/board/BoardDetail";
 import { ReviewList } from "./components/board/review/ReviewList";
 import { ReviewWrtie } from "./components/board/review/ReviewWrite";
 import { ReviewDetail } from "./components/board/review/ReviewDetail";
+import FindCredentialsForm from "./components/auth/FindCredentialsForm";
+
+
 
 function App() {
     return (
@@ -65,14 +68,17 @@ function AppContent() {
                 {/* 메인 - 축제 리스트 */}
                 <Route path="/" element={<MainPage />} />
 
-                {/* AI 테스트 화면 */}
-                <Route path="/ai-test" element={<AITestPage />} />
+                {/* AI 일정 추천 */}
+                {/* <Route path="/ai-test" element={<AITestPage />} /> */}
 
                 {/* 공개 페이지 */}
                 <Route path="/overview" element={<RegionOverviewPage />} />
 
                 {/* 상세 페이지 */}
                 <Route path="/festival/:id" element={<FestivalDetail />} />
+
+                {/* 아이디/비밀번호 찾기 */}
+                <Route path="/find-credentials" element={<FindCredentialsForm />} />
 
                 {/* 로그인 */}
                 <Route
@@ -114,6 +120,8 @@ function AppContent() {
                         )
                     }
                 />
+
+
 
                 {/* 마이페이지 */}
                 <Route
