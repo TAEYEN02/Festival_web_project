@@ -50,7 +50,7 @@ public class Festival_MainPage {
     private String bookingUrl;   // 예매 링크 또는 홈페이지
 
     private int views = 0;           // 상세 조회수
-    // private int likes = 0;          // 좋아요수
+     private int likes = 0;          // 좋아요수
     private int clicks = 0;          // 클릭수
     
     private boolean active; // 현재 축제 정보가 유효한지
@@ -70,7 +70,7 @@ public class Festival_MainPage {
     private List<CommunityPostEntity> posts;
     
     @OneToMany(mappedBy = "festival", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FestivalLikeEntity> likes = new ArrayList<>();
+    private List<FestivalLikeEntity> likes_info = new ArrayList<>();
     
     @Column(name = "likes_count")
     private int likesCount = 0;
