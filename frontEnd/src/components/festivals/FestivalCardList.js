@@ -23,7 +23,7 @@ const PrevArrow = ({ onClick }) => (
   </div>
 );
 
-const FestivalCardList = ({ festivals }) => {
+const FestivalCardList = ({ festivals, token }) => {
   const settings = {
     dots: false,
     infinite: false,
@@ -37,10 +37,16 @@ const FestivalCardList = ({ festivals }) => {
   return (
     <div className="festival-card-list" style={{ position: "relative" }}>
       <Slider {...settings}>
-        {festivals.map((festival) => (
-          <FestivalCard key={festival.contentId} festival={festival} />
+        {festivals.map((festival, index) => (
+          <FestivalCard
+            key={festival.contentId}
+            festival={festival}
+            token={token}
+            rank={index + 1} // 순위 전달
+          />
         ))}
       </Slider>
+
     </div>
   );
 };

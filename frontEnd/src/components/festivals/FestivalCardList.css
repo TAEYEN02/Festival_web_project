@@ -1,3 +1,17 @@
+.festival-card-list {
+  margin: 10px;
+}
+
+.festival-card-list .slick-list {
+  overflow-x: hidden;   /* 좌우는 숨기기 */
+  overflow-y: visible;  /* 상하만 허용 */
+}
+
+.festival-card-list .slick-slide {
+  overflow: visible; /* 각 슬라이드 overflow 허용 */
+}
+
+
 /* 커스텀 캐러셀 화살표 */
 .custom-arrow-next,
 .custom-arrow-prev {
@@ -26,3 +40,5 @@
   font-weight: bolder;
   margin-right: 10px;
 }
+
+

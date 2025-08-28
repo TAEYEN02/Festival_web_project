@@ -19,7 +19,6 @@ import { BoardDetail } from "./components/board/BoardDetail";
 import { ReviewList } from "./components/board/review/ReviewList";
 import { ReviewWrtie } from "./components/board/review/ReviewWrite";
 import { ReviewDetail } from "./components/board/review/ReviewDetail";
-import FindCredentialsForm from "./components/auth/FindCredentialsForm";
 
 function App() {
     return (
@@ -32,7 +31,7 @@ function App() {
 // AuthProvider 내부에서 useAuth 훅 사용
 function AppContent() {
     const { isAuthenticated, user, isLoading } = useAuth();
-
+    
     if (isLoading) {
         return (
             <div style={{
@@ -49,7 +48,7 @@ function AppContent() {
 
     // ROLE_ADMIN 체크 (백엔드에서 ADMIN으로 오면 ROLE_ADMIN으로 변환됨)
     const isAdmin = user?.roles?.includes("ROLE_ADMIN");
-
+    
     console.log('App - user:', user);
     console.log('App - isAdmin:', isAdmin);
     console.log('App - user roles:', user?.roles);
@@ -73,10 +72,12 @@ function AppContent() {
                 <Route path="/overview" element={<RegionOverviewPage />} />
 
                 {/* 상세 페이지 */}
-                <Route path="/festival/:id" element={<FestivalDetail />} />
-
-                {/* 아이디/비밀번호 찾기 */}
-                <Route path="/find-credentials" element={<FindCredentialsForm />} />
+                <Route
+                    path="/festival/:id"
+                    element={
+                        isAuthenticated ? <FestivalDetail /> : <Navigate to="/login" replace />
+                    }
+                />
 
                 {/* 로그인 */}
                 <Route
@@ -118,8 +119,6 @@ function AppContent() {
                         )
                     }
                 />
-
-
 
                 {/* 마이페이지 */}
                 <Route

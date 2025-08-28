@@ -1,27 +1,50 @@
 /* 카드 공통 */
 .festival-card {
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   margin: 10px;
   transition: transform 0.2s;
   background: #fff;
   cursor: pointer;
+  position: relative;
+  height: 100px;
+  min-height: 350px;
+  /* min-width: 200px; */
 }
-.festival-card:hover { transform: translateY(-5px); }
+
+.festival-card:hover {
+  transform: translateY(-5px);
+}
 
 .festival-image {
   width: 100%;
-  height: 190px;
+  height: 200px;
   object-fit: cover;
+  display: block;
 }
 
-.festival-info { padding: 10px; }
+.festival-info { 
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;   /* D-DAY 절대 위치용 */
+  overflow: hidden;     /* 내용 넘치면 숨김 */ 
+}
 
 .festival-title {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: bold;
-  margin-bottom: 5px;
+  margin: 0 0 5px 0;
+  margin-right: 25px;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;  /* 2줄 제한 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
 }
 
 .festival-location {
@@ -43,11 +66,43 @@
 }
 
 .festival-dday {
-  font-size: 13px;
+  position: absolute;
+  bottom: 10px;      
+  right: 10px;   
+  font-size: 14px;
   font-weight: bold;
   margin-left: 8px;
+  white-space: nowrap;
 }
 .festival-dday.upcoming { color: #e63946; }  /* 시작 전 */
 .festival-dday.today { color: #ff7f50; }     /* 당일 */
 .festival-dday.ongoing { color: #2a9d8f; }   /* 진행중 */
 .festival-dday.ended { color: #999; }        /* 종료 */
+
+
+/* 좋아요 버튼 */
+.like-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  z-index: 10;
+  padding: 0;
+}
+
+/* 순위 뱃지 */
+.rank-badge {
+  position: absolute;
+  top: -35px;               /* 카드 위로 튀어나오도록 */
+  left: -13px;              /* 왼쪽으로도 살짝 튀어나오게 */
+  font-size: 70px;          /* 크게 */
+  font-weight: bold;
+  color: #000000;
+  transform: rotate(5deg);
+  /* text-shadow: 3px 3px 6px rgba(0,0,0,0.5); */
+  z-index: 20;              /* 카드보다 위에 표시 */
+  pointer-events: none;     /* 클릭 방해 안함 */
+}

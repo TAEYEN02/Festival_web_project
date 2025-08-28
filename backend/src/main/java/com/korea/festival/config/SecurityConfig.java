@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/board/**").permitAll()
                 .requestMatchers("/api/review/**").permitAll()
+                .requestMatchers("/api/festivals/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()   // ✅ WebSocket 엔드포인트 허용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

@@ -1,24 +1,28 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:8080/festivals"; // 백엔드 URL
+
+const API_BASE = "http://localhost:8081/api/festivals"; // 백엔드 URL
 
 // 디코딩된 인증키
-const API_KEY = "2piBNpWzKFccWKcWevKpU314EjNULmxCbZNcuzfUEmPtoKQyO5J+j0J3qI0qWQVWuHCQWxtmYbCwp2OdOl8+xg=="; 
+const API_KEY = "437d76c0cc52c6e459d60d55ba21fa2b4446b310df80d1a0f2e8ff57f2ed8222"; 
 
 export const fetchFestivalsFromApi = async () => {
   try {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+
     const response = await axios.get(
       `https://apis.data.go.kr/B551011/KorService2/searchFestival2`,
       {
         params: {
           serviceKey: API_KEY,
-          numOfRows: 100, // 넉넉히 가져오기
+          numOfRows: 200, // 넉넉히
           pageNo: 1,
           MobileOS: "ETC",
           MobileApp: "AppTest",
           _type: "json",
-          eventStartDate: new Date().toISOString().slice(0,10).replace(/-/g, ""), // 오늘 기준 이후 축제
-          eventEndDate: "20251231", // 연말까지
+          eventStartDate: todayStr,
+          eventEndDate: "20251231",
         },
       }
     );
@@ -30,13 +34,24 @@ export const fetchFestivalsFromApi = async () => {
 
     let items = response.data.response.body.items.item;
 
-    // 시작일 기준 오름차순 정렬 → 최신 축제
-    items.sort((a, b) => {
-      return a.eventstartdate.localeCompare(b.eventstartdate);
+    // 오늘 날짜와 겹치는 "여름 축제(6~8월)" 필터링
+    const summerFestivals = items.filter((festival) => {
+      const start = festival.eventstartdate;
+      const end = festival.eventenddate;
+      const month = parseInt(start.substring(4, 6)); // 시작일 기준 월
+      return (
+        month >= 6 &&
+        month <= 8 &&
+        todayStr >= start &&
+        todayStr <= end
+      );
     });
 
-    // 앞에서 10개만 가져오기
-    return items.slice(0, 10);
+    // 랜덤 섞기
+    const shuffled = summerFestivals.sort(() => Math.random() - 0.5);
+
+    // 앞에서 10개만 랜덤 선택
+    return shuffled.slice(0, 10);
   } catch (error) {
     console.error("축제 정보 불러오기 실패:", error);
     return [];
@@ -44,70 +59,118 @@ export const fetchFestivalsFromApi = async () => {
 };
 
 
-// // Tour API에서 바로 최신/인기 축제 가져오기 (DB 사용 안 함)
-// export const fetchFestivalsFromApi = async () => {
-//   try {
-//     const response = await axios.get(`${API_BASE}/from-api`);
-//     return response.data || [];
-//   } catch (error) {
-//     console.error("Tour API 축제 조회 실패:", error);
-//     return [];
-//   }
-// };
-
-// // DB에서 최신순/인기순 조회 (원하면 사용 가능)
-// export const fetchFestivalsFromDB = async (sort = "latest") => {
-//   try {
-//     const response = await axios.get(`${API_BASE}`, { params: { sort } });
-//     return response.data || [];
-//   } catch (error) {
-//     console.error("DB 축제 조회 실패:", error);
-//     return [];
-//   }
-// };
 
 // 축제 상세정보 가져오기
-export const fetchFestivalDetail = async (contentId) => {
+export const fetchFestivalDetail = async (id) => {
   try {
-    const res = await axios.get(`${API_BASE}/detail/${contentId}`);
-    return res.data.response.body.items.item;
+    const res = await axios.get(`${API_BASE}/detail/${id}`);
+    return res.data; // 축제 상세 정보
   } catch (err) {
     console.error("축제 상세 조회 실패:", err);
     return null;
   }
 };
 
-// 상세 조회 + 클릭 시 DB 저장
-// export const fetchFestivalDetailAndSave = async (externalId) => {
-//   try {
-//     const response = await axios.get(`${API_BASE}/${externalId}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error("상세 조회 실패:", error);
-//     return null;
-//   }
-// };
+// 축제 최신순
+export const fetchLatestFestivals = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/latest`);
+    const today = new Date();
 
-// // 예매 클릭 기록 + URL 반환
-// export const clickBooking = async (id) => {
-//   try {
-//     const response = await axios.post(`${API_BASE}/${id}/click`);
-//     return response.data;
-//   } catch (error) {
-//     console.error("예매 클릭 기록 실패:", error);
-//     return null;
-//   }
-// };
+    // 오늘 이후 시작하는 축제만 필터
+    const upcoming = response.data
+      .filter(f => new Date(f.startDate) >= today)
+      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate)) // 시작일 기준 오름차순
+      .slice(0, 10); // 최신 10개
 
-// // 키워드로 축제 검색
-// export const searchFestivals = async (keyword) => {
-//   try {
-//     const res = await axios.get(`${API_BASE}/search`, {
-//       params: { keyword },
-//     });
-//     return res.data;
-//   } catch (error) {
-//     console.error(`Failed to search festivals (keyword: ${keyword})`, error);
-//     return [];
-//   }
-// };
+    const formatted = upcoming.map(f => ({
+      contentid: f.contentId,
+      title: f.name,
+      addr1: f.location,
+      eventstartdate: f.startDate.replace(/-/g, ""),
+      eventenddate: f.endDate.replace(/-/g, ""),
+      firstimage: f.firstimage,
+      likes: f.likes,
+      views: f.views,
+      clicks: f.clicks,
+    }));
+
+    return formatted;
+  } catch (error) {
+    console.error("최신순 축제 불러오기 실패:", error);
+    return [];
+  }
+};
+
+
+// 축제 인기순 (좋아요 수 기준)
+export const fetchPopularFestivalsByLikes = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/popular`);
+    const sorted = response.data
+      .sort((a, b) => b.likes - a.likes) // 좋아요 내림차순
+      .slice(0, 10);
+
+    return sorted.map(f => ({
+      contentid: f.contentId,
+      title: f.name,
+      addr1: f.location,
+      eventstartdate: f.startDate.replace(/-/g, ""),
+      eventenddate: f.endDate.replace(/-/g, ""),
+      firstimage: f.firstimage,
+      likes: f.likes,
+      views: f.views,
+      clicks: f.clicks,
+    }));
+  } catch (error) {
+    console.error("좋아요순 축제 불러오기 실패:", error);
+    return [];
+  }
+};
+
+// 축제 인기순 (조회수 수 기준)
+export const fetchPopularFestivalsByViews = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/popular`);
+    const sorted = response.data
+      .sort((a, b) => b.views - a.views) // 조회수 내림차순
+      .slice(0, 10);
+
+    return sorted.map(f => ({
+      contentid: f.contentId,
+      title: f.name,
+      addr1: f.location,
+      eventstartdate: f.startDate.replace(/-/g, ""),
+      eventenddate: f.endDate.replace(/-/g, ""),
+      firstimage: f.firstimage,
+      likes: f.likes,
+      views: f.views,
+      clicks: f.clicks,
+    }));
+  } catch (error) {
+    console.error("조회수순 축제 불러오기 실패:", error);
+    return [];
+  }
+};
+
+// 조회수 증가
+export const incrementViews = async (contentId) => {
+  try {
+    await axios.post(`/api/festivals/increment-views/${contentId}`);
+  } catch (error) {
+    console.error("조회수 증가 실패:", error);
+    throw error;
+  }
+};
+
+// 좋아요 토글
+export const toggleFestivalLike = async (contentId) => {
+  try {
+    const response = await axios.post(`${API_BASE}/toggle-like/${contentId}`);
+    return response.data.likes; // 현재 좋아요 수 반환
+  } catch (err) {
+    console.error("좋아요 토글 실패:", err);
+    return null;
+  }
+};
+
