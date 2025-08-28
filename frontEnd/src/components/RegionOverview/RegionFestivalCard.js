@@ -48,7 +48,7 @@ export default function FestivalCard({ festival, onTagClick, isScrapped, onToggl
 
     return (
         <div
-            className="festival-card"
+            className="festival-card-info"
             onClick={goDetail}
             role="button"
             tabIndex={0}

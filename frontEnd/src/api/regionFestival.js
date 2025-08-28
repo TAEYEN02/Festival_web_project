@@ -12,7 +12,7 @@ const api = axios.create({
 const MOBILE_OS = "WEB";
 
 // 정렬구분 (A=제목순, C=수정일순, D=생성일순) 대표이미지가반드시있는정렬(O=제목순, Q=수정일순, R=생성일순)
-const DEFAULT_ARRANGE = "Q";
+const DEFAULT_ARRANGE = "C";
 
 function normalizeServiceKey(k) {
     if (!k) return "";
@@ -114,7 +114,7 @@ const REGION_TO_AREA_CODES = {
    2) 날짜/정렬 헬퍼
    ========================= */
 function sortToArrange(sort) {
-    return "Q"; // 서버는 항상 수정일(Q)로 크게 끌어오고, 클라에서 정렬
+    return DEFAULT_ARRANGE; // 서버는 항상 수정일(Q)로 크게 끌어오고, 클라에서 정렬
 }
 
 function parseYmdOrIso(s) {
@@ -165,24 +165,6 @@ function sortOngoingThenUpcoming(list) {
     });
     return [...ongoing, ...upcoming];
 }
-
-// // 시작일 오름차순
-// function sortByStartDateAsc(list) {
-//     return [...list].sort((a, b) => {
-//         const ad = parseYmdOrIso(a.startDate || "9999-12-31");
-//         const bd = parseYmdOrIso(b.startDate || "9999-12-31");
-//         return (ad?.getTime() ?? Infinity) - (bd?.getTime() ?? Infinity);
-//     });
-// }
-
-// // 종료일 오름차순
-// function sortByEndDateAsc(list) {
-//     return [...list].sort((a, b) => {
-//         const ad = parseYmdOrIso(a.endDate || a.startDate || "9999-12-31");
-//         const bd = parseYmdOrIso(b.endDate || b.startDate || "9999-12-31");
-//         return (ad?.getTime() ?? Infinity) - (bd?.getTime() ?? Infinity);
-//     });
-// }
 
 // 기본 정렬: 진행중→예정(요구사항)
 function applyClientSort(list, sort, includePast = false) {

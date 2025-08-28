@@ -508,48 +508,6 @@ export default function RegionOverviewPage() {
                 </div>
             </div>
 
-            <div className="tag-suggest">
-                <div className="tag-row">
-                    <strong className="tag-title">인기 태그</strong>
-                    <div className="tag-chips">
-                        {POPULAR_TAGS.map((t) => (
-                            <button
-                                key={`pop-${t}`}
-                                className={`chip ${selectedTags.includes(t) ? "on" : ""}`}
-                                onClick={() => handleTagClick(t)}
-                                title={`태그 '${t}' 적용`}
-                            >
-                                #{t}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                {recentTagChips.length > 0 && (
-                    <div className="tag-row">
-                        <strong className="tag-title">최근 태그</strong>
-                        <div className="tag-chips">
-                            {recentTagChips.map((t) => (
-                                <button
-                                    key={`recent-${t}`}
-                                    className={`chip ${selectedTags.includes(t) ? "on" : ""}`}
-                                    onClick={() => handleTagClick(t)}
-                                    title={`태그 '${t}' 적용`}
-                                >
-                                    #{t}
-                                </button>
-                            ))}
-                            <button
-                                className="chip clear"
-                                onClick={() => { setRecentTagChips([]); localStorage.removeItem("recentTagChips"); }}
-                                title="최근 태그 비우기"
-                            >
-                                최근 비우기 ✕
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
-
             {!groupView && (
                 <RegionFilter value={region} onChange={(v) => setRegion(v)} />
             )}
