@@ -651,17 +651,6 @@ const ProfileSection = ({ userData, onUpdateUser }) => {
           </Button>
         )}
       </ButtonGroup>
-
-      <StatsGrid>
-        <StatCard>
-          <StatValue>{userData.roles?.length || 0}</StatValue>
-          <StatLabel>역할 수</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{userData.isActive ? '활성' : '비활성'}</StatValue>
-          <StatLabel>계정 상태</StatLabel>
-        </StatCard>
-      </StatsGrid>
     </Container>
   );
 };

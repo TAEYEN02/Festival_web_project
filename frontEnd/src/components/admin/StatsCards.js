@@ -109,8 +109,6 @@ const StatsCards = ({ stats }) => {
       value: stats?.totalUsers || 0, 
       icon: Users, 
       color: 'blue',
-      change: '+12%',
-      changeText: '이번 달',
       positive: true
     },
     { 
@@ -118,26 +116,13 @@ const StatsCards = ({ stats }) => {
       value: stats?.pendingInquiries || 0, 
       icon: Mail, 
       color: 'red',
-      change: '-5%',
-      changeText: '지난 주',
       positive: false
-    },
-    { 
-      title: '진행 중인 축제', 
-      value: stats?.activeFestivals || 0, 
-      icon: Calendar, 
-      color: 'green',
-      change: '+8%',
-      changeText: '이번 달',
-      positive: true
     },
     { 
       title: '채팅 활성 사용자', 
       value: stats?.activeChatUsers || 0, 
       icon: MessageCircle, 
       color: 'purple',
-      change: '+23%',
-      changeText: '오늘',
       positive: true
     }
   ];

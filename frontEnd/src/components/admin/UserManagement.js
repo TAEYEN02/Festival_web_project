@@ -169,7 +169,7 @@ const SearchContainer = styled.div`
 `;
 
 const SearchInput = styled.input`
-  width: 100%;
+  width: 90%;
   padding: 0.75rem 0.75rem 0.75rem 2.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
@@ -728,59 +728,12 @@ const UserManagement = () => {
           <Subtitle>등록된 사용자들을 관리하고 모니터링합니다</Subtitle>
         </HeaderLeft>
         <HeaderActions>
-          <ActionButton onClick={handleExport} disabled={loading}>
-            <Download size={16} />
-            데이터 내보내기
-          </ActionButton>
           <ActionButton $variant="primary" onClick={handleRefresh} disabled={refreshing}>
             <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
             새로고침
           </ActionButton>
         </HeaderActions>
       </Header>
-
-      {/* 통계 카드 */}
-      <StatsGrid>
-        <StatCard>
-          <StatIcon $color="blue">
-            <Users size={24} />
-          </StatIcon>
-          <StatInfo>
-            <StatValue>{stats.total.toLocaleString()}</StatValue>
-            <StatLabel>전체 사용자</StatLabel>
-          </StatInfo>
-        </StatCard>
-
-        <StatCard>
-          <StatIcon $color="green">
-            <UserCheck size={24} />
-          </StatIcon>
-          <StatInfo>
-            <StatValue>{stats.active.toLocaleString()}</StatValue>
-            <StatLabel>활성 사용자</StatLabel>
-          </StatInfo>
-        </StatCard>
-
-        <StatCard>
-          <StatIcon $color="red">
-            <UserX size={24} />
-          </StatIcon>
-          <StatInfo>
-            <StatValue>{stats.inactive.toLocaleString()}</StatValue>
-            <StatLabel>비활성 사용자</StatLabel>
-          </StatInfo>
-        </StatCard>
-
-        <StatCard>
-          <StatIcon $color="purple">
-            <Calendar size={24} />
-          </StatIcon>
-          <StatInfo>
-            <StatValue>{stats.newThisMonth.toLocaleString()}</StatValue>
-            <StatLabel>이번 달 신규</StatLabel>
-          </StatInfo>
-        </StatCard>
-      </StatsGrid>
 
       {/* 필터 및 검색 */}
       <FilterSection>

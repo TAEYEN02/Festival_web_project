@@ -120,13 +120,7 @@ const Sidebar = ({ currentPage, onPageChange, onLogout }) => {
   const managementItems = [
     { id: 'users', label: '사용자 관리', icon: Users },
     { id: 'inquiries', label: '1:1 문의 관리', icon: Mail },
-    { id: 'festivals', label: '축제 관리', icon: Calendar },
     { id: 'chat', label: '채팅방 관리', icon: MessageCircle },
-  ];
-
-  const systemItems = [
-    { id: 'reports', label: '통계 및 리포트', icon: BarChart3 },
-    { id: 'settings', label: '시스템 설정', icon: Settings }
   ];
 
   const renderNavItems = (items) => (
@@ -160,11 +154,6 @@ const Sidebar = ({ currentPage, onPageChange, onLogout }) => {
         <NavSection>
           <SectionTitle>관리</SectionTitle>
           {renderNavItems(managementItems)}
-        </NavSection>
-
-        <NavSection>
-          <SectionTitle>시스템</SectionTitle>
-          {renderNavItems(systemItems)}
         </NavSection>
       </Nav>
       

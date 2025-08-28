@@ -742,10 +742,6 @@ const InquiryManagement = () => {
             <Subtitle>사용자 문의에 신속하게 답변하고 관리합니다</Subtitle>
           </HeaderLeft>
           <HeaderActions>
-            <ActionButton onClick={handleExport} disabled={loading}>
-              <Download size={16} />
-              데이터 내보내기
-            </ActionButton>
             <ActionButton $variant="primary" onClick={handleRefresh} disabled={refreshing}>
               <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
               새로고침
