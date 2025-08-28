@@ -1,10 +1,14 @@
-// src/components/MainHeader.jsx
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext"; // 🔹 AuthContext import
 import "./MainHeader.css";
 
-export default function MainHeader({ isAuthenticated, isAdmin, username, onLogout }) {
+export default function MainHeader() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const { isAuthenticated, user, logout } = useAuth(); // 🔹 컨텍스트에서 가져오기
+    const isAdmin = user?.roles?.includes("ROLE_ADMIN"); // 🔹 역할 판별
+    const username = user?.username || "";
+
     const closeMenu = () => setMenuOpen(false);
 
     return (
@@ -12,10 +16,9 @@ export default function MainHeader({ isAuthenticated, isAdmin, username, onLogou
             {/* 왼쪽 - 로고 + 내비 */}
             <div className="header-left">
                 <Link to="/" className="logo" onClick={closeMenu}>
-                    <h3>FestivalGo</h3>
+                    <h3>세상축제</h3>
                 </Link>
 
-                {/* 데스크톱 내비게이션 */}
                 <nav className="nav-links" aria-label="주 내비게이션">
                     <Link to="/overview" className="nav-item" onClick={closeMenu}>
                         한눈에 보기
@@ -33,7 +36,6 @@ export default function MainHeader({ isAuthenticated, isAdmin, username, onLogou
                             관리자
                         </Link>
                     )}
-                    {/* 🔗 추가: AI 테스트 페이지로 이동 */}
                     <Link to="/ai-test" className="nav-item" onClick={closeMenu}>
                         AI 테스트
                     </Link>
@@ -43,14 +45,8 @@ export default function MainHeader({ isAuthenticated, isAdmin, username, onLogou
             {/* 가운데 - 검색창 */}
             <div className="header-center">
                 <div className="search-box" role="search">
-                    <input
-                        type="text"
-                        placeholder="더 뜨거운 여름휴가 보내기"
-                        aria-label="검색어 입력"
-                    />
-                    <button className="search-btn" type="button" aria-label="검색">
-                        🔍
-                    </button>
+                    <input type="text" placeholder="더 뜨거운 여름휴가 보내기" />
+                    <button className="search-btn" type="button">🔍</button>
                 </div>
             </div>
 
@@ -64,7 +60,7 @@ export default function MainHeader({ isAuthenticated, isAdmin, username, onLogou
                                 className="btn-logout"
                                 type="button"
                                 onClick={() => {
-                                    onLogout?.();
+                                    logout();   // 🔹 바로 AuthContext의 logout 실행
                                     closeMenu();
                                 }}
                             >
@@ -83,11 +79,10 @@ export default function MainHeader({ isAuthenticated, isAdmin, username, onLogou
                     )}
                 </div>
 
-                {/* 모바일 - 햄버거 버튼 */}
+                {/* 모바일 햄버거 버튼 */}
                 <button
                     className="menu-toggle"
                     type="button"
-                    aria-label="모바일 메뉴 열기"
                     aria-expanded={menuOpen}
                     onClick={() => setMenuOpen((v) => !v)}
                 >
@@ -97,33 +92,23 @@ export default function MainHeader({ isAuthenticated, isAdmin, username, onLogou
 
             {/* 모바일 드롭다운 */}
             {menuOpen && (
-                <div className="mobile-menu" role="menu" aria-label="모바일 메뉴">
-                    <Link to="/overview" onClick={closeMenu} role="menuitem">
-                        🗺️ 한눈에 보기
-                    </Link>
-                    <Link to="/board" onClick={closeMenu} role="menuitem">
-                        📝 게시판
-                    </Link>
+                <div className="mobile-menu" role="menu">
+                    <Link to="/overview" onClick={closeMenu}>🗺️ 한눈에 보기</Link>
+                    <Link to="/board" onClick={closeMenu}>📝 게시판</Link>
                     {isAuthenticated && !isAdmin && (
-                        <Link to="/mypage" onClick={closeMenu} role="menuitem">
-                            👤 마이페이지
-                        </Link>
+                        <Link to="/mypage" onClick={closeMenu}>👤 마이페이지</Link>
                     )}
                     {isAuthenticated && isAdmin && (
-                        <Link to="/admin" onClick={closeMenu} role="menuitem">
-                            🛠️ 관리자
-                        </Link>
+                        <Link to="/admin" onClick={closeMenu}>🛠️ 관리자</Link>
                     )}
-                    {/* 🔗 추가: AI 테스트 (모바일 메뉴) */}
-                    <Link to="/ai-test" onClick={closeMenu} role="menuitem">
-                        🤖 AI 테스트
-                    </Link>
+                    <Link to="/ai-test" onClick={closeMenu}>🤖 AI 테스트</Link>
+
                     {isAuthenticated ? (
                         <button
                             className="mobile-logout"
                             type="button"
                             onClick={() => {
-                                onLogout?.();
+                                logout();   // 🔹 모바일 메뉴에서도 로그아웃
                                 closeMenu();
                             }}
                         >
@@ -131,12 +116,8 @@ export default function MainHeader({ isAuthenticated, isAdmin, username, onLogou
                         </button>
                     ) : (
                         <>
-                            <Link to="/login" onClick={closeMenu} role="menuitem">
-                                🔑 로그인
-                            </Link>
-                            <Link to="/register" onClick={closeMenu} role="menuitem">
-                                ✍️ 회원가입
-                            </Link>
+                            <Link to="/login" onClick={closeMenu}>🔑 로그인</Link>
+                            <Link to="/register" onClick={closeMenu}>✍️ 회원가입</Link>
                         </>
                     )}
                 </div>
