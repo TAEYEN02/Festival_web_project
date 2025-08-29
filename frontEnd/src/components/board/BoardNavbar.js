@@ -9,14 +9,14 @@ export const BoardNavBar = () => {
     
     // 기본 카테고리와 특별 카테고리로 분리
     const mainCategories = [
-        { id: 0, name: '전체', emoji: '🌍' },
-        { id: 1, name: '잡담', emoji: '💬' },
-        { id: 2, name: '질문', emoji: '❓' },
+        { id: 0, name: '전체'},
+        { id: 1, name: '잡담'},
+        { id: 2, name: '질문'},
     ];
     
     const specialCategories = [
-        { id: 3, name: '지역', emoji: '⛪' },
-        { id: 'review', name: '리뷰', emoji: '⭐' },
+        { id: 3, name: '지역'},
+        { id: 'review', name: '리뷰'},
     ];
     
     const allCategories = [...mainCategories, ...specialCategories];
@@ -37,12 +37,10 @@ export const BoardNavBar = () => {
                                                 key={category.id}
                                                 onClick={() => {
                                                     setActiveTab(category.name)
-                                                    console.log(category.name)
                                                     navigate(`/board/${category.id}`)
                                                 }}
                                                 className={`BNnav-tab ${activeTab === category.name ? 'BNnav-tab-active' : ''}`}
                                             >
-                                                <span>{category.emoji}</span>
                                                 <span>{category.name}</span>
                                             </button>
                                         ))}
@@ -58,12 +56,10 @@ export const BoardNavBar = () => {
                                                 key={category.id}
                                                 onClick={() => {
                                                     setActiveTab(category.name)
-                                                    console.log(category.name)
                                                     navigate(`/board/${category.id}`)
                                                 }}
                                                 className={`BNnav-tab BNnav-tab-special ${activeTab === category.name ? 'BNnav-tab-active BNnav-tab-special-active' : ''}`}
                                             >
-                                                <span>{category.emoji}</span>
                                                 <span>{category.name}</span>
                                             </button>
                                         ))}

@@ -30,7 +30,7 @@ public class BoardController {
 	
 	//c
 	@PostMapping
-	public ResponseEntity<?> boardWrite(@RequestBody BoardRequestDTO dto,@RequestParam Long userId){
+	public ResponseEntity<?> boardWrite(@RequestBody BoardRequestDTO dto,@RequestParam("userId") Long userId){
 		BoardResponseDTO result = boardService.boardWrtie(dto,userId);
 		return ResponseEntity.ok().body(result);
 	}
@@ -51,7 +51,7 @@ public class BoardController {
 	
 	//u
 	@PutMapping
-	public ResponseEntity<?> boardUpdate(@RequestBody BoardRequestDTO dto,@RequestParam Long userId){
+	public ResponseEntity<?> boardUpdate(@RequestBody BoardRequestDTO dto,@RequestParam("userId") Long userId){
 		BoardResponseDTO result = boardService.boardUpdate(dto,userId);
 		return ResponseEntity.ok().body(result);
 	}

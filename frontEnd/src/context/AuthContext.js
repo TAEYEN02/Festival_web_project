@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }) => {
             
             const userData = {
               username: decodedPayload.sub || decodedPayload.username,
+              userId:decodedPayload,
               roles: roles
             };
             
@@ -102,6 +103,8 @@ export const AuthProvider = ({ children }) => {
       console.log('AuthContext login called with:', { userData, token });
       console.log('Token type:', typeof token);
       console.log('Token length:', token ? token.length : 0);
+      console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!"+userData)
+      console.log(userData)
       
       if (!token || typeof token !== 'string' || token.length < 50) {
         throw new Error('Invalid token provided to login function');
@@ -126,6 +129,7 @@ export const AuthProvider = ({ children }) => {
       
       const user = {
         username: userData.username,
+        userId:userData,
         roles: roles
       };
       

@@ -50,9 +50,12 @@ public class AuthController {
 
 		String role = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).findFirst()
 				.map(a -> a.startsWith("ROLE_") ? a : "ROLE_" + a).orElse("ROLE_USER");
+		
+		Long userId = userService.getUserProfile(loginRequest.getUsername()).getId();
 
 		JwtAuthenticationResponse response = new JwtAuthenticationResponse(jwt);
 		response.setUsername(loginRequest.getUsername());
+		response.setUserId(userId);
 		response.setRole(role);
 
 		return ResponseEntity.ok(response);

@@ -11,11 +11,12 @@ export const login = async (username, password) => {
       password,
     });
 
-    const { accessToken, username: user, role } = response.data;
+    const { accessToken, username: user, role, userId } = response.data;
     
     // 토큰과 사용자 정보 저장
     localStorage.setItem("token", accessToken);
     localStorage.setItem("username", user);
+    localStorage.setItem("userId", userId);
     localStorage.setItem("role", role);
 
     console.log("로그인 응답:", response.data);

@@ -1,32 +1,31 @@
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import './BoardWrite.css';
+import { boardWrite } from "../../api/board";
+import { useAuth } from "../../context/AuthContext";
 
 
 export const BoardWrite = () => {
     const { categoryId } = useParams();
+    const navigate = useNavigate();
+    const {user,isLoading} = useAuth();
+
+    const userId = Number(localStorage.getItem('userId'));
+    console.log('전달받음',typeof userId,userId)
 
     const [formData, setFormData] = useState({
         category: '잡담',
         title: '',
         content: '',
-        date: new Date(),
-        author: 'usernickname',
-        likes: 0,
-        comments: 0,
         tags: [],
-        user: 1
     });
     const [tagInput, setTagInput] = useState('');
-    const [images, setImages] = useState([]);
-    const [isDragging, setIsDragging] = useState(false);
 
     const categories = [
         { id: 1, value: '잡담', label: '잡담', emoji: '💬', color: 'chat' },
         { id: 2, value: '질문', label: '질문', emoji: '❓', color: 'inquiry' },
-        // { id: 3, value: '후기', label: '후기', emoji: '⭐', color: 'review' }
     ];
 
     //내용 넣기
@@ -57,48 +56,17 @@ export const BoardWrite = () => {
         }));
     };
 
-    const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files);
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                setImages(prev => [...prev, {
-                    id: Date.now() + Math.random(),
-                    url: event.target.result,
-                    name: file.name
-                }]);
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const files = Array.from(e.dataTransfer.files);
-        files.forEach(file => {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    setImages(prev => [...prev, {
-                        id: Date.now() + Math.random(),
-                        url: event.target.result,
-                        name: file.name
-                    }]);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    };
-
-    const handleImageRemove = (imageId) => {
-        setImages(prev => prev.filter(img => img.id !== imageId));
-    };
-
     //[POST]작성완료 버튼 동작.
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('게시글 데이터:',formData);
+
+        const response = boardWrite(formData,userId);
+
+        if(!response){
+            alert('게시글 작성에 실패했습니다.');    
+        }
+
+        navigate(-1)
         alert('게시글이 작성되었습니다! 🎉');
     };
 
@@ -196,52 +164,6 @@ export const BoardWrite = () => {
                             />
                         </div>
                     </div>
-
-                    {/* Image Upload */}
-                    {/* <div className="BWform-section">
-                        <label className="BWsection-label">
-                            <span className="BWicon-placeholder">📷</span>
-                            <span>사진 업로드</span>
-                        </label>
-
-                        <div
-                            onDrop={handleDrop}
-                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                            onDragLeave={() => setIsDragging(false)}
-                            className={`BWimage-drop-zone ${isDragging ? 'BWimage-drop-zone-active' : ''}`}
-                            onClick={() => document.getElementById('imageInput').click()}
-                        >
-                            <span className="BWupload-icon">🖼️</span>
-                            <p className="BWupload-text">클릭하거나 이미지를 드래그해서 업로드하세요</p>
-                            <p className="BWupload-subtext">PNG, JPG, GIF 파일을 지원합니다</p>
-                        </div>
-
-                        <input
-                            id="imageInput"
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="BWfile-input"
-                        />
-
-                        {images.length > 0 && (
-                            <div className="BWimage-preview-grid">
-                                {images.map((image) => (
-                                    <div key={image.id} className="BWimage-preview-item">
-                                        <img src={image.url} alt={image.name} className="BWpreview-image" />
-                                        <button
-                                            type="button"
-                                            onClick={() => handleImageRemove(image.id)}
-                                            className="BWremove-image-btn"
-                                        >
-                                            <span className="BWicon-placeholder">✕</span>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div> */}
 
                     {/* Tags */}
                     <div className="BWform-section">

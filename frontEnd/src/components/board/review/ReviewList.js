@@ -1,3 +1,4 @@
+import {MessageSquareText,Heart,SquarePen} from 'lucide-react'
 import { useNavigate} from "react-router-dom"
 import './ReviewList.css';
 
@@ -108,11 +109,9 @@ export const ReviewList = () => {
                                             </div>
                                             <div className="post-meta">
                                                 {/* MapPin 아이콘 (react-icons: MdLocationOn) */}
-                                                <span className="icon-placeholder">📍</span>
                                                 <span>{post.location || ''}</span>
                                                 <span>•</span>
                                                 {/* Calendar 아이콘 (react-icons: MdCalendarToday) */}
-                                                <span className="icon-placeholder">📅</span>
                                                 <span>{post.date}</span>
                                             </div>
                                         </div>
@@ -163,18 +162,13 @@ export const ReviewList = () => {
                                     <div className="action-buttons">
                                         <div className="action-btn">
                                             {/* Heart 아이콘 (react-icons: FaHeart) */}
-                                            <span className="icon-placeholder">❤️</span>
+                                            <span className="icon-placeholder"><Heart /></span>
                                             <span>{post.likes}</span>
                                         </div>
                                         <div className="action-btn">
                                             {/* MessageCircle 아이콘 (react-icons: FaComment) */}
-                                            <span className="icon-placeholder">💬</span>
+                                            <span className="icon-placeholder"><MessageSquareText /></span>
                                             <span>{post.comments}</span>
-                                        </div>
-                                        <div className="action-btn">
-                                            {/* Share2 아이콘 (react-icons: FaShare) */}
-                                            <span className="icon-placeholder">📤</span>
-                                            <span>공유</span>
                                         </div>
                                     </div>
                                     <div className="view-count">
@@ -205,7 +199,7 @@ export const ReviewList = () => {
                     window.scroll(0,0)
                 }}
                 className="floating-btn">
-                ✨
+                <SquarePen />
             </button>
         </div>
     )
