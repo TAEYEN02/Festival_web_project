@@ -1,5 +1,6 @@
 // src/components/AdminDashboard.js
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import styled from 'styled-components';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
@@ -84,11 +85,33 @@ const ErrorContainer = styled.div`
   color: #dc2626;
 `;
 
+const regionIdMapping = {
+  'seoul': '서울',
+  'busan': '부산',
+  'daegu': '대구',
+  'incheon': '인천',
+  'gwangju': '광주',
+  'daejeon': '대전',
+  'ulsan': '울산',
+  'gyeonggi': '경기',
+  'gangwon': '강원',
+  'north-chungcheong': '충북',
+  'south-chungcheong': '충남',
+  'north-jeolla': '전북',
+  'south-jeolla': '전남',
+  'north-gyeongsang': '경북',
+  'south-gyeongsang': '경남',
+  'jeju': '제주'
+};
+
+
 const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+  const [growthData, setGrowthData] = useState([]);
+  const [regionData, setRegionData] = useState([]);
+
   // Dashboard Data
   const [dashboardStats, setDashboardStats] = useState({
     totalUsers: 0,
@@ -103,13 +126,44 @@ const AdminDashboard = () => {
     loadDashboardData();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token'); // JWT 토큰 포함 필요
+        const growthRes = await axios.get('/api/admin/stats/user-growth', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const regionRes = await axios.get('/api/admin/stats/regional-chat', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setGrowthData(growthRes.data);
+
+        // 여기서 regionData 매핑
+        const formattedRegionData = regionRes.data.map(r => ({
+          region: r.region,                  // 실제 key (ex: seoul)
+          regionName: regionIdMapping[r.region] || r.region, // 표시용
+          messageCount: r.messageCount,
+          activeUsers: r.activeUsers,
+          todayMessages: r.todayMessages
+        }));
+        setRegionData(formattedRegionData);
+      } catch (err) {
+        console.error('차트 데이터 로딩 실패:', err);
+        setError('차트 데이터를 불러오지 못했습니다.');
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('대시보드 데이터 로딩 시작...');
-      
+
       // 1. 먼저 대시보드 통계 로드 (가장 중요)
       let statsData = null;
       try {
@@ -148,9 +202,9 @@ const AdminDashboard = () => {
         console.warn('Inquiries 데이터 로드 실패:', inquiriesError);
         setRecentInquiries([]);
       }
-      
+
       console.log('대시보드 데이터 로딩 완료');
-      
+
     } catch (err) {
       console.error('Dashboard load error:', err);
       setError('데이터를 불러오는 중 오류가 발생했습니다.');
@@ -167,7 +221,7 @@ const AdminDashboard = () => {
     // 토큰 제거
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
-    
+
     // 로그인 페이지로 리다이렉트
     window.location.href = '/login';
   };
@@ -203,7 +257,7 @@ const AdminDashboard = () => {
   if (error) {
     return (
       <Container>
-        <Sidebar 
+        <Sidebar
           currentPage={currentPage}
           onPageChange={handlePageChange}
           onLogout={handleLogout}
@@ -214,7 +268,7 @@ const AdminDashboard = () => {
             <ErrorContainer>
               <h3>오류 발생</h3>
               <p>{error}</p>
-              <button 
+              <button
                 onClick={handleRefresh}
                 style={{
                   background: '#2563eb',
@@ -242,19 +296,22 @@ const AdminDashboard = () => {
           <ContentSection>
             <ConnectionTest />
             <StatsCards stats={dashboardStats} />
-            
+
             <ContentGrid>
-              <RecentInquiries 
-                inquiries={recentInquiries} 
-                onViewAll={() => handleViewAll('inquiries')} 
+              <RecentInquiries
+                inquiries={recentInquiries}
+                onViewAll={() => handleViewAll('inquiries')}
               />
-              <RecentUsers 
-                users={recentUsers} 
-                onViewAll={() => handleViewAll('users')} 
+              <RecentUsers
+                users={recentUsers}
+                onViewAll={() => handleViewAll('users')}
               />
             </ContentGrid>
-            
-            <ChartSection />
+
+            <ChartSection
+              growthData={growthData}
+              regionData={regionData}  // 이미 매핑된 formattedRegionData
+            />
           </ContentSection>
         );
       case 'users':
@@ -279,15 +336,15 @@ const AdminDashboard = () => {
 
   return (
     <Container>
-      <Sidebar 
+      <Sidebar
         currentPage={currentPage}
         onPageChange={handlePageChange}
         onLogout={handleLogout}
       />
 
       <Main>
-        <TopBar 
-          stats={dashboardStats} 
+        <TopBar
+          stats={dashboardStats}
           onRefresh={handleRefresh}
         />
         {renderContent()}

@@ -35,8 +35,15 @@ public class RegionalChatService {
     
     @Transactional(readOnly = true)
     public Page<RegionalChatDto> getRegionalMessages(String region, Pageable pageable) {
-        Page<RegionalChat> messages = regionalChatRepository.findByRegionOrderByCreatedAtDesc(region, pageable);
-        return messages.map(chat -> convertToDto(chat)); // 또는 messages.<RegionalChatDto>map(this::convertToDto)
+        Page<RegionalChat> messages;
+
+        if (region == null || region.isBlank()) {
+            messages = regionalChatRepository.findAllByOrderByCreatedAtDesc(pageable);
+        } else {
+            messages = regionalChatRepository.findByRegionOrderByCreatedAtDesc(region, pageable);
+        }
+
+        return messages.map(this::convertToDto);
     }
     
     @Transactional(readOnly = true)
@@ -137,30 +144,37 @@ public class RegionalChatService {
     // 관리자용 신고 조회
     @Transactional(readOnly = true)
     public Page<RegionalChatReportDto> getReports(ReportStatus status, String region, Pageable pageable) {
-        Page<RegionalChatReport> reports = reportRepository.findByFilters(status, region, pageable);
-        return reports.map(report -> convertToReportDto(report));
+        return reportRepository.findByFilters(status, region, pageable)
+                               .map(this::convertToReportDto); // ✅ 생성자 대신 변환 메서드 사용
     }
     
     // 신고 처리
     public void resolveReport(Long reportId, String adminUsername, ReportStatus status, String adminNotes) {
         User admin = userRepository.findByUsername(adminUsername)
-            .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다"));
-        
+                .orElseThrow(() -> new RuntimeException("관리자를 찾을 수 없습니다"));
+
         RegionalChatReport report = reportRepository.findById(reportId)
-            .orElseThrow(() -> new RuntimeException("신고를 찾을 수 없습니다"));
-        
+                .orElseThrow(() -> new RuntimeException("신고를 찾을 수 없습니다"));
+
+        // 상태 갱신
         report.setStatus(status);
         report.setResolvedAt(LocalDateTime.now());
-        report.setResolvedBy(admin);
         report.setAdminNotes(adminNotes);
-        
+        report.setResolvedBy(admin); // resolvedBy 필드 존재 시
+
         reportRepository.save(report);
-        
-        // 신고가 승인되면 메시지 삭제
+
+        // 신고 승인 시 메시지 삭제 (자식 신고 먼저 삭제)
         if (status == ReportStatus.RESOLVED) {
-            deleteMessageByAdmin(report.getMessage().getId(), adminUsername);
+            RegionalChat chat = report.getMessage();
+
+            // 1. 메시지와 관련된 모든 신고 삭제
+            reportRepository.deleteAllByMessage(chat);
+
+            // 2. 메시지 삭제
+            regionalChatRepository.delete(chat);
         }
-        
+
         log.info("신고 처리 완료: 관리자={}, 신고ID={}, 처리결과={}", adminUsername, reportId, status);
     }
     

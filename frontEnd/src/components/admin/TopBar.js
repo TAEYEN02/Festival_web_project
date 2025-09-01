@@ -37,7 +37,7 @@ const TitleContainer = styled.div`
 
 const IconWrapper = styled.div`
   padding: 0.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -161,7 +161,7 @@ const Profile = styled.div`
 const Avatar = styled.div`
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -475,10 +475,6 @@ const TopBar = ({ stats, onRefresh, loading }) => {
         <StatusItem>
           <StatusDot $color="#f59e0b" $pulse={stats?.pendingInquiries > 0} />
           대기 문의: {stats?.pendingInquiries || 0}건
-        </StatusItem>
-        <StatusItem>
-          <StatusDot $color="#8b5cf6" />
-          활성 축제: {stats?.activeFestivals || 0}개
         </StatusItem>
         <StatusItem style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#9ca3af' }}>
           <Clock size={14} />

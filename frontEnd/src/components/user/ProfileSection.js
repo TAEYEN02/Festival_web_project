@@ -133,7 +133,7 @@ const Button = styled.button`
     switch (variant) {
       case 'primary':
         return `
-          background: linear-gradient(to right, #6366f1, #a855f7);
+          background: linear-gradient(to right, #4a4aff);
           color: white;
           &:hover {
             transform: translateY(-2px);
@@ -184,7 +184,7 @@ const StatsGrid = styled.div`
 const StatCard = styled.div`
   text-align: center;
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%);
   border-radius: 0.75rem;
   color: white;
 `;

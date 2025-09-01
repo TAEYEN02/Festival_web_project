@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { User, Bookmark, MessageSquare, LogOut, Calendar, Users } from 'lucide-react';
+import { User, Bookmark, MessageSquare, LogOut, Calendar, Users, Camera } from 'lucide-react';
+import axios from 'axios';
 
 const SidebarContainer = styled.div`
   background: rgba(255,255,255,0.95);
@@ -14,18 +15,46 @@ const SidebarContainer = styled.div`
   height: fit-content;
 `;
 
-const Avatar = styled.div`
+const AvatarWrapper = styled.div`
+  position: relative;
   width: 5rem;
   height: 5rem;
+  margin: 0 auto 1rem;
+`;
+
+const Avatar = styled.div`
+  width: 100%;
+  height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(to right, #6366f1, #a78bfa);
+  background: ${props => props.image ? `url(${props.image}) center/cover no-repeat` : 'linear-gradient(to right, #4a4aff)'};
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
   font-size: 1.25rem;
-  margin: 0 auto 1rem;
+`;
+
+const CameraButton = styled.label`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: white;
+  border-radius: 50%;
+  padding: 0.25rem;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+
+  input {
+    display: none;
+  }
 `;
 
 const UserInfo = styled.div`
@@ -57,12 +86,12 @@ const MenuButton = styled.button`
   border: none;
   cursor: pointer;
 
-  background: ${props => props.active ? 'linear-gradient(to right, #6366f1)' : 'transparent'};
+  background: ${props => props.active ? 'linear-gradient(to right,#4a4aff)' : 'transparent'};
   color: ${props => props.active ? 'white' : '#4b5563'};
 
   &:hover {
     background: ${props => props.active ? '' : '#f9fafb'};
-    color: ${props => props.active ? 'white' : '#6366f1'};
+    color: ${props => props.active ? 'white' : '#4a4aff'};
     transform: translateY(-1px);
   }
 `;
@@ -105,7 +134,9 @@ const LogoutButton = styled.button`
   }
 `;
 
-const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, onLogout }) => {
+const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, onLogout, setUserData, token }) => {
+  const [preview, setPreview] = useState(userData?.profileImage || null);
+
   const menuItems = [
     { id: 'profile', label: '프로필 관리', icon: User },
     { id: 'scraps', label: '찜 목록', icon: Bookmark },
@@ -113,34 +144,80 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
     { id: 'regionChat', label: '지역 채팅', icon: Users },
   ];
 
+  console.log("JWT token:", token);
+  
+  useEffect(() => {
+    if (!isLoggedIn || !token) return;
+
+    axios.get("/api/mypage/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => {
+        setUserData(res.data);
+        setPreview(res.data.profileImage);
+      })
+      .catch(err => {
+        console.error(err);
+        alert("프로필 정보를 불러오는 데 실패했습니다.");
+      });
+  }, [isLoggedIn, token]);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 미리보기
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result);
+    reader.readAsDataURL(file);
+
+    // FormData 생성
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post("/api/mypage/profile/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      setUserData(prev => ({ ...prev, profileImage: response.data.profileImage }));
+      setPreview(response.data.profileImage);
+    } catch (err) {
+      console.error(err);
+      alert("업로드 실패");
+    }
+  };
+
+  const getInitial = () => userData?.nickname ? userData.nickname.charAt(0) : userData?.username?.charAt(0) || "?";
+
   if (!isLoggedIn || !userData) {
     return (
       <SidebarContainer>
-        <div style={{ textAlign: 'center' }}>
-          <Avatar>?</Avatar>
-          <UserInfo>
-            <UserName>로그인이 필요합니다</UserName>
-            <UserEmail>마이페이지 기능을 사용하려면 로그인해주세요.</UserEmail>
-          </UserInfo>
-        </div>
+        <Avatar>{'?'}</Avatar>
+        <UserInfo>
+          <UserName>로그인이 필요합니다</UserName>
+          <UserEmail>마이페이지 기능을 사용하려면 로그인해주세요.</UserEmail>
+        </UserInfo>
       </SidebarContainer>
     );
   }
 
-  const formatJoinDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('ko-KR');
-  };
-
-  const getInitial = () => {
-    return userData.nickname ?
-      userData.nickname.charAt(0) :
-      userData.username.charAt(0);
-  };
+  const formatJoinDate = (dateString) => new Date(dateString).toLocaleDateString('ko-KR');
 
   return (
     <SidebarContainer>
+      <AvatarWrapper>
+        <Avatar image={preview}>{!preview && getInitial()}</Avatar>
+        <CameraButton>
+          <Camera size={16} />
+          <input type="file" accept="image/*" onChange={handleFileChange} />
+        </CameraButton>
+      </AvatarWrapper>
+
       <UserInfo>
-        <Avatar>{getInitial()}</Avatar>
         <UserName>{userData.nickname || userData.username}</UserName>
         <UserEmail>{userData.email}</UserEmail>
       </UserInfo>
@@ -157,7 +234,8 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
             >
               <Icon size={20} />
               {item.label}
-            </MenuButton>);
+            </MenuButton>
+          );
         })}
       </MenuNav>
 

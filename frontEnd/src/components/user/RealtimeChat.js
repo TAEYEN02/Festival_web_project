@@ -8,7 +8,7 @@ import SouthKorea from '@svg-maps/south-korea';
 const Container = styled.div`
   display: flex;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 100%, #764ba2 0%);
+  background: linear-gradient(135deg, #667eea 100%);
   overflow: hidden;
 `;
 
@@ -589,7 +589,7 @@ const RealtimeChat = () => {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
       }).join(''));
       return JSON.parse(jsonPayload);
@@ -601,7 +601,7 @@ const RealtimeChat = () => {
 
   const currentUser = getCurrentUser();
   const token = currentUser?.token;
-  
+
   // API에서 가져온 사용자 정보 사용
   const userId = userInfo?.id;
   const username = userInfo?.username;
@@ -635,7 +635,7 @@ const RealtimeChat = () => {
     ws.onopen = () => {
       console.log('WebSocket 연결됨');
       setConnectionError('');
-      
+
       const backendRegionCode = regionIdMapping[selectedRegion] || selectedRegion;
       const joinMessage = {
         type: 'JOIN_REGION',
@@ -644,7 +644,7 @@ const RealtimeChat = () => {
         username: username,
         nickname: userNickname
       };
-      
+
       console.log('JOIN_REGION 전송:', joinMessage);
       ws.send(JSON.stringify(joinMessage));
     };
@@ -653,7 +653,7 @@ const RealtimeChat = () => {
       console.log('받은 메시지:', event.data);
       try {
         const data = JSON.parse(event.data);
-        
+
         switch (data.type) {
           case 'NEW_MESSAGE':
             setMessages(prev => [...prev, {
@@ -670,10 +670,15 @@ const RealtimeChat = () => {
             break;
           case 'REGION_MESSAGES':
           case 'PREVIOUS_MESSAGES':
-            const mappedMessages = (data.messages || []).map(msg => ({ 
-              ...msg, 
-              isOwn: msg.userId === userId 
+            const mappedMessages = (data.messages || []).map(msg => ({
+              id: msg.id,
+              content: msg.message,          // message → content
+              nickname: msg.userNickname,    // userNickname → nickname
+              userId: msg.userId || 0,       // userId가 없으면 0으로 처리
+              timestamp: msg.createdAt,      // createdAt → timestamp
+              isOwn: msg.userId === userId
             })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
             setMessages(mappedMessages);
             break;
           case 'ERROR':
@@ -730,11 +735,11 @@ const RealtimeChat = () => {
   const handleLocationClick = (event) => {
     // SVG path 요소의 id를 가져옵니다.
     const locationId = event.target.id;
-    
+
     // 유효한 지역 ID이고, 현재 선택된 지역과 다른 경우에만 처리합니다.
     if (locationId && regionIdMapping[locationId] && locationId !== selectedRegion) {
       console.log(`지역 변경: ${selectedRegion || '없음'} -> ${locationId}`);
-      
+
       // 선택된 지역 상태를 업데이트합니다.
       // 이 상태 변경으로 인해 WebSocket 연결 useEffect가 자동으로 재실행됩니다.
       setSelectedRegion(locationId);
@@ -749,7 +754,7 @@ const RealtimeChat = () => {
       const svgElements = document.querySelectorAll('.svg-map__location');
       svgElements.forEach(element => {
         const locationId = element.id;
-        
+
         // 선택된 지역 표시
         if (locationId === selectedRegion) {
           element.setAttribute('data-selected', 'true');
@@ -777,7 +782,7 @@ const RealtimeChat = () => {
       nickname: userNickname,
       timestamp: new Date().toISOString()
     };
-    
+
     websocket.send(JSON.stringify(messageData));
     setNewMessage('');
   };
@@ -835,9 +840,9 @@ const RealtimeChat = () => {
   if (loadingUserInfo) {
     return (
       <Container>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
           color: '#3b82f6',
@@ -852,9 +857,9 @@ const RealtimeChat = () => {
   if (!userInfo || !token) {
     return (
       <Container>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
           color: '#dc2626',
@@ -934,11 +939,11 @@ const RealtimeChat = () => {
               {connectionError}
             </ErrorMessage>
           )}
-          
+
           {messages.length === 0 && !connectionError ? (
-            <div style={{ 
-              textAlign: 'center', 
-              color: '#6b7280', 
+            <div style={{
+              textAlign: 'center',
+              color: '#6b7280',
               marginTop: '2rem',
               fontSize: '0.875rem'
             }}>
@@ -1011,7 +1016,7 @@ const RealtimeChat = () => {
               <strong>{reportingMessage?.nickname}</strong>: {reportingMessage?.content}
             </div>
 
-             <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.75rem' }}>
                 신고 사유를 선택하세요
               </label>

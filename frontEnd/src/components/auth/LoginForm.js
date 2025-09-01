@@ -27,7 +27,7 @@ const HeaderIcon = styled.div`
   width: 4rem; 
   height:4rem; 
   margin:0 auto 1rem auto;
-  background: linear-gradient(to right,#6366f1,#a855f7);
+  background: linear-gradient(to right,#4a4aff);
   border-radius:9999px;
   display:flex; 
   align-items:center; 
@@ -120,7 +120,7 @@ const SubmitButton = styled.button`
   border-radius:1rem; 
   font-weight:500; 
   color:white;
-  background: linear-gradient(to right,#6366f1,#a855f7); 
+  background: linear-gradient(to right,#4a4aff); 
   border:none; 
   cursor:pointer;
   transition:all 0.2s;
@@ -225,14 +225,14 @@ const FindLinksContainer = styled.div`
 const FindLink = styled.button`
   background: transparent;
   border: none;
-  color: #6366f1;
+  color: #4a4aff;
   cursor: pointer;
   text-decoration: underline;
   font-size: 0.875rem;
   padding: 0;
   
   &:hover {
-    color: #4f46e5;
+    color: #4a4aff;
   }
   
   &:disabled {
@@ -559,14 +559,14 @@ const LoginForm = () => {
           type="button"
           onClick={() => { setRole('USER'); setFormData({ username: 'test', password: 'test123!' }); }}
           disabled={isLoading}
-          style={{ borderColor: role === 'USER' ? '#6366f1' : '#d1d5db', color: role === 'USER' ? '#6366f1' : '#374151' }}
+          style={{ borderColor: role === 'USER' ? '#4a4aff' : '#d1d5db', color: role === 'USER' ? '#4a4aff' : '#374151' }}
         >일반 회원</SecondaryButton>
 
         <SecondaryButton
           type="button"
           onClick={() => { setRole('ADMIN'); setFormData({ username: 'admin', password: 'admin123!' }); }}
           disabled={isLoading}
-          style={{ borderColor: role === 'ADMIN' ? '#6366f1' : '#d1d5db', color: role === 'ADMIN' ? '#6366f1' : '#374151' }}
+          style={{ borderColor: role === 'ADMIN' ? '#4a4aff' : '#d1d5db', color: role === 'ADMIN' ? '#4a4aff' : '#374151' }}
         >관리자</SecondaryButton>
       </RoleContainer>
 

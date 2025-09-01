@@ -103,6 +103,7 @@ const RefreshButton = styled.button`
   font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-left : 20px;
 
   &:hover {
     background: #1d4ed8;

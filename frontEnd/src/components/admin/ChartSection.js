@@ -1,13 +1,24 @@
-// src/components/ChartSection.js
 import React from 'react';
 import styled from 'styled-components';
 import { Activity, BarChart3 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
+} from 'recharts';
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
-  
+
   @media(min-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -27,49 +38,54 @@ const CardTitle = styled.h3`
   margin: 0 0 1rem 0;
 `;
 
-const ChartPlaceholder = styled.div`
-  height: 16rem;
-  background: #f9fafb;
-  border-radius: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: #6b7280;
-  gap: 0.5rem;
-`;
+const regionIdMapping = {
+  'seoul': '서울',
+  'busan': '부산',
+  'daegu': '대구',
+  'incheon': '인천',
+  'gwangju': '광주',
+  'daejeon': '대전',
+  'ulsan': '울산',
+  'gyeonggi': '경기',
+  'gangwon': '강원',
+  'north-chungcheong': '충북',
+  'south-chungcheong': '충남',
+  'north-jeolla': '전북',
+  'south-jeolla': '전남',
+  'north-gyeongsang': '경북',
+  'south-gyeongsang': '경남',
+  'jeju': '제주'
+};
 
-const PlaceholderText = styled.p`
-  margin: 0;
-  font-size: 1rem;
-`;
-
-const PlaceholderSubtext = styled.p`
-  margin: 0;
-  font-size: 0.875rem;
-  color: #9ca3af;
-`;
-
-const ChartSection = ({ growthData }) => {
+const ChartSection = ({ growthData, regionData }) => {
   return (
     <Grid>
       <Card>
         <CardTitle>사용자 증가 추이</CardTitle>
-        <ChartPlaceholder>
-          <Activity size={48} />
-          <PlaceholderText>사용자 증가 차트 영역</PlaceholderText>
-          <PlaceholderSubtext>Chart.js 또는 Recharts 연동</PlaceholderSubtext>
-        </ChartPlaceholder>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={growthData}>
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Line dataKey="newUsers" stroke="#2563eb" name="신규 사용자" />
+            <Line dataKey="totalUsers" stroke="#f97316" name="총 사용자" />
+          </LineChart>
+
+        </ResponsiveContainer>
       </Card>
 
       <Card>
         <CardTitle>지역별 채팅 활동</CardTitle>
-        <ChartPlaceholder>
-          <BarChart3 size={48} />
-          <PlaceholderText>지역별 채팅 활동 차트 영역</PlaceholderText>
-          <PlaceholderSubtext>실시간 데이터 시각화</PlaceholderSubtext>
-        </ChartPlaceholder>
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={regionData}>
+            <XAxis dataKey="region" tickFormatter={d => regionIdMapping[d]} />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="messageCount" fill="#2563eb" name="메시지 수" />
+            <Bar dataKey="activeUsers" fill="#f97316" name="활성 사용자" />
+          </BarChart>
+        </ResponsiveContainer>
       </Card>
     </Grid>
   );

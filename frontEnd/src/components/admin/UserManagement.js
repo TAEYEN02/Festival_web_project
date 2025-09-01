@@ -272,7 +272,7 @@ const Avatar = styled.div`
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%);
   display: flex;
   align-items: center;
   justify-content: center;

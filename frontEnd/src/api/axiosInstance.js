@@ -1,7 +1,7 @@
 // src/api/axiosInstance.js
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081';
 
 // 기본 Axios 인스턴스
 const axiosInstance = axios.create({

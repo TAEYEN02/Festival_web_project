@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.korea.festival.entity.RegionalChat;
 import com.korea.festival.entity.RegionalChatReport;
 import com.korea.festival.entity.ReportStatus;
 
@@ -15,6 +16,8 @@ public interface RegionalChatReportRepository extends JpaRepository<RegionalChat
     
     Page<RegionalChatReport> findByStatusOrderByReportedAtDesc(ReportStatus status, Pageable pageable);
     Page<RegionalChatReport> findAllByOrderByReportedAtDesc(Pageable pageable);
+    
+    void deleteAllByMessage(RegionalChat message);
     
     @Query("SELECT r FROM RegionalChatReport r WHERE " +
            "(:status IS NULL OR r.status = :status) AND " +

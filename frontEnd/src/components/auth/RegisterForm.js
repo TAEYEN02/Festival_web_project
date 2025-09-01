@@ -33,7 +33,7 @@ const HeaderIcon = styled.div`
   width: 4rem;
   height: 4rem;
   margin: 0 auto 1rem auto;
-  background: linear-gradient(to right, #34d399, #3b82f6);
+  background: linear-gradient(to right,#4a4aff);
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -203,7 +203,7 @@ const SubmitButton = styled.button`
   border-radius: 1rem;
   font-weight: 500;
   color: white;
-  background: ${({ disabled }) => (disabled ? '#9ca3af' : 'linear-gradient(to right, #34d399, #3b82f6)')};
+  background: ${({ disabled }) => (disabled ? '#9ca3af' : 'linear-gradient(to right,#4a4aff)')};
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   border: none;
   transition: all 0.2s;

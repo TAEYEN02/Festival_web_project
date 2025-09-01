@@ -35,7 +35,7 @@ const Button = styled.button`
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
-  background: linear-gradient(to right, #6366f1, #a855f7);
+  background: linear-gradient(to right, #4a4aff);
   color: white;
   border: none;
   cursor: pointer;

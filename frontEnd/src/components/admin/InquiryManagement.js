@@ -554,6 +554,9 @@ const InquiryManagement = () => {
 
   const pageSize = 10;
 
+
+  const completedInquiries = inquiries.filter(i => i.status === '답변 완료').length;
+
   // 문의 목록 로드
   const loadInquiries = useCallback(async () => {
     try {
@@ -733,6 +736,8 @@ const InquiryManagement = () => {
     );
   }
 
+  const answeredCount = inquiries.filter(i => i.status === 'ANSWERED').length;
+
   return (
     <Container>
       <MainContent>
@@ -776,7 +781,7 @@ const InquiryManagement = () => {
               <CheckCircle size={24} />
             </StatIcon>
             <StatInfo>
-              <StatValue>{stats.answered.toLocaleString()}</StatValue>
+              <StatValue>{answeredCount.toLocaleString()}</StatValue>
               <StatLabel>답변 완료</StatLabel>
             </StatInfo>
           </StatCard>
@@ -928,18 +933,8 @@ const InquiryManagement = () => {
                 총 {totalElements.toLocaleString()}개 중 {Math.min(page * pageSize + 1, totalElements)}-{Math.min((page + 1) * pageSize, totalElements)}번째
               </PaginationInfo>
               <PaginationButtons>
-                <PageButton
-                  onClick={() => setPage(0)}
-                  disabled={page === 0}
-                >
-                  처음
-                </PageButton>
-                <PageButton
-                  onClick={() => setPage(Math.max(0, page - 1))}
-                  disabled={page === 0}
-                >
-                  이전
-                </PageButton>
+                <PageButton onClick={() => setPage(0)} disabled={page === 0}>처음</PageButton>
+                <PageButton onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}>이전</PageButton>
 
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const startPage = Math.max(0, Math.min(page - 2, totalPages - 5));
@@ -957,18 +952,8 @@ const InquiryManagement = () => {
                   );
                 })}
 
-                <PageButton
-                  onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-                  disabled={page >= totalPages - 1}
-                >
-                  다음
-                </PageButton>
-                <PageButton
-                  onClick={() => setPage(totalPages - 1)}
-                  disabled={page >= totalPages - 1}
-                >
-                  마지막
-                </PageButton>
+                <PageButton onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}>다음</PageButton>
+                <PageButton onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>마지막</PageButton>
               </PaginationButtons>
             </Pagination>
           )}

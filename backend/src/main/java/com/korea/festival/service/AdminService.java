@@ -29,6 +29,7 @@ import com.korea.festival.entity.Inquiry;
 import com.korea.festival.entity.InquiryStatus;
 import com.korea.festival.entity.User;
 import com.korea.festival.repository.InquiryRepository;
+import com.korea.festival.repository.RegionalChatRepository;
 import com.korea.festival.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class AdminService {
     
     private final UserRepository userRepository;
     private final InquiryRepository inquiryRepository;
+    private final RegionalChatRepository chatRepository;
     
     @Transactional(readOnly = true)
     public AdminDashboardDTO getDashboardStats() {
@@ -195,6 +197,14 @@ public class AdminService {
         return convertToAdminInquiryDTO(saved);
     }
     
+    //사용자 삭제
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+        
+        userRepository.delete(user);
+    }
+    
     // 실제 사용자 증가 통계
     @Transactional(readOnly = true)
     public List<UserGrowthDTO> getUserGrowthStats(int days) {
@@ -228,26 +238,34 @@ public class AdminService {
     // 지역별 채팅 통계 (실제 데이터 or 기본값)
     @Transactional(readOnly = true)
     public List<RegionalChatStatsDTO> getRegionalChatStats() {
-        // TODO: RegionalChatRepository가 구현되면 실제 데이터 사용
-        // 현재는 기본 지역 데이터 반환
-        List<RegionalChatStatsDTO> stats = new ArrayList<>();
-        
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        LocalDateTime weekAgo = todayStart.minusDays(7);
+
+        // 프론트 매핑 ID 기준
         String[] regions = {
-            "서울시 강남구", "서울시 종로구", "서울시 마포구",
-            "부산시 해운대구", "부산시 중구",
-            "대구시 중구", "대구시 수성구",
-            "인천시 연수구", "광주시 서구"
+            "seoul", "busan", "daegu", "incheon", "gwangju",
+            "daejeon", "ulsan", "gyeonggi", "gangwon",
+            "north-chungcheong", "south-chungcheong",
+            "north-jeolla", "south-jeolla",
+            "north-gyeongsang", "south-gyeongsang", "jeju"
         };
-        
-        for (String region : regions) {
-            RegionalChatStatsDTO stat = new RegionalChatStatsDTO();
-            stat.setRegion(region);
-            stat.setMessageCount(0L); // 실제 채팅 메시지 개수로 교체 필요
-            stat.setActiveUsers(0L); // 실제 활성 사용자 수로 교체 필요
-            stat.setTodayMessages(0L); // 실제 오늘 메시지 수로 교체 필요
-            stats.add(stat);
+
+        List<RegionalChatStatsDTO> stats = new ArrayList<>();
+
+        for (String regionId : regions) {
+            Long messageCount = chatRepository.countByRegionAndCreatedAtAfter(regionId, weekAgo);
+            Long activeUsers = chatRepository.countUniqueUsersByRegionAndCreatedAtAfter(regionId, weekAgo);
+            Long todayMessages = chatRepository.countByRegionAndCreatedAtAfter(regionId, todayStart);
+
+            RegionalChatStatsDTO dto = new RegionalChatStatsDTO();
+            dto.setRegion(regionId);  // 프론트 ID 그대로 전달
+            dto.setMessageCount(messageCount != null ? messageCount : 0L);
+            dto.setActiveUsers(activeUsers != null ? activeUsers : 0L);
+            dto.setTodayMessages(todayMessages != null ? todayMessages : 0L);
+
+            stats.add(dto);
         }
-        
+
         return stats;
     }
     

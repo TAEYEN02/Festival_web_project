@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { 
-  MessageCircle, Users, MapPin, Activity, AlertTriangle, 
+import {
+  MessageCircle, Users, MapPin, Activity, AlertTriangle,
   Search, Filter, Eye, Trash2, Ban, CheckCircle, X,
   RefreshCw, Download, Shield, Clock, Flag, UserX,
-  TrendingUp, AlertCircle, MessageSquare
+  TrendingUp, AlertCircle, MessageSquare, MoreHorizontal
 } from 'lucide-react';
+import { getCurrentUser } from '../../api/auth';
 
 const Container = styled.div`
   padding: 1.5rem;
@@ -95,7 +96,6 @@ const ActionButton = styled.button`
   }
 `;
 
-// 실시간 통계 카드 그리드
 const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -126,15 +126,15 @@ const StatCard = styled.div`
     width: 100%;
     height: 3px;
     background: ${({ $color }) => {
-      switch ($color) {
-        case 'blue': return 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
-        case 'green': return 'linear-gradient(90deg, #10b981, #059669)';
-        case 'purple': return 'linear-gradient(90deg, #8b5cf6, #7c3aed)';
-        case 'red': return 'linear-gradient(90deg, #ef4444, #dc2626)';
-        case 'orange': return 'linear-gradient(90deg, #f59e0b, #d97706)';
-        default: return 'linear-gradient(90deg, #6b7280, #4b5563)';
-      }
-    }};
+    switch ($color) {
+      case 'blue': return 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+      case 'green': return 'linear-gradient(90deg, #10b981, #059669)';
+      case 'purple': return 'linear-gradient(90deg, #8b5cf6, #7c3aed)';
+      case 'red': return 'linear-gradient(90deg, #ef4444, #dc2626)';
+      case 'orange': return 'linear-gradient(90deg, #f59e0b, #d97706)';
+      default: return 'linear-gradient(90deg, #6b7280, #4b5563)';
+    }
+  }};
   }
 `;
 
@@ -192,7 +192,6 @@ const StatChange = styled.div`
   color: ${({ $positive }) => $positive ? '#059669' : '#dc2626'};
 `;
 
-// 지역별 현황 카드
 const RegionGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -268,7 +267,6 @@ const RegionStatLabel = styled.div`
   margin-top: 0.25rem;
 `;
 
-// 탭 컨테이너
 const TabContainer = styled.div`
   background: white;
   border-radius: 1rem;
@@ -324,7 +322,6 @@ const TabContent = styled.div`
   padding: 1.5rem;
 `;
 
-// 필터 및 검색
 const FilterSection = styled.div`
   display: flex;
   gap: 1rem;
@@ -377,7 +374,6 @@ const Select = styled.select`
   }
 `;
 
-// 테이블
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -421,7 +417,6 @@ const TableCell = styled.td`
   vertical-align: middle;
 `;
 
-// 상태 배지
 const StatusBadge = styled.span`
   padding: 0.375rem 0.75rem;
   border-radius: 9999px;
@@ -431,42 +426,32 @@ const StatusBadge = styled.span`
   letter-spacing: 0.025em;
   
   ${({ $status }) => {
-    switch ($status) {
-      case 'pending':
-        return `
-          background: #fef3c7;
-          color: #92400e;
-        `;
-      case 'reviewing':
-        return `
-          background: #dbeafe;
-          color: #1e40af;
-        `;
-      case 'resolved':
-        return `
-          background: #d1fae5;
-          color: #065f46;
-        `;
-      case 'rejected':
-        return `
-          background: #fecaca;
-          color: #991b1b;
-        `;
+    switch ($status?.toUpperCase()) {
+      case 'PENDING':
+        return `background: #fef3c7; color: #92400e;`;
+      case 'REVIEWING':
+        return `background: #dbeafe; color: #1e40af;`;
+      case 'RESOLVED':
+        return `background: #d1fae5; color: #065f46;`;
+      case 'REJECTED':
+        return `background: #fecaca; color: #991b1b;`;
+      case 'TRUE':
+      case 'ACTIVE':
+        return `background: #d1fae5; color: #065f46;`;
+      case 'FALSE':
+      case 'INACTIVE':
+        return `background: #f3f4f6; color: #6b7280;`;
       default:
-        return `
-          background: #f3f4f6;
-          color: #6b7280;
-        `;
+        return `background: #f3f4f6; color: #6b7280;`;
     }
   }}
 `;
 
-// 사용자 아바타
 const UserAvatar = styled.div`
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -491,7 +476,6 @@ const UserMeta = styled.div`
   color: #6b7280;
 `;
 
-// 메시지 내용
 const MessageContent = styled.div`
   max-width: 300px;
   overflow: hidden;
@@ -503,7 +487,6 @@ const MessageContent = styled.div`
   line-height: 1.5;
 `;
 
-// 액션 버튼들
 const ActionButtons = styled.div`
   display: flex;
   gap: 0.5rem;
@@ -531,7 +514,6 @@ const IconButton = styled.button`
   }
 `;
 
-// 로딩 및 빈 상태
 const LoadingState = styled.div`
   text-align: center;
   padding: 3rem;
@@ -554,7 +536,7 @@ const EmptyState = styled.div`
 
 const ErrorState = styled.div`
   text-align: center;
-  padding: 3rem;
+  padding: 1.5rem;
   color: #dc2626;
   background: #fef2f2;
   border-radius: 0.75rem;
@@ -563,6 +545,56 @@ const ErrorState = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 1rem;
+`;
+
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+`;
+
+const PageButton = styled.button`
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  background: ${({ $active }) => $active ? '#3b82f6' : 'white'};
+  color: ${({ $active }) => $active ? 'white' : '#374151'};
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: ${({ $active }) => $active ? '#2563eb' : '#f9fafb'};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const RealTimeIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #10b981;
+  margin-top: 0.5rem;
+`;
+
+const PulsingDot = styled.div`
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
 `;
 
 const ChatManagement = () => {
@@ -570,130 +602,269 @@ const ChatManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // 실시간 데이터
   const [realTimeStats, setRealTimeStats] = useState(null);
-  const [regionStats, setRegionStats] = useState([]);
+  const [regionalStats, setRegionalStats] = useState([]);
   const [reports, setReports] = useState([]);
+  const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
-  
+
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // 필터 상태
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [regionFilter, setRegionFilter] = useState('all');
-  
-  // 필터 및 탭 상태에 따라 신고 목록을 불러오는 함수
+  const [userStatusFilter, setUserStatusFilter] = useState('all');
+
+  // API 헬퍼 함수
+  const callAPI = async (url, options = {}) => {
+    const currentUser = getCurrentUser();
+    const token = currentUser?.token;
+
+    if (!token) {
+      throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers
+      }
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("API Error Response:", errorBody);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}. 서버 응답을 확인하세요.`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      return response.json();
+    } else {
+      const responseText = await response.text();
+      console.error("Received non-JSON response:", responseText);
+      throw new SyntaxError("서버로부터 유효하지 않은 JSON 응답을 받았습니다. (응답이 HTML일 수 있습니다)");
+    }
+  };
+
+  // 실시간 대시보드 데이터 로드
+  const loadDashboardData = useCallback(async () => {
+    if (activeTab !== 'overview') return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('실시간 대시보드 데이터 로드...');
+
+      const chatDashboard = await callAPI('/api/admin/dashboard');
+      console.log('채팅 대시보드 데이터:', chatDashboard);
+
+      const realTimeData = chatDashboard;
+      setRealTimeStats({
+        totalMessages: realTimeData.totalMessages || 0,
+        activeUsers: realTimeData.activeUsers || 0, // DTO 필드명 변경
+        totalRegions: realTimeData.activeRegions || 0, // DTO 필드명 변경
+        pendingReports: realTimeData.pendingReports || 0,
+        lastUpdated: new Date().toLocaleTimeString('ko-KR')
+      });
+
+      const regionalData = chatDashboard.regionalStats || [];
+      setRegionalStats(regionalData.map(region => ({
+        region: region.region,
+        totalMessages: region.totalMessages || 0,
+        todayMessages: region.todayMessages || 0,
+        activeUsers: region.activeUsers || 0,
+        reports: region.reportCount || 0 // DTO 필드명 변경
+      })));
+
+    } catch (error) {
+      console.error('대시보드 로드 실패:', error);
+      setError(`대시보드를 불러올 수 없습니다: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab]);
+
+  // 신고 목록 로드
   const loadReports = useCallback(async () => {
-    // '신고 관리' 탭이 아닐 경우 실행하지 않음
     if (activeTab !== 'reports') return;
 
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ page: 0, size: 20 });
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        size: '20'
+      });
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (regionFilter !== 'all') params.set('region', regionFilter);
-      if (searchTerm) params.set('search', searchTerm);
 
-      const response = await fetch(`/api/admin/chat/reports?${params.toString()}`);
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({ message: '신고 목록을 불러오는데 실패했습니다.' }));
-        throw new Error(errData.message);
-      }
-      const reportsData = await response.json();
+      console.log(`신고 목록 로드: ${params.toString()}`);
+      const reportsData = await callAPI(`/api/admin/chat/reports?${params.toString()}`);
+
       setReports(reportsData.content || []);
+      setTotalPages(reportsData.totalPages || 0);
+      setTotalElements(reportsData.totalElements || 0);
+      setCurrentPage(reportsData.number || 0);
+
+      console.log(`신고 ${reportsData.totalElements}건 로드 완료`);
     } catch (err) {
-      setError(err.message);
-      console.error('Failed to load reports:', err);
+      setError(`신고 목록 로드 실패: ${err.message}`);
+      console.error('신고 목록 로드 실패:', err);
     } finally {
       setLoading(false);
     }
-  }, [activeTab, statusFilter, regionFilter, searchTerm]);
+  }, [activeTab, statusFilter, regionFilter, currentPage]);
 
-  // 대시보드 관련 데이터만 불러오는 함수
-  const loadDashboardData = useCallback(async () => {
+  // 사용자 목록 로드  
+  const loadUsers = useCallback(async () => {
+    if (activeTab !== 'users') return;
+
+    setLoading(true);
+    setError(null);
     try {
-      const [statsResponse, regionResponse, reportsCountResponse] = await Promise.all([
-        fetch('/api/admin/chat/stats/realtime'),
-        fetch('/api/admin/stats/regional-chat'),
-        fetch('/api/admin/chat/reports?status=pending&size=0') // 대기 중인 신고 개수만 확인
-      ]);
-
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        const reportsCountData = reportsCountResponse.ok ? await reportsCountResponse.json() : { totalElements: 0 };
-        setRealTimeStats({
-          totalMessages: statsData.totalMessages || 0,
-          activeUsers: statsData.totalOnlineUsers || 0,
-          totalRegions: statsData.activeRegions || 0,
-          pendingReports: reportsCountData.totalElements || 0,
-          blockedUsers: 0,
-          messageGrowth: 0,
-          userGrowth: 0,
-          reportGrowth: 0
-        });
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        size: '20'
+      });
+      if (userStatusFilter !== 'all') {
+        params.set('isActive', userStatusFilter === 'active' ? 'true' : 'false');
       }
+      if (searchTerm) params.set('search', searchTerm);
 
-      if (regionResponse.ok) {
-        const regionData = await regionResponse.json();
-        setRegionStats(regionData.map(region => ({
-          ...region,
-          onlineUsers: 0, // TODO: 실시간 데이터 연동 필요
-          reports: region.reportCount || 0 // 백엔드에서 주는 reportCount 필드 사용
-        })));
-      }
+      console.log(`사용자 목록 로드: ${params.toString()}`);
+      const usersData = await callAPI(`/api/admin/users?${params.toString()}`);
 
-    } catch (error) {
-      console.error('대시보드 데이터 로드 실패:', error);
-      setError('대시보드 데이터를 불러오는데 실패했습니다.');
+      setUsers(usersData.content || []);
+      setTotalPages(usersData.totalPages || 0);
+      setTotalElements(usersData.totalElements || 0);
+      setCurrentPage(usersData.number || 0);
+
+      console.log(`사용자 ${usersData.totalElements}명 로드 완료`);
+    } catch (err) {
+      setError(`사용자 목록 로드 실패: ${err.message}`);
+      console.error('사용자 목록 로드 실패:', err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [activeTab, userStatusFilter, searchTerm, currentPage]);
 
-  // 대시보드 데이터는 주기적으로 갱신
-  useEffect(() => {
-    loadDashboardData();
-    const interval = setInterval(loadDashboardData, 30000);
-    return () => clearInterval(interval);
-  }, [loadDashboardData]);
+  // 메시지 목록 로드 (실제 API 사용)
+  const loadMessages = useCallback(async () => {
+    if (activeTab !== 'messages') return;
 
-  // 필터나 탭이 변경되면 신고 목록을 다시 불러옴
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        size: '20'
+      });
+      if (regionFilter !== 'all') params.set('region', regionFilter);
+      if (searchTerm) params.set('search', searchTerm);
+
+      console.log(`메시지 목록 로드: ${params.toString()}`);
+      const messagesData = await callAPI(`/api/admin/chat/messages?${params.toString()}`);
+
+      setMessages(messagesData.content || []);
+      setTotalPages(messagesData.totalPages || 0);
+      setTotalElements(messagesData.totalElements || 0);
+      setCurrentPage(messagesData.number || 0);
+
+      console.log(`메시지 ${messagesData.totalElements}건 로드 완료`);
+    } catch (err) {
+      setError(`메시지 목록 로드 실패: ${err.message}`);
+      console.error('메시지 목록 로드 실패:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, regionFilter, searchTerm, currentPage]);
+
+  // 실시간 업데이트 (5초마다)
   useEffect(() => {
-    loadReports();
-  }, [loadReports]);
+    if (activeTab === 'overview') {
+      loadDashboardData();
+      const interval = setInterval(loadDashboardData, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab, loadDashboardData]);
+
+  // 탭별 데이터 로드
+  useEffect(() => {
+    if (activeTab === 'reports') loadReports();
+    else if (activeTab === 'messages') loadMessages();
+  }, [activeTab, loadReports, loadMessages]);
+
+  // 탭 변경시 상태 리셋
+  useEffect(() => {
+    setCurrentPage(0);
+    setError(null);
+  }, [activeTab]);
+
+  // 검색어나 필터 변경시 첫 페이지로
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm, statusFilter, regionFilter]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // 실제 API 호출
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    try {
+      if (activeTab === 'overview') await loadDashboardData();
+      else if (activeTab === 'reports') await loadReports();
+      else if (activeTab === 'messages') await loadMessages();
+    } finally {
+      setTimeout(() => setRefreshing(false), 1000);
+    }
   };
 
   const handleReportAction = async (reportId, action) => {
+    const newStatus = action === 'approve' ? 'RESOLVED' : 'REJECTED';
     const actionText = action === 'approve' ? '승인 (메시지 삭제)' : '기각 (메시지 복원)';
-    if (!window.confirm(`정말로 해당 신고를 '${actionText}' 처리하시겠습니까?`)) {
-      return;
-    }
+
+    if (!window.confirm(`해당 신고를 '${actionText}' 처리하시겠습니까?`)) return;
 
     try {
-      const response = await fetch(`/api/admin/chat/reports/${reportId}/${action}`, {
-        method: 'POST',
+      await callAPI(`/api/admin/chat/reports/${reportId}/resolve`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          status: newStatus,
+          adminNotes: `관리자에 의해 ${actionText} 처리됨`
+        }),
       });
 
-      if (response.ok) {
-        alert(`신고가 성공적으로 처리되었습니다.`);
-        loadReports(); // 처리 후 목록 새로고침
-      } else {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || '작업 처리에 실패했습니다.');
-      }
+      alert('신고가 처리되었습니다.');
+      loadReports();
+      if (activeTab === 'overview') loadDashboardData();
     } catch (err) {
-      console.error(`Failed to ${action} report:`, err);
-      alert(err.message);
+      alert(`신고 처리 실패: ${err.message}`);
+    }
+  };
+
+  const handleMessageDelete = async (messageId) => {
+    if (!window.confirm('해당 메시지를 삭제하시겠습니까?')) return;
+
+    try {
+      await callAPI(`/api/admin/chat/messages/${messageId}`, { method: 'DELETE' });
+      alert('메시지가 삭제되었습니다.');
+      loadMessages();
+      if (activeTab === 'overview') loadDashboardData();
+    } catch (err) {
+      alert(`메시지 삭제 실패: ${err.message}`);
     }
   };
 
   const formatTime = (timestamp) => {
+    if (!timestamp) return '-';
     return new Date(timestamp).toLocaleString('ko-KR');
   };
 
@@ -701,20 +872,26 @@ const ChatManagement = () => {
     return name ? name.charAt(0).toUpperCase() : '?';
   };
 
-  if (error) {
-    return (
-      <Container>
-        <ErrorState>
-          <AlertTriangle size={48} />
-          <h3>오류 발생</h3>
-          <p>{error}</p>
-          <ActionButton $variant="primary" onClick={() => window.location.reload()}>
-            페이지 새로고침
-          </ActionButton>
-        </ErrorState>
-      </Container>
-    );
-  }
+  const getStatusText = (status) => {
+    switch (status?.toString().toUpperCase()) {
+      case 'PENDING': return '대기 중';
+      case 'REVIEWING': return '검토 중';
+      case 'RESOLVED': return '해결됨';
+      case 'REJECTED': return '기각됨';
+      case 'TRUE':
+      case 'ACTIVE': return '활성';
+      case 'FALSE':
+      case 'INACTIVE': return '비활성';
+      default: return status || '알 수 없음';
+    }
+  };
+
+  const pendingReportsCount = reports.filter(r => (r.status || '').toUpperCase() === 'PENDING').length;
+
+  const answeredReportsCount = reports.filter(
+    r => (r.status || '').toUpperCase() === 'RESOLVED'
+  ).length;
+
 
   return (
     <Container>
@@ -724,10 +901,6 @@ const ChatManagement = () => {
           <Subtitle>지역별 채팅방을 모니터링하고 실시간으로 관리합니다</Subtitle>
         </HeaderLeft>
         <HeaderActions>
-          <ActionButton onClick={() => {}}>
-            <Download size={16} />
-            리포트 다운로드
-          </ActionButton>
           <ActionButton $variant="primary" onClick={handleRefresh} disabled={refreshing}>
             <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
             새로고침
@@ -736,193 +909,129 @@ const ChatManagement = () => {
       </Header>
 
       {/* 실시간 통계 대시보드 */}
-      {realTimeStats && (
-        <StatsGrid>
-          <StatCard $color="blue">
-            <StatHeader>
-              <StatIcon $color="blue">
-                <MessageCircle size={24} />
-              </StatIcon>
-            </StatHeader>
-            <StatValue>{realTimeStats.totalMessages?.toLocaleString()}</StatValue>
-            <StatLabel>총 메시지 수</StatLabel>
-            <StatChange $positive={realTimeStats.messageGrowth > 0}>
-              <TrendingUp size={12} />
-              {Math.abs(realTimeStats.messageGrowth)}% 오늘
-            </StatChange>
-          </StatCard>
-          
-          <StatCard $color="green">
-            <StatHeader>
-              <StatIcon $color="green">
-                <Users size={24} />
-              </StatIcon>
-            </StatHeader>
-            <StatValue>{realTimeStats.activeUsers?.toLocaleString()}</StatValue>
-            <StatLabel>실시간 접속자</StatLabel>
-            <StatChange $positive={realTimeStats.userGrowth > 0}>
-              <TrendingUp size={12} />
-              {Math.abs(realTimeStats.userGrowth)}% 전일 대비
-            </StatChange>
-          </StatCard>
-          
-          <StatCard $color="purple">
-            <StatHeader>
-              <StatIcon $color="purple">
-                <MapPin size={24} />
-              </StatIcon>
-            </StatHeader>
-            <StatValue>{realTimeStats.totalRegions}</StatValue>
-            <StatLabel>활성 지역</StatLabel>
-            <StatChange $positive>
-              <CheckCircle size={12} />
-              모든 지역 운영중
-            </StatChange>
-          </StatCard>
-          
-          <StatCard $color="red">
-            <StatHeader>
-              <StatIcon $color="red">
-                <AlertTriangle size={24} />
-              </StatIcon>
-            </StatHeader>
-            <StatValue>{realTimeStats.pendingReports}</StatValue>
-            <StatLabel>대기 중 신고</StatLabel>
-            <StatChange $positive={realTimeStats.reportGrowth < 0}>
-              <TrendingUp size={12} />
-              {Math.abs(realTimeStats.reportGrowth)}% 감소
-            </StatChange>
-          </StatCard>
-          
-          <StatCard $color="orange">
-            <StatHeader>
-              <StatIcon $color="orange">
-                <UserX size={24} />
-              </StatIcon>
-            </StatHeader>
-            <StatValue>{realTimeStats.blockedUsers}</StatValue>
-            <StatLabel>차단된 사용자</StatLabel>
-            <StatChange>
-              <Shield size={12} />
-              보안 강화됨
-            </StatChange>
-          </StatCard>
-        </StatsGrid>
+      {activeTab === 'overview' && (
+        <>
+          {error && (
+            <ErrorState>
+              <AlertTriangle size={24} />
+              <p>{error}</p>
+              <ActionButton $variant="primary" onClick={loadDashboardData}>
+                다시 시도
+              </ActionButton>
+            </ErrorState>
+          )}
+
+          {loading ? (
+            <LoadingState>
+              <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite' }} />
+              <p>실시간 데이터를 불러오는 중...</p>
+            </LoadingState>
+          ) : realTimeStats ? (
+            <>
+              <StatsGrid>
+                <StatCard $color="green">
+                  <StatHeader>
+                    <StatIcon $color="green">
+                      <Users size={24} />
+                    </StatIcon>
+                  </StatHeader>
+                  <StatValue>{realTimeStats.activeUsers?.toLocaleString()}</StatValue>
+                  <StatLabel>현재 접속자</StatLabel>
+                  <RealTimeIndicator>
+                    <PulsingDot />
+                    실시간 ({realTimeStats.lastUpdated})
+                  </RealTimeIndicator>
+                </StatCard>
+
+
+                <StatCard $color="red">
+                  <StatHeader>
+                    <StatIcon $color="red">
+                      <AlertTriangle size={24} />
+                    </StatIcon>
+                  </StatHeader>
+                  <StatValue>{realTimeStats.pendingReports}</StatValue>
+                  <StatLabel>대기 중 신고</StatLabel>
+                  <StatChange $positive={realTimeStats.pendingReports === 0}>
+                    <Shield size={12} />
+                    {realTimeStats.pendingReports === 0 ? '처리 완료' : '처리 필요'}
+                  </StatChange>
+                </StatCard>
+
+              </StatsGrid>
+
+              {/* 지역별 현황 */}
+              <RegionGrid>
+                {regionalStats.map((region, index) => (
+                  <RegionCard key={region.region || index}>
+                    <RegionHeader>
+                      <RegionName>
+                        <MapPin size={16} />
+                        {region.region}
+                      </RegionName>
+                      <RegionStatus $online={region.activeUsers}>
+                        <Users size={12} />
+                        {region.activeUsers}명 접속
+                      </RegionStatus>
+                    </RegionHeader>
+                    <RegionStats>
+                      <RegionStat>
+                        <RegionStatValue>{region.totalMessages?.toLocaleString()}</RegionStatValue>
+                        <RegionStatLabel>총 메시지</RegionStatLabel>
+                      </RegionStat>
+                      <RegionStat>
+                        <RegionStatValue>{region.todayMessages?.toLocaleString()}</RegionStatValue>
+                        <RegionStatLabel>오늘 메시지</RegionStatLabel>
+                      </RegionStat>
+                      <RegionStat>
+                        <RegionStatValue>{region.reports}</RegionStatValue>
+                        <RegionStatLabel>신고 건수</RegionStatLabel>
+                      </RegionStat>
+                    </RegionStats>
+                  </RegionCard>
+                ))}
+              </RegionGrid>
+            </>
+          ) : (
+            <EmptyState>
+              <Activity size={48} />
+              <p>대시보드 데이터를 불러올 수 없습니다.</p>
+              <ActionButton $variant="primary" onClick={loadDashboardData}>
+                다시 시도
+              </ActionButton>
+            </EmptyState>
+          )}
+        </>
       )}
 
-      {/* 지역별 현황 */}
-      <RegionGrid>
-        {regionStats.map((region) => (
-          <RegionCard key={region.region}>
-            <RegionHeader>
-              <RegionName>
-                <MapPin size={16} />
-                {region.region}
-              </RegionName>
-              <RegionStatus $online={region.onlineUsers}>
-                <Users size={12} />
-                {region.onlineUsers}명 접속
-              </RegionStatus>
-            </RegionHeader>
-            <RegionStats>
-              <RegionStat>
-                <RegionStatValue>{region.totalMessages}</RegionStatValue>
-                <RegionStatLabel>총 메시지</RegionStatLabel>
-              </RegionStat>
-              <RegionStat>
-                <RegionStatValue>{region.todayMessages}</RegionStatValue>
-                <RegionStatLabel>오늘 메시지</RegionStatLabel>
-              </RegionStat>
-              <RegionStat>
-                <RegionStatValue>{region.reports}</RegionStatValue>
-                <RegionStatLabel>신고 건수</RegionStatLabel>
-              </RegionStat>
-            </RegionStats>
-          </RegionCard>
-        ))}
-      </RegionGrid>
-
-      {/* 상세 관리 탭 */}
+      {/* 탭 컨테이너 */}
       <TabContainer>
         <TabHeader>
-          <Tab 
-            $active={activeTab === 'overview'}
-            onClick={() => setActiveTab('overview')}
-          >
+          <Tab $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
             <Activity size={16} style={{ marginRight: '0.5rem' }} />
-            대시보드
+            실시간 대시보드
           </Tab>
-          <Tab 
+          <Tab
             $active={activeTab === 'reports'}
-            $hasNotification={reports.filter(r => r.status === 'pending').length > 0}
+            $hasNotification={pendingReportsCount > 0}
             onClick={() => setActiveTab('reports')}
           >
             <Flag size={16} style={{ marginRight: '0.5rem' }} />
-            신고 관리
+            신고 관리 {pendingReportsCount > 0 && `(${pendingReportsCount})`}
           </Tab>
-          <Tab 
-            $active={activeTab === 'messages'}
-            onClick={() => setActiveTab('messages')}
-          >
+          <Tab $active={activeTab === 'messages'} onClick={() => setActiveTab('messages')}>
             <MessageSquare size={16} style={{ marginRight: '0.5rem' }} />
             메시지 관리
-          </Tab>
-          <Tab 
-            $active={activeTab === 'users'}
-            onClick={() => setActiveTab('users')}
-          >
-            <Users size={16} style={{ marginRight: '0.5rem' }} />
-            사용자 관리
           </Tab>
         </TabHeader>
 
         <TabContent>
-          {activeTab === 'overview' && (
-            <div>
-              <h3 style={{ marginBottom: '1rem', color: '#1f2937' }}>실시간 모니터링</h3>
-              <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
-                지역별 채팅방 활동을 실시간으로 모니터링하고 있습니다.
-              </p>
-              
-              {loading ? (
-                <LoadingState>
-                  <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite' }} />
-                  <p>데이터를 불러오는 중...</p>
-                </LoadingState>
-              ) : (
-                <div style={{ 
-                  background: '#f8fafc', 
-                  padding: '2rem', 
-                  borderRadius: '1rem',
-                  border: '1px solid #e5e7eb'
-                }}>
-                  <h4 style={{ margin: '0 0 1rem 0', color: '#1f2937' }}>시스템 상태</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>서버 상태</div>
-                      <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#059669' }}>정상 운영</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>WebSocket 연결</div>
-                      <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#059669' }}>안정</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>응답 시간</div>
-                      <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#059669' }}>12ms</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
+          {/* 신고 관리 탭 */}
           {activeTab === 'reports' && (
             <>
               <FilterSection>
                 <SearchContainer>
-                  <SearchIcon>
-                    <Search size={16} />
-                  </SearchIcon>
+                  <SearchIcon><Search size={16} /></SearchIcon>
                   <SearchInput
                     type="text"
                     placeholder="신고 내용 또는 사용자명으로 검색..."
@@ -930,30 +1039,31 @@ const ChatManagement = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </SearchContainer>
-                
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
+
+                <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                   <option value="all">모든 상태</option>
-                  <option value="pending">대기 중</option>
-                  <option value="reviewing">검토 중</option>
-                  <option value="resolved">해결됨</option>
-                  <option value="rejected">기각됨</option>
+                  <option value="PENDING">대기 중</option>
+                  <option value="REVIEWING">검토 중</option>
+                  <option value="RESOLVED">해결됨</option>
+                  <option value="REJECTED">기각됨</option>
                 </Select>
-                
-                <Select
-                  value={regionFilter}
-                  onChange={(e) => setRegionFilter(e.target.value)}
-                >
+
+                <Select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
                   <option value="all">모든 지역</option>
-                  {regionStats.map(region => (
+                  {regionalStats.map(region => (
                     <option key={region.region} value={region.region}>
                       {region.region}
                     </option>
                   ))}
                 </Select>
               </FilterSection>
+
+              {error && (
+                <ErrorState>
+                  <AlertTriangle size={24} />
+                  <p>{error}</p>
+                </ErrorState>
+              )}
 
               <Table>
                 <TableHeader>
@@ -983,97 +1093,92 @@ const ChatManagement = () => {
                       <TableCell colSpan={8}>
                         <EmptyState>
                           <Shield size={48} />
-                          <p>신고된 메시지가 없습니다.</p>
+                          <p>신고가 없습니다.</p>
                         </EmptyState>
                       </TableCell>
                     </tr>
                   ) : (
-                    reports
-                      .filter(report => 
-                        (statusFilter === 'all' || report.status === statusFilter) &&
-                        (regionFilter === 'all' || report.region === regionFilter) &&
-                        (!searchTerm || 
-                         report.messageContent.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.messageAuthor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.reporterNickname.toLowerCase().includes(searchTerm.toLowerCase())
-                        )
-                      )
-                      .map((report) => (
-                        <TableRow key={report.id}>
-                          <TableCell>
-                            <UserInfo>
-                              <UserAvatar>{getInitials(report.reporterNickname)}</UserAvatar>
-                              <div>
-                                <UserName>{report.reporterNickname}</UserName>
-                              </div>
-                            </UserInfo>
-                          </TableCell>
-                          <TableCell>
-                            <UserInfo>
-                              <UserAvatar>{getInitials(report.messageAuthor)}</UserAvatar>
-                              <div>
-                                <UserName>{report.messageAuthor}</UserName>
-                              </div>
-                            </UserInfo>
-                          </TableCell>
-                          <TableCell>
-                            <MessageContent>{report.messageContent}</MessageContent>
-                          </TableCell>
-                          <TableCell>{report.reason}</TableCell>
-                          <TableCell>{report.region}</TableCell>
-                          <TableCell>
-                            <StatusBadge $status={report.status}>
-                              {report.status === 'pending' && '대기 중'}
-                              {report.status === 'reviewing' && '검토 중'}
-                              {report.status === 'resolved' && '해결됨'}
-                              {report.status === 'rejected' && '기각됨'}
-                            </StatusBadge>
-                          </TableCell>
-                          <TableCell>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#6b7280', fontSize: '0.75rem' }}>
-                              <Clock size={12} />
-                              {formatTime(report.reportedAt)}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <ActionButtons>
-                              <IconButton title="상세 보기">
-                                <Eye size={14} />
-                              </IconButton>
-                              {report.status === 'pending' && (
-                                <>
-                                  <IconButton 
-                                    title="승인 (메시지 삭제)"
-                                    onClick={() => handleReportAction(report.id, 'approve')}
-                                  >
-                                    <CheckCircle size={14} />
-                                  </IconButton>
-                                  <IconButton 
-                                    $danger
-                                    title="기각 (메시지 복원)"
-                                    onClick={() => handleReportAction(report.id, 'reject')}
-                                  >
-                                    <X size={14} />
-                                  </IconButton>
-                                </>
-                              )}
-                            </ActionButtons>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                    reports.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell>
+                          <UserInfo>
+                            <UserAvatar>{getInitials(report.reporterNickname)}</UserAvatar>
+                            <UserName>{report.reporterNickname || '익명'}</UserName>
+                          </UserInfo>
+                        </TableCell>
+                        <TableCell>
+                          <UserInfo>
+                            <UserAvatar>{getInitials(report.messageAuthor)}</UserAvatar>
+                            <UserName>{report.messageAuthor || '알 수 없음'}</UserName>
+                          </UserInfo>
+                        </TableCell>
+                        <TableCell>
+                          <MessageContent>{report.messageContent}</MessageContent>
+                        </TableCell>
+                        <TableCell>{report.reason}</TableCell>
+                        <TableCell>{report.region}</TableCell>
+                        <TableCell>
+                          <StatusBadge $status={report.status}>
+                            {getStatusText(report.status)}
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#6b7280', fontSize: '0.75rem' }}>
+                            <Clock size={12} />
+                            {formatTime(report.reportedAt)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <ActionButtons>
+                            {(report.status || '').toUpperCase() === 'PENDING' && (
+                              <>
+                                <IconButton
+                                  title="승인 (메시지 삭제)"
+                                  onClick={() => handleReportAction(report.id, 'approve')}
+                                >
+                                  <CheckCircle size={14} />
+                                </IconButton>
+                                <IconButton
+                                  $danger
+                                  title="기각 (메시지 복원)"
+                                  onClick={() => handleReportAction(report.id, 'reject')}
+                                >
+                                  <X size={14} />
+                                </IconButton>
+                              </>
+                            )}
+                          </ActionButtons>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>
+
+              {totalPages > 1 && (
+                <Pagination>
+                  <PageButton onClick={() => setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}>이전</PageButton>
+                  {[...Array(Math.min(totalPages, 10))].map((_, i) => {
+                    const pageNum = currentPage < 5 ? i : currentPage - 4 + i;
+                    if (pageNum >= totalPages) return null;
+                    return (
+                      <PageButton key={pageNum} $active={pageNum === currentPage} onClick={() => setCurrentPage(pageNum)}>
+                        {pageNum + 1}
+                      </PageButton>
+                    );
+                  })}
+                  <PageButton onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}>다음</PageButton>
+                </Pagination>
+              )}
             </>
           )}
 
+          {/* 메시지 관리 탭 */}
           {activeTab === 'messages' && (
             <>
               <FilterSection>
                 <SearchContainer>
-                  <SearchIcon>
-                    <Search size={16} />
-                  </SearchIcon>
+                  <SearchIcon><Search size={16} /></SearchIcon>
                   <SearchInput
                     type="text"
                     placeholder="메시지 내용 또는 작성자로 검색..."
@@ -1081,13 +1186,10 @@ const ChatManagement = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </SearchContainer>
-                
-                <Select
-                  value={regionFilter}
-                  onChange={(e) => setRegionFilter(e.target.value)}
-                >
+
+                <Select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
                   <option value="all">모든 지역</option>
-                  {regionStats.map(region => (
+                  {regionalStats.map(region => (
                     <option key={region.region} value={region.region}>
                       {region.region}
                     </option>
@@ -1095,39 +1197,105 @@ const ChatManagement = () => {
                 </Select>
               </FilterSection>
 
-              <EmptyState>
-                <MessageSquare size={48} />
-                <p>메시지 관리 기능은 개발 중입니다.</p>
-                <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-                  실시간 메시지 스트림과 필터링 기능을 추가할 예정입니다.
-                </p>
-              </EmptyState>
-            </>
-          )}
+              {error && (
+                <ErrorState>
+                  <AlertTriangle size={24} />
+                  <p>{error}</p>
+                </ErrorState>
+              )}
 
-          {activeTab === 'users' && (
-            <>
-              <FilterSection>
-                <SearchContainer>
-                  <SearchIcon>
-                    <Search size={16} />
-                  </SearchIcon>
-                  <SearchInput
-                    type="text"
-                    placeholder="사용자명으로 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </SearchContainer>
-              </FilterSection>
+              <Table>
+                <TableHeader>
+                  <tr>
+                    <TableHeaderCell>작성자</TableHeaderCell>
+                    <TableHeaderCell>메시지 내용</TableHeaderCell>
+                    <TableHeaderCell>지역</TableHeaderCell>
+                    <TableHeaderCell>작성 시간</TableHeaderCell>
+                    <TableHeaderCell>신고 상태</TableHeaderCell>
+                    <TableHeaderCell>작업</TableHeaderCell>
+                  </tr>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <tr>
+                      <TableCell colSpan={6}>
+                        <LoadingState>
+                          <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                          메시지를 불러오는 중...
+                        </LoadingState>
+                      </TableCell>
+                    </tr>
+                  ) : messages.length === 0 ? (
+                    <tr>
+                      <TableCell colSpan={6}>
+                        <EmptyState>
+                          <MessageSquare size={48} />
+                          <p>메시지가 없습니다.</p>
+                        </EmptyState>
+                      </TableCell>
+                    </tr>
+                  ) : (
+                    messages.map((message) => (
+                      <TableRow key={message.id}>
+                        <TableCell>
+                          <UserInfo>
+                            <UserAvatar>{getInitials(message.userNickname)}</UserAvatar>
+                            <UserName>{message.userNickname}</UserName>
+                          </UserInfo>
+                        </TableCell>
+                        <TableCell>
+                          <MessageContent>{message.message}</MessageContent>
+                        </TableCell>
+                        <TableCell>{message.region}</TableCell>
+                        <TableCell>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#6b7280', fontSize: '0.75rem' }}>
+                            <Clock size={12} />
+                            {formatTime(message.createdAt)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge $status={message.reported ? 'REPORTED' : 'NORMAL'}>
+                            {message.reported ? '신고됨' : '정상'}
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell>
+                          <ActionButtons>
+                            <IconButton
+                              $danger
+                              title="메시지 삭제"
+                              onClick={() => handleMessageDelete(message.id)}
+                            >
+                              <Trash2 size={14} />
+                            </IconButton>
+                          </ActionButtons>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
 
-              <EmptyState>
-                <Users size={48} />
-                <p>사용자 관리 기능은 개발 중입니다.</p>
-                <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-                  사용자 차단, 권한 관리 등의 기능을 추가할 예정입니다.
-                </p>
-              </EmptyState>
+              {totalPages > 1 && (
+                <Pagination>
+                  <PageButton onClick={() => setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}>이전</PageButton>
+                  {[...Array(Math.min(totalPages, 10))].map((_, i) => {
+                    const pageNum = currentPage < 5 ? i : currentPage - 4 + i;
+                    if (pageNum >= totalPages) return null;
+                    return (
+                      <PageButton key={pageNum} $active={pageNum === currentPage} onClick={() => setCurrentPage(pageNum)}>
+                        {pageNum + 1}
+                      </PageButton>
+                    );
+                  })}
+                  <PageButton onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}>다음</PageButton>
+                </Pagination>
+              )}
+
+              {totalElements > 0 && (
+                <div style={{ textAlign: 'center', marginTop: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                  총 {totalElements.toLocaleString()}건 중 {currentPage * 20 + 1}-{Math.min((currentPage + 1) * 20, totalElements)}건 표시
+                </div>
+              )}
             </>
           )}
         </TabContent>
@@ -1137,3 +1305,4 @@ const ChatManagement = () => {
 };
 
 export default ChatManagement;
+

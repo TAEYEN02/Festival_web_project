@@ -82,7 +82,7 @@ const CardContent = styled.div`
 const ItemImage = styled.div`
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;

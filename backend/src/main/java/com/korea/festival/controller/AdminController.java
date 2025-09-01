@@ -28,13 +28,16 @@ import com.korea.festival.dto.AdminDashboardDTO;
 import com.korea.festival.dto.AdminInquiryDTO;
 import com.korea.festival.dto.AdminUserDTO;
 import com.korea.festival.dto.InquiryAnswerDTO;
+import com.korea.festival.dto.RegionalChatDto;
 import com.korea.festival.dto.RegionalChatReportDto;
 import com.korea.festival.dto.RegionalChatStatsDTO;
 import com.korea.festival.dto.ReportResolutionDto;
 import com.korea.festival.dto.UserGrowthDTO;
 import com.korea.festival.entity.InquiryStatus;
+import com.korea.festival.entity.RegionalChat;
 import com.korea.festival.entity.ReportStatus;
 import com.korea.festival.handler.ChatWebSocketHandler;
+import com.korea.festival.repository.RegionalChatRepository;
 import com.korea.festival.service.AdminService;
 import com.korea.festival.service.RegionalChatService;
 
@@ -53,6 +56,7 @@ public class AdminController {
     private final AdminService adminService;
     private final RegionalChatService regionalChatService;
     private final ChatWebSocketHandler chatWebSocketHandler;
+    private final RegionalChatRepository chatRepository;
     
     // ===== 대시보드 =====
     
@@ -116,6 +120,23 @@ public class AdminController {
             throw e;
         }
     }
+    
+    //사용자 삭제
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable("userId") Long userId) {
+        try {
+            adminService.deleteUser(userId);
+            log.info("Deleted user with ID: {}", userId);
+            return ResponseEntity.ok().body("사용자가 삭제되었습니다.");
+        } catch (RuntimeException e) {
+            log.error("Failed to delete user with ID: {}", userId, e);
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error deleting user with ID: {}", userId, e);
+            return ResponseEntity.status(500).body("사용자 삭제 중 서버 오류가 발생했습니다.");
+        }
+    }
+    
     
     // ===== 문의 관리 =====
     
@@ -248,30 +269,24 @@ public class AdminController {
      */
     @GetMapping("/chat/reports")
     public ResponseEntity<Page<RegionalChatReportDto>> getChatReports(
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String region,
+            @RequestParam(name="status", required=false) String status,
+            @RequestParam(name="region", required=false) String region,
             @PageableDefault(size = 20, sort = "reportedAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
-        try {
-            ReportStatus reportStatus = null;
-            if (status != null && !status.equals("all")) {
-                try {
-                    reportStatus = ReportStatus.valueOf(status.toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().build();
-                }
+
+        ReportStatus reportStatus = null;
+        if (status != null && !status.equalsIgnoreCase("all")) {
+            try {
+                reportStatus = ReportStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
             }
-            
-            String regionFilter = region != null && !region.equals("all") ? region : null;
-            
-            Page<RegionalChatReportDto> reports = regionalChatService.getReports(
-                reportStatus, regionFilter, pageable);
-            
-            return ResponseEntity.ok(reports);
-        } catch (Exception e) {
-            log.error("Error retrieving chat reports", e);
-            throw e;
         }
+
+        String regionFilter = (region != null && !region.equalsIgnoreCase("all")) ? region : null;
+
+        Page<RegionalChatReportDto> reports = regionalChatService.getReports(reportStatus, regionFilter, pageable);
+
+        return ResponseEntity.ok(reports);
     }
     
     /**
@@ -316,6 +331,27 @@ public class AdminController {
             log.error("Error deleting chat message: messageId=" + messageId, e);
             return ResponseEntity.internalServerError().body("메시지 삭제에 실패했습니다");
         }
+    }
+    
+    /**
+     * 메시지 관리 목록
+     * */
+    @GetMapping("/chat/messages")
+    public Page<RegionalChatDto> getMessages(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "region", required = false) String region,
+            @RequestParam(name = "search", required = false) String search) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<RegionalChat> chats = chatRepository.findByRegionAndSearch(
+                region != null && !region.equals("all") ? region : null,
+                search != null && !search.isBlank() ? search : null,
+                pageable
+        );
+
+        return chats.map(RegionalChatDto::new);
     }
     
     /**

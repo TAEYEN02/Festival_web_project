@@ -5,14 +5,13 @@ import { Crown, PieChart, Users, Mail, Calendar, MessageCircle, BarChart3, Setti
 
 const Aside = styled.aside`
   position: fixed;
-  top: 0;
+  top: 72px;            /* Header 높이 */
   left: 0;
   z-index: 50;
   width: 18rem;
-  height: 100%;
+  height: calc(100% - 72px); /* Header 제외한 나머지 높이 */
   background: white;
   border-right: 1px solid #e5e7eb;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
 `;
@@ -20,7 +19,7 @@ const Aside = styled.aside`
 const SidebarHeader = styled.div`
   padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -143,7 +142,7 @@ const Sidebar = ({ currentPage, onPageChange, onLogout }) => {
     <Aside>
       <SidebarHeader>
         <Crown size={24} />
-        <SidebarTitle>Festival Admin</SidebarTitle>
+        <SidebarTitle>관리자 페이지</SidebarTitle>
       </SidebarHeader>
       
       <Nav>

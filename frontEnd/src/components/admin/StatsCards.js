@@ -117,13 +117,6 @@ const StatsCards = ({ stats }) => {
       icon: Mail, 
       color: 'red',
       positive: false
-    },
-    { 
-      title: '채팅 활성 사용자', 
-      value: stats?.activeChatUsers || 0, 
-      icon: MessageCircle, 
-      color: 'purple',
-      positive: true
     }
   ];
 

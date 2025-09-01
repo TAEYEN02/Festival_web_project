@@ -35,8 +35,8 @@ const HeaderIcon = styled.div`
   margin: 0 auto 1rem auto;
   background: ${({ type }) => 
     type === 'find-username' 
-      ? 'linear-gradient(to right, #10b981, #06b6d4)' 
-      : 'linear-gradient(to right, #f59e0b, #ef4444)'
+      ? 'linear-gradient(to right,#4a4aff)' 
+      : 'linear-gradient(to right,#4a4aff)'
   };
   border-radius: 9999px;
   display: flex;
@@ -151,8 +151,8 @@ const SubmitButton = styled.button`
   background: ${({ disabled, variant }) => {
     if (disabled) return '#9ca3af';
     return variant === 'find-username' 
-      ? 'linear-gradient(to right, #10b981, #06b6d4)' 
-      : 'linear-gradient(to right, #f59e0b, #ef4444)';
+      ? 'linear-gradient(to right, #4a4aff)' 
+      : 'linear-gradient(to right,#4a4aff)';
   }};
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   border: none;

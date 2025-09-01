@@ -57,12 +57,13 @@ const MyPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const hasLoadedRef = useRef(false); // 중복 로드 방지
+  const handleSectionChange = (section) => setCurrentSection(section);
 
   useEffect(() => {
     const loadUserData = async () => {
       // 이미 로드했거나 로딩 중이면 중단
       if (hasLoadedRef.current || loading === false) return;
-      
+
       // 토큰 확인 - localStorage에서 직접 확인
       const token = localStorage.getItem('token');
       if (!token) {
@@ -75,12 +76,12 @@ const MyPage = () => {
         hasLoadedRef.current = true; // 로드 시작 표시
         setLoading(true);
         setError(null);
-        
+
         const userInfo = await fetchCurrentUserInfo();
         setUserData(userInfo);
       } catch (err) {
         console.error('사용자 정보 로드 실패:', err);
-        
+
         // 401 에러면 토큰 만료
         if (err.response?.status === 401) {
           setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
@@ -115,15 +116,15 @@ const MyPage = () => {
     if (!userData) return null;
 
     switch (currentSection) {
-      case 'profile': 
+      case 'profile':
         return <ProfileSection userData={userData} onUpdateUser={handleUserDataUpdate} />;
-      case 'scraps': 
+      case 'scraps':
         return <ScrapSection userId={userData.id} />;
-      case 'inquiries': 
+      case 'inquiries':
         return <InquirySection userId={userData.id} />;
-      case 'regionChat': 
+      case 'regionChat':
         return <RealtimeChat userId={userData.id} userNickname={userData.nickname} />;
-      default: 
+      default:
         return <ProfileSection userData={userData} onUpdateUser={handleUserDataUpdate} />;
     }
   };
@@ -144,7 +145,7 @@ const MyPage = () => {
         <ErrorContainer>
           <h2>오류가 발생했습니다</h2>
           <p>{error}</p>
-          <button 
+          <button
             onClick={() => {
               hasLoadedRef.current = false; // 재로드 허용
               window.location.reload();
@@ -171,10 +172,11 @@ const MyPage = () => {
       <ContentWrapper>
         <MyPageSidebar
           currentSection={currentSection}
-          onSectionChange={setCurrentSection}
-          isLoggedIn={!!userData}
-          userData={userData}
-          onLogout={handleLogout}
+          onSectionChange={handleSectionChange}
+          isLoggedIn={!!user}       // user가 존재하면 로그인 상태
+          userData={userData}       // 사용자 정보
+          token={localStorage.getItem("token")}
+          setUserData={setUserData}
         />
         <MainContent>
           {renderCurrentSection()}

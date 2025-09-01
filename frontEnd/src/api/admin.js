@@ -465,8 +465,8 @@ export const blockChatUserByAdmin = async (userId, reason = '부적절한 행동
 // Server-Sent Events 구독
 export const subscribeToChatEvents = (onDataReceived, onError) => {
   try {
-    const eventSource = new EventSource('/api/admin/chat/events');
-    
+    const eventSource = new EventSource('http://localhost:8081/api/admin/chat/events');
+
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);

@@ -15,6 +15,14 @@ import com.korea.festival.entity.User;
 
 @Repository
 public interface RegionalChatRepository extends JpaRepository<RegionalChat, Long> {
+	
+	// 특정 지역(region)의 전체 메시지 조회 (페이징 X, 전체 리스트)
+	List<RegionalChat> findByRegion(String region);
+
+	// 특정 지역(region)의 전체 메시지 조회 (페이징 지원)
+	Page<RegionalChat> findByRegion(String region, Pageable pageable);
+	
+	 Page<RegionalChat> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     Page<RegionalChat> findByRegionOrderByCreatedAtDesc(String region, Pageable pageable);
 
@@ -39,7 +47,7 @@ public interface RegionalChatRepository extends JpaRepository<RegionalChat, Long
     List<Object[]> getRegionalMessageStats(@Param("today") LocalDateTime today,
                                           @Param("weekAgo") LocalDateTime weekAgo);
 
-    // 지역별 통계 (전체 데이터)
+        // 지역별 통계 (전체 데이터)
     @Query("SELECT r.region, COUNT(r), COUNT(DISTINCT r.user), " +
            "COUNT(CASE WHEN r.createdAt >= :today THEN 1 END) " +
            "FROM RegionalChat r WHERE r.isHidden = false " +
@@ -97,4 +105,15 @@ public interface RegionalChatRepository extends JpaRepository<RegionalChat, Long
            "r.createdAt >= :startDate AND r.createdAt <= :endDate AND r.isHidden = false")
     Long countMessagesBetweenDates(@Param("startDate") LocalDateTime startDate,
                                   @Param("endDate") LocalDateTime endDate);
+    
+   /**
+    * 내용이나 사용자 닉네임 검색도 하고 싶으면 검색하는 거
+    */
+    @Query("SELECT r FROM RegionalChat r " +
+            "WHERE (:region IS NULL OR r.region = :region) " +
+            "AND (:search IS NULL OR r.message LIKE %:search% OR r.user.nickname LIKE %:search%)")
+     Page<RegionalChat> findByRegionAndSearch(
+             @Param("region") String region,
+             @Param("search") String search,
+             Pageable pageable);
 }
