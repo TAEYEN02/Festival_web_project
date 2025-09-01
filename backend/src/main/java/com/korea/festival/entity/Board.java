@@ -1,12 +1,13 @@
 package com.korea.festival.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedDate;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -17,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,13 +50,17 @@ public class Board {
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 	
-	private int likes=0;
+	private int likes;
 	
-	private int view=0;
+	private int view;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id",nullable = false)
 	private User user;
+	
+	@OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<BoardComment> comments = new ArrayList<BoardComment>();
+
 	
 	@ElementCollection
 	@CollectionTable(name = "board_tags",joinColumns = @JoinColumn(name="board_id"))

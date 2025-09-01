@@ -184,7 +184,7 @@ body {
 }
 
 .BDcommenttextarea {
-  width: 100%;
+  width: 97%;
   padding: 0.75rem;
   border: 1px solid #ced4da;
   border-radius: 4px;
@@ -214,4 +214,192 @@ body {
   text-align: center;
   color: #6c757d;
   padding: 2rem 0;
+}
+
+/* 댓글 */
+.BDcommentlist {
+  display: flex;
+  flex-direction: column;
+}
+
+.BDcommentitem {
+  border-top: 1px solid #e9ecef;
+}
+
+.BDcommentheader {
+  display: grid;
+  grid-template-columns: 64px 80px 1fr 120px;
+  gap: 0.7rem;
+  padding: 0.75rem 1rem;
+  align-items: center;
+}
+
+.BDcommentavatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.BDcommentnickname {
+  font-weight: 600;
+  color: #212529;
+}
+
+.BDcommentnicknameadmin {
+  font-weight: 600;
+  color: red;
+}
+
+.BDcommentdate {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-left: auto;
+}
+
+.BDcommentcontent {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #343a40;
+  padding-left: 2rem;
+}
+
+.BDcommentreplies {
+  margin-left: 2rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-left: 2px solid #dee2e6;
+  padding-left: 1rem;
+}
+
+.BDreplyitem .BDcommentcontent {
+  padding-left: 1.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* 댓글 삭제 버튼 */
+.BDcommenteditbtn,
+.BDcommentdeletebtn {
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* 수정 버튼 */
+.BDcommenteditbtn {
+  background-color: #f0f8ff;
+  color: #007bff;
+  border-color: #b3d7ff;
+}
+
+.BDcommenteditbtn:hover {
+  background-color: #007bff;
+  color: #ffffff;
+  border-color: #007bff;
+}
+
+/* 삭제 버튼 */
+.BDcommentdeletebtn {
+  background-color: #fff5f5;
+  color: #d9534f;
+  border-color: #f5c6cb;
+}
+
+.BDcommentdeletebtn:hover {
+  background-color: #d9534f;
+  color: #ffffff;
+  border-color: #d9534f;
+}
+
+.BDcommentactions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+
+@media (max-width: 768px) {
+  @media (max-width: 768px) {
+
+    /* Container */
+    .BDboarddetailcontainer {
+      padding: 1rem;
+      margin: 1rem;
+    }
+
+    /* Post Title */
+    .BDposttitle {
+      font-size: 1.75rem;
+      margin: 15px 0 0.5rem 0;
+    }
+
+    /* Post Meta Info */
+    .BDpostmetainfo {
+      font-size: 0.75rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+
+    /* Tags */
+    .BDtag {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    /* Action Buttons */
+    .BDactionbtn {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* Post Content */
+    .BDpostcontent {
+      font-size: 0.95rem;
+    }
+
+    /* Comment Section */
+    .BDcommentheading {
+      font-size: 1.25rem;
+    }
+
+    .BDcommenttextarea {
+      font-size: 0.9rem;
+      min-height: 60px;
+    }
+
+    .BDcommentsubmitbtn {
+      padding: 0.4rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* 댓글 */
+    .BDcommentcontent {
+      font-size: 0.9rem;
+      padding-left: 1.5rem;
+    }
+
+    .BDcommentreplies {
+      margin-left: 1rem;
+      padding-left: 0.5rem;
+    }
+
+    .BDreplyitem .BDcommentcontent {
+      padding-left: 1rem;
+      font-size: 0.85rem;
+    }
+
+    /* Avatar */
+    .BDcommentavatar {
+      width: 42px;
+      height: 42px;
+    }
+  }
+
 }

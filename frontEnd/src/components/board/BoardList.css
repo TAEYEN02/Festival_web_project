@@ -150,6 +150,11 @@
     white-space: nowrap;
 }
 
+.BLtitlepreview p {
+    margin: 0;
+    padding: 0;
+}
+
 .BLtagscontainer {
     display: flex;
     gap: 0.25rem;
@@ -298,7 +303,7 @@
 
     .BLheaderrow,
     .BLpostrow {
-        grid-template-columns: 50px 1fr 70px 60px;
+        grid-template-columns: 50px 1fr ;
         gap: 0.25rem;
         padding: 0.6rem 0.5rem;
     }
@@ -320,6 +325,11 @@
     .BLtitlepreview {
         font-size: 0.7rem;
         -webkit-line-clamp: 1;
+    }
+
+    .BLtitlepreview p {
+        margin: 0;
+        padding: 0;
     }
 
     .BLtagscontainer {
@@ -363,5 +373,9 @@
         margin-top: 0.25rem;
         padding-top: 0.25rem;
         border-top: 1px solid #f3f4f6;
+    }
+
+    .BLcolumnauthor,.BLcolumndate {
+        display: none;
     }
 }
