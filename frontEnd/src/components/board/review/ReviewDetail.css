@@ -166,8 +166,8 @@ html, body {
 
 .BDtag {
   padding: 0.25rem 0.75rem;
-  background: linear-gradient(to right, #ede9fe, #fce7f3);
-  color: #7c3aed;
+    background: linear-gradient(to right, #e0f7fa, #e6f7ff);
+    color: #6b7280;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;

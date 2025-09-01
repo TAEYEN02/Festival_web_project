@@ -1,7 +1,9 @@
-import { useState } from "react";
+import {MessageSquareText,Heart,SquarePen} from 'lucide-react'
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowUpDown } from 'lucide-react'
 import './BoardList.css'
+import { useEffect } from 'react'
+import { boardFindALL } from '../../api/board'
 
 export const BoardList = () => {
 
@@ -9,14 +11,19 @@ export const BoardList = () => {
     const { categoryId } = useParams();
     const navigate = useNavigate();
     const boardCategories = [
-        { id: 0, name: '전체', emoji: '🌍' },
-        { id: 1, name: '잡담', emoji: '💬' },
-        { id: 2, name: '질문', emoji: '❓' },
+        { id: 0, name: '전체'},
+        { id: 1, name: '잡담'},
+        { id: 2, name: '질문'},
     ];
 
     // useState 대신 categoryId로 직접 필터링
     const currentCategory = boardCategories.find(cat => cat.id == categoryId);
     const activeTab = currentCategory?.name || '전체';
+
+    useEffect(()=>{
+        const response = boardFindALL();
+        console.log("응답해라",response)
+    },[])
 
     const posts = [
         {
@@ -156,24 +163,22 @@ export const BoardList = () => {
                                     {/* 모바일용 추가 정보 */}
                                     <div className="BLmobileinfo">
                                         <div className="BLmobileauthor">
-                                            <span>{post.avatar}</span>
                                             <span>{post.author}</span>
                                             <span>•</span>
                                             <span>{post.date}</span>
                                         </div>
                                         <div className="BLmobilestats">
-                                            <span>❤️ {post.likes}</span>
+                                            <span><Heart /> {post.likes}</span>
                                         </div>
                                         <div className="BLmobilestats">
 
-                                            <span>💬 {post.comments}</span>
+                                            <span><MessageSquareText /> {post.comments}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="BLrowauthor">
                                     <div className="BLauthorinfo">
-                                        <span className="BLauthoravatar">{post.avatar}</span>
                                         <span className="BLauthorname">{post.author}</span>
                                     </div>
                                 </div>
@@ -182,7 +187,6 @@ export const BoardList = () => {
                                     <span>{post.date}</span>
                                     {post.location && (
                                         <div className="BLlocation">
-                                            <span className="BLlocationicon">📍</span>
                                             <span>{post.location}</span>
                                         </div>
                                     )}
@@ -190,7 +194,7 @@ export const BoardList = () => {
 
                                 <div className="BLrowstats">
                                     <div className="BLstatsitem">
-                                        <span className="BLstatsicon">❤️</span>
+                                        <span className="BLstatsicon"><Heart /></span>
                                         <span>{post.likes}</span>
                                     </div>
 
@@ -199,7 +203,7 @@ export const BoardList = () => {
                                 <div className="BLrowstats">
 
                                     <div className="BLstatsitem">
-                                        <span className="BLstatsicon">💬</span>
+                                        <span className="BLstatsicon"><MessageSquareText /></span>
                                         <span>{post.comments}</span>
                                     </div>
                                 </div>
@@ -211,7 +215,7 @@ export const BoardList = () => {
                 {/* Load More Button */}
                 <div className="BLloadmoresection">
                     <button className="BLloadmorebtn">
-                        더 많은 축제 이야기 보기 🎊
+                        페이징 버튼(예정)
                     </button>
                 </div>
             </main>
@@ -224,7 +228,7 @@ export const BoardList = () => {
                     window.scroll(0,0)
                 }}
                 className="BLfloatingbtn">
-                ✨
+                <SquarePen />
             </button>
         </div>
     )

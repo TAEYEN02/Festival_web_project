@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JwtAuthenticationResponse {
+	private Long userId;
     private String accessToken;
     private String tokenType = "Bearer";
     private String username;
