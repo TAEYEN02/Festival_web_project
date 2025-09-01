@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { MessageSquare, Plus, Clock, CheckCircle, X, Send } from 'lucide-react';
 import { fetchMyInquiries, createInquiry, getInquiry } from '../../api/mypage';
+import ReactDOM from "react-dom";
 
 const Container = styled.div`
   background: rgba(255,255,255,0.95);
@@ -119,15 +120,12 @@ const Status = styled.span`
 
 const Modal = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
+  top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 999999; /* 헤더보다 높게 */
+  padding: 1rem;
 `;
 
 const ModalContent = styled.div`
@@ -135,9 +133,12 @@ const ModalContent = styled.div`
   border-radius: 1rem;
   padding: 1.5rem;
   max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
+  width: 100%;
+  max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1000000;
 `;
 
 const ModalHeader = styled.div`
@@ -244,6 +245,26 @@ const InquirySection = ({ userId }) => {
     }
   };
 
+  const Modal = ({ children, onClose }) => {
+    return ReactDOM.createPortal(
+      <div
+        style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "rgba(0,0,0,0.4)",
+          zIndex: 99999
+        }}
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        {children}
+      </div>,
+      document.body
+    );
+  };
+
   const handleCreateInquiry = async (e) => {
     e.preventDefault();
 
@@ -340,7 +361,7 @@ const InquirySection = ({ userId }) => {
 
       {/* 문의 작성 모달 */}
       {showCreateModal && (
-        <Modal onClick={(e) => e.target === e.currentTarget && setShowCreateModal(false)}>
+        <Modal onClose={() => setShowCreateModal(false)}>
           <ModalContent>
             <ModalHeader>
               <ModalTitle>새 문의 작성</ModalTitle>

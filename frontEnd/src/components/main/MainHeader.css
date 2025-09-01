@@ -20,9 +20,9 @@
   background-color: #fff;
   position: sticky;   /* 스크롤 시 상단 고정 */
   top: 0;
-  z-index: 100;
   border-bottom: 1px solid #eee;
-  font-family: Arial, sans-serif;
+  font-family: Arial, sans-serif; 
+  z-index: 1000; 
 }
 
 /* 왼쪽: 로고 + 내비 */

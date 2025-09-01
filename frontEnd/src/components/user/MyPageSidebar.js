@@ -57,7 +57,7 @@ const MenuButton = styled.button`
   border: none;
   cursor: pointer;
 
-  background: ${props => props.active ? 'linear-gradient(to right, #6366f1, #a78bfa)' : 'transparent'};
+  background: ${props => props.active ? 'linear-gradient(to right, #6366f1)' : 'transparent'};
   color: ${props => props.active ? 'white' : '#4b5563'};
 
   &:hover {

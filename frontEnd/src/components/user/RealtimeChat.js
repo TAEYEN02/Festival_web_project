@@ -8,7 +8,7 @@ import SouthKorea from '@svg-maps/south-korea';
 const Container = styled.div`
   display: flex;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 100%, #764ba2 0%);
   overflow: hidden;
 `;
 
@@ -17,7 +17,6 @@ const MapSection = styled.div`
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   padding: 1.5rem;
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
   
@@ -59,7 +58,6 @@ const CloseButton = styled.button`
   
   &:hover {
     background: #f3f4f6;
-    color: #374151;
   }
   
   @media (max-width: 1024px) {
@@ -81,41 +79,32 @@ const MapWrapper = styled.div`
   .svg-map {
     width: 100%;
     height: 100%;
-    cursor: pointer;
   }
   
   .svg-map__location {
-    fill: #e5e7eb !important;
-    stroke: #ffffff !important;
-    stroke-width: 1.5 !important;
-    transition: all 0.3s ease !important;
-    cursor: pointer !important;
+    fill: #e5e7eb;
+    stroke: #ffffff;
+    stroke-width: 1.5;
+    transition: all 0.3s ease;
+    cursor: pointer;
   }
   
   .svg-map__location:hover {
-    fill: #3b82f6 !important;
-    stroke-width: 2 !important;
+    fill: #60a5fa;
+    stroke-width: 2;
   }
   
-  .svg-map__location.selected {
+  .svg-map__location[data-selected="true"] {
     fill: #2563eb !important;
-    stroke-width: 2 !important;
+    stroke-width: 2;
   }
   
-  .svg-map__location.has-users {
-    fill: #60a5fa !important;
+  .svg-map__location[data-has-users="true"] {
+    fill: #93c5fd;
   }
   
-  .svg-map__location.selected:hover {
-    fill: #1d4ed8 !important;
-  }
-  
-  .svg-map path {
-    fill: inherit !important;
-    stroke: inherit !important;
-    stroke-width: inherit !important;
-    transition: inherit !important;
-    cursor: pointer !important;
+  .svg-map__location[data-selected="true"]:hover {
+    fill: #1d4ed8;
   }
 `;
 
@@ -130,7 +119,6 @@ const RegionInfo = styled.div`
 const SelectedRegion = styled.div`
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -138,8 +126,8 @@ const SelectedRegion = styled.div`
 `;
 
 const RegionStats = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  justify-content: center;
   gap: 1rem;
   margin-top: 1rem;
 `;
@@ -282,12 +270,15 @@ const MessageActions = styled.div`
   top: -0.5rem;
   right: ${({ $isOwn }) => $isOwn ? '-2.5rem' : 'auto'};
   left: ${({ $isOwn }) => $isOwn ? 'auto' : '-2.5rem'};
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 1;
+
   ${MessageWrapper}:hover & {
-    display: flex;
+    opacity: 1;
   }
 `;
 
@@ -392,7 +383,7 @@ const Modal = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 999999;
 `;
 
 const ModalContent = styled.div`
@@ -403,6 +394,7 @@ const ModalContent = styled.div`
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  z-index: 1000000;
 `;
 
 const ModalHeader = styled.div`
@@ -488,43 +480,24 @@ const ModalButton = styled.button`
 
 // 지역 ID 매핑
 const regionIdMapping = {
-  'seoul': 'seoul',
-  'busan': 'busan', 
-  'daegu': 'daegu',
-  'incheon': 'incheon',
-  'gwangju': 'gwangju',
-  'daejeon': 'daejeon',
-  'ulsan': 'ulsan',
-  'gyeonggi': 'gyeonggi',
-  'gangwon': 'gangwon',
-  'north-chungcheong': 'chungbuk',
-  'south-chungcheong': 'chungnam',
-  'north-jeolla': 'jeonbuk',
-  'south-jeolla': 'jeonnam',
-  'north-gyeongsang': 'gyeongbuk',
-  'south-gyeongsang': 'gyeongnam',
-  'jeju': 'jeju'
+  'seoul': '서울',
+  'busan': '부산',
+  'daegu': '대구',
+  'incheon': '인천',
+  'gwangju': '광주',
+  'daejeon': '대전',
+  'ulsan': '울산',
+  'gyeonggi': '경기',
+  'gangwon': '강원',
+  'north-chungcheong': '충북',
+  'south-chungcheong': '충남',
+  'north-jeolla': '전북',
+  'south-jeolla': '전남',
+  'north-gyeongsang': '경북',
+  'south-gyeongsang': '경남',
+  'jeju': '제주'
 };
 
-// 지역별 사용자 수 데이터
-const regionUserData = {
-  'seoul': 1247,
-  'busan': 456,
-  'daegu': 634,
-  'incheon': 289,
-  'gwangju': 378,
-  'daejeon': 523,
-  'ulsan': 234,
-  'gyeonggi': 2156,
-  'gangwon': 187,
-  'north-chungcheong': 312,
-  'south-chungcheong': 278,
-  'north-jeolla': 201,
-  'south-jeolla': 445,
-  'north-gyeongsang': 389,
-  'south-gyeongsang': 156,
-  'jeju': 156
-};
 
 const reportReasons = [
   '스팸 또는 광고',
@@ -537,7 +510,7 @@ const reportReasons = [
 
 const RealtimeChat = () => {
   // 모든 useState 훅들
-  const [selectedRegion, setSelectedRegion] = useState('seoul');
+  const [selectedRegion, setSelectedRegion] = useState('');
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [websocket, setWebsocket] = useState(null);
@@ -641,6 +614,14 @@ const RealtimeChat = () => {
       return;
     }
 
+    // 지역이 선택되지 않았다면 웹소켓 연결을 시도하지 않습니다.
+    if (!selectedRegion) {
+      if (websocket) {
+        websocket.close();
+      }
+      return;
+    }
+
     if (!token || !userInfo || !username || !userNickname) {
       console.log('사용자 정보 부족:', { token: !!token, userInfo, username, userNickname });
       setConnectionError("로그인 정보가 부족합니다.");
@@ -688,10 +669,11 @@ const RealtimeChat = () => {
             setOnlineUsers(data.count || 0);
             break;
           case 'REGION_MESSAGES':
+          case 'PREVIOUS_MESSAGES':
             const mappedMessages = (data.messages || []).map(msg => ({ 
               ...msg, 
               isOwn: msg.userId === userId 
-            }));
+            })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
             setMessages(mappedMessages);
             break;
           case 'ERROR':
@@ -701,6 +683,15 @@ const RealtimeChat = () => {
           case 'JOIN_SUCCESS':
             console.log('지역 입장 성공');
             setConnectionError('');
+            const backendRegionCode = regionIdMapping[selectedRegion] || selectedRegion;
+            ws.send(JSON.stringify({
+              type: 'GET_PREVIOUS_MESSAGES',
+              region: backendRegionCode,
+              limit: 50
+            }));
+            break;
+          case 'MESSAGE_DELETED':
+            setMessages(prev => prev.filter(msg => msg.id !== data.messageId));
             break;
           default:
             break;
@@ -735,33 +726,44 @@ const RealtimeChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 지역 변경 핸들러
+  // 지역 변경 핸들러 - 더 정확한 클릭 감지
   const handleLocationClick = (event) => {
-    const target = event.target;
-    const locationId = target.id || target.getAttribute('id') || target.parentElement?.id;
+    // SVG path 요소의 id를 가져옵니다.
+    const locationId = event.target.id;
     
-    console.log('지역 클릭:', locationId);
-    
-    if (locationId && locationId !== selectedRegion && websocket && websocket.readyState === WebSocket.OPEN) {
+    // 유효한 지역 ID이고, 현재 선택된 지역과 다른 경우에만 처리합니다.
+    if (locationId && regionIdMapping[locationId] && locationId !== selectedRegion) {
+      console.log(`지역 변경: ${selectedRegion || '없음'} -> ${locationId}`);
+      
+      // 선택된 지역 상태를 업데이트합니다.
+      // 이 상태 변경으로 인해 WebSocket 연결 useEffect가 자동으로 재실행됩니다.
       setSelectedRegion(locationId);
-      setMessages([]);
+      setMessages([]); // 즉각적인 UI 피드백을 위해 메시지 목록을 비웁니다.
       setConnectionError('');
-
-      websocket.send(JSON.stringify({ type: 'LEAVE_REGION' }));
-      
-      const backendRegionCode = regionIdMapping[locationId] || locationId;
-      const joinMessage = {
-        type: 'JOIN_REGION',
-        region: backendRegionCode,
-        userId: userId,
-        username: username,
-        nickname: userNickname
-      };
-      
-      console.log('새 지역 입장:', joinMessage);
-      websocket.send(JSON.stringify(joinMessage));
     }
   };
+
+  // SVG 엘리먼트에 데이터 속성 추가하는 함수
+  const updateSvgAttributes = () => {
+    setTimeout(() => {
+      const svgElements = document.querySelectorAll('.svg-map__location');
+      svgElements.forEach(element => {
+        const locationId = element.id;
+        
+        // 선택된 지역 표시
+        if (locationId === selectedRegion) {
+          element.setAttribute('data-selected', 'true');
+        } else {
+          element.removeAttribute('data-selected');
+        }
+      });
+    }, 100);
+  };
+
+  // 지역이 변경될 때마다 SVG 속성 업데이트
+  useEffect(() => {
+    updateSvgAttributes();
+  }, [selectedRegion]);
 
   // 메시지 전송
   const sendMessage = () => {
@@ -807,6 +809,14 @@ const RealtimeChat = () => {
       reporterId: userId,
       reporterNickname: userNickname
     }));
+
+    setMessages(prevMessages =>
+      prevMessages.map(msg =>
+        msg.id === reportingMessage.id
+          ? { ...msg, content: '신고된 메시지입니다.', isReported: true }
+          : msg
+      )
+    );
 
     setShowReportModal(false);
     setReportingMessage(null);
@@ -857,15 +867,7 @@ const RealtimeChat = () => {
   }
 
   const selectedLocation = SouthKorea.locations.find(location => location.id === selectedRegion);
-  const regionUsers = regionUserData[selectedRegion] || 0;
   const formatTime = (timestamp) => new Date(timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-  
-  const getLocationClassName = (location) => {
-    const classes = [];
-    if (location.id === selectedRegion) classes.push('selected');
-    if (regionUserData[location.id] > 0) classes.push('has-users');
-    return classes.join(' ');
-  };
 
   return (
     <Container>
@@ -885,7 +887,6 @@ const RealtimeChat = () => {
             <SVGMap
               map={SouthKorea}
               onLocationClick={handleLocationClick}
-              locationClassName={getLocationClassName}
             />
           </MapWrapper>
 
@@ -899,10 +900,6 @@ const RealtimeChat = () => {
                 <Stat>
                   <StatValue>{onlineUsers}</StatValue>
                   <StatLabel>실시간 접속자</StatLabel>
-                </Stat>
-                <Stat>
-                  <StatValue>{regionUsers}</StatValue>
-                  <StatLabel>총 사용자</StatLabel>
                 </Stat>
               </RegionStats>
             </RegionInfo>
@@ -958,7 +955,7 @@ const RealtimeChat = () => {
                   <MessageContent>{message.content}</MessageContent>
 
                   <MessageActions $isOwn={message.isOwn}>
-                    {!message.isOwn && (
+                    {!message.isOwn && !message.isReported && (
                       <ActionButton onClick={() => reportMessage(message)} title="신고">
                         <Flag size={12} />
                       </ActionButton>
@@ -1014,14 +1011,14 @@ const RealtimeChat = () => {
               <strong>{reportingMessage?.nickname}</strong>: {reportingMessage?.content}
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.75rem' }}>
-                신고 사유를 선택해주세요:
+                신고 사유를 선택하세요
               </label>
               <ReportReasonList>
-                {reportReasons.map((reason) => (
+                {reportReasons.map((reason, idx) => (
                   <ReportReasonButton
-                    key={reason}
+                    key={idx}
                     $selected={selectedReportReason === reason}
                     onClick={() => setSelectedReportReason(reason)}
                   >

@@ -582,35 +582,51 @@ const ChatManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [regionFilter, setRegionFilter] = useState('all');
   
-  // 실시간 데이터 로드
-  useEffect(() => {
-    loadRealTimeData();
-    
-    // 실시간 업데이트
-    const interval = setInterval(() => {
-      loadRealTimeData();
-    }, 30000); // 30초마다 갱신
-    
-    return () => clearInterval(interval);
-  }, []);
+  // 필터 및 탭 상태에 따라 신고 목록을 불러오는 함수
+  const loadReports = useCallback(async () => {
+    // '신고 관리' 탭이 아닐 경우 실행하지 않음
+    if (activeTab !== 'reports') return;
 
-  const loadRealTimeData = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      
-      const [statsResponse, regionResponse, reportsResponse] = await Promise.all([
+      const params = new URLSearchParams({ page: 0, size: 20 });
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (regionFilter !== 'all') params.set('region', regionFilter);
+      if (searchTerm) params.set('search', searchTerm);
+
+      const response = await fetch(`/api/admin/chat/reports?${params.toString()}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({ message: '신고 목록을 불러오는데 실패했습니다.' }));
+        throw new Error(errData.message);
+      }
+      const reportsData = await response.json();
+      setReports(reportsData.content || []);
+    } catch (err) {
+      setError(err.message);
+      console.error('Failed to load reports:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, statusFilter, regionFilter, searchTerm]);
+
+  // 대시보드 관련 데이터만 불러오는 함수
+  const loadDashboardData = useCallback(async () => {
+    try {
+      const [statsResponse, regionResponse, reportsCountResponse] = await Promise.all([
         fetch('/api/admin/chat/stats/realtime'),
         fetch('/api/admin/stats/regional-chat'),
-        fetch('/api/admin/chat/reports?status=pending&size=10')
+        fetch('/api/admin/chat/reports?status=pending&size=0') // 대기 중인 신고 개수만 확인
       ]);
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
+        const reportsCountData = reportsCountResponse.ok ? await reportsCountResponse.json() : { totalElements: 0 };
         setRealTimeStats({
           totalMessages: statsData.totalMessages || 0,
           activeUsers: statsData.totalOnlineUsers || 0,
           totalRegions: statsData.activeRegions || 0,
-          pendingReports: 0, // 아래에서 설정
+          pendingReports: reportsCountData.totalElements || 0,
           blockedUsers: 0,
           messageGrowth: 0,
           userGrowth: 0,
@@ -621,30 +637,29 @@ const ChatManagement = () => {
       if (regionResponse.ok) {
         const regionData = await regionResponse.json();
         setRegionStats(regionData.map(region => ({
-          region: region.region,
-          onlineUsers: 0, // WebSocket에서 실시간 데이터
-          totalMessages: region.messageCount || 0,
-          todayMessages: region.todayMessages || 0,
-          reports: 0
+          ...region,
+          onlineUsers: 0, // TODO: 실시간 데이터 연동 필요
+          reports: region.reportCount || 0 // 백엔드에서 주는 reportCount 필드 사용
         })));
       }
 
-      if (reportsResponse.ok) {
-        const reportsData = await reportsResponse.json();
-        setReports(reportsData.content || []);
-        setRealTimeStats(prev => prev ? {
-          ...prev,
-          pendingReports: reportsData.totalElements || 0
-        } : null);
-      }
-
     } catch (error) {
-      console.error('실시간 데이터 로드 실패:', error);
-      setError('데이터를 불러오는데 실패했습니다.');
-    } finally {
-      setLoading(false);
+      console.error('대시보드 데이터 로드 실패:', error);
+      setError('대시보드 데이터를 불러오는데 실패했습니다.');
     }
-  };
+  }, []);
+
+  // 대시보드 데이터는 주기적으로 갱신
+  useEffect(() => {
+    loadDashboardData();
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, [loadDashboardData]);
+
+  // 필터나 탭이 변경되면 신고 목록을 다시 불러옴
+  useEffect(() => {
+    loadReports();
+  }, [loadReports]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -654,12 +669,28 @@ const ChatManagement = () => {
     }, 1000);
   };
 
-  const handleResolveReport = async (reportId, status) => {
-    setReports(prev => prev.map(report => 
-      report.id === reportId 
-        ? { ...report, status, resolvedAt: new Date().toISOString() }
-        : report
-    ));
+  const handleReportAction = async (reportId, action) => {
+    const actionText = action === 'approve' ? '승인 (메시지 삭제)' : '기각 (메시지 복원)';
+    if (!window.confirm(`정말로 해당 신고를 '${actionText}' 처리하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/chat/reports/${reportId}/${action}`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        alert(`신고가 성공적으로 처리되었습니다.`);
+        loadReports(); // 처리 후 목록 새로고침
+      } else {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || '작업 처리에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error(`Failed to ${action} report:`, err);
+      alert(err.message);
+    }
   };
 
   const formatTime = (timestamp) => {
@@ -1013,14 +1044,14 @@ const ChatManagement = () => {
                                 <>
                                   <IconButton 
                                     title="승인 (메시지 삭제)"
-                                    onClick={() => handleResolveReport(report.id, 'resolved')}
+                                    onClick={() => handleReportAction(report.id, 'approve')}
                                   >
                                     <CheckCircle size={14} />
                                   </IconButton>
                                   <IconButton 
                                     $danger
-                                    title="기각"
-                                    onClick={() => handleResolveReport(report.id, 'rejected')}
+                                    title="기각 (메시지 복원)"
+                                    onClick={() => handleReportAction(report.id, 'reject')}
                                   >
                                     <X size={14} />
                                   </IconButton>
