@@ -171,6 +171,14 @@ public class UserService {
         );
     }
     
+    //이미지 업로드
+    public void updateProfileImage(String username, String profileImagePath) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+        user.setProfileImage(profileImagePath);
+        userRepository.save(user);
+    }
+    
     // DTO 변환 헬퍼 메서드
     private UserDetailDto convertToUserDetailDto(User user) {
         Set<String> roleNames = user.getRoles().stream()

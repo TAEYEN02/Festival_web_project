@@ -61,15 +61,24 @@ spring:
         max-size: 5
         queue-capacity: 100
         thread-name-prefix: email-
+  #/uploads/파일명 으로 접근해서 사진 업로드
+  mvc:
+    static-path-pattern: /uploads/**
+  resources:
+    static-locations: file:C:/festival/uploads/
 
 server:
   port: 8081
+
 
 # JWT 설정
 app:
   jwtSecret: 46930c6e2098076c2ffdc8f1de5d7095debe589eea5b0f43819599a3749d88e26fff284659a26f4baecffc1e7ba574d24d4da5164bf2cf21670ce983d58eb91c
   jwtExpirationInMs: 604800000 # 7일
   name: Festival App # 이메일에서 사용할 앱 이름
+  #이미지 업로드
+  upload:
+    path: C:/festival/uploads
 
 # Kakao 설정
 kakao:
@@ -182,3 +191,5 @@ cors:
     - "*"
   allow-credentials: true
   max-age: 3600
+  
+ 

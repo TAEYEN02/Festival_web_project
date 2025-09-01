@@ -1,7 +1,13 @@
 package com.korea.festival.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -9,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,11 +24,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.korea.festival.dto.InquiryDto;
 import com.korea.festival.dto.RegionalChatDto;
 import com.korea.festival.dto.UserProfileDTO;
+import com.korea.festival.dto.UserProfileImageDTO;
 import com.korea.festival.dto.UserUpdateDto;
 import com.korea.festival.dto.WishListDto;
 import com.korea.festival.service.InquiryService;
@@ -37,131 +47,144 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Validated
 public class MyPageController {
-    
-    private final UserService userService;
-    private final InquiryService inquiryService;
-    private final WishlistService wishlistService;
-    private final RegionalChatService regionalChatService;
-    
-    // ===== 사용자 프로필 관련 =====
-    
-    @GetMapping("/profile")
-    public ResponseEntity<UserProfileDTO> getUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
-        UserProfileDTO profile = userService.getUserProfile(userDetails.getUsername());
-        return ResponseEntity.ok(profile);
-    }
-    
-    @PutMapping("/profile")
-    public ResponseEntity<UserProfileDTO> updateUserProfile(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UserUpdateDto updateDTO) {
-        UserProfileDTO updated = userService.updateUserProfile(userDetails.getUsername(), updateDTO);
-        return ResponseEntity.ok(updated);
-    }
-    
-    // ===== 1대1 문의 관련 =====
-    
-    @PostMapping("/inquiries")
-    public ResponseEntity<InquiryDto> createInquiry(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody InquiryDto inquiryDTO) {
-    	InquiryDto created = inquiryService.createInquiry(userDetails.getUsername(), inquiryDTO);
-        return ResponseEntity.ok(created);
-    }
-    
-    @GetMapping("/inquiries")
-    public ResponseEntity<Page<InquiryDto>> getUserInquiries(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<InquiryDto> inquiries = inquiryService.getUserInquiries(userDetails.getUsername(), pageable);
-        return ResponseEntity.ok(inquiries);
-    }
-    
-    @GetMapping("/inquiries/{id}")
-    public ResponseEntity<InquiryDto> getInquiry(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable("id") Long id) {
-    	
-        InquiryDto inquiry = inquiryService.getInquiry(userDetails.getUsername(), id);
-        
-        return ResponseEntity.ok(inquiry);
-    }
-    
-    // ===== 찜 목록 관련 =====
-    
-    @PostMapping("/wishlist")
-    public ResponseEntity<WishListDto> addToWishlist(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, Object> request) {
-        String itemType = (String) request.get("itemType");
-        Long itemId = Long.valueOf(request.get("itemId").toString());
-        String itemTitle = (String) request.get("itemTitle");
-        String itemImage = (String) request.get("itemImage");
-        Integer itemPrice = request.get("itemPrice") != null ? 
-            Integer.valueOf(request.get("itemPrice").toString()) : null;
-        
-        WishListDto wishlist = wishlistService.addToWishlist(
-            userDetails.getUsername(), itemType, itemId, itemTitle, itemImage, itemPrice);
-        return ResponseEntity.ok(wishlist);
-    }
-    
-    @DeleteMapping("/wishlist/{itemType}/{itemId}")
-    public ResponseEntity<Void> removeFromWishlist(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable("itemType") String itemType,
-            @PathVariable("itemId") Long itemId) {
-        wishlistService.removeFromWishlist(userDetails.getUsername(), itemType, itemId);
-        return ResponseEntity.ok().build();
-    }
-    
-    @GetMapping("/wishlist")
-    public ResponseEntity<Page<WishListDto>> getUserWishlist(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<WishListDto> wishlist = wishlistService.getUserWishlist(userDetails.getUsername(), pageable);
-        return ResponseEntity.ok(wishlist);
-    }
-    
-    @GetMapping("/wishlist/check/{itemType}/{itemId}")
-    public ResponseEntity<Map<String, Boolean>> checkWishlist(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable("itemType") String itemType,
-            @PathVariable("itemId") Long itemId) {
-        boolean isInWishlist = wishlistService.isInWishlist(userDetails.getUsername(), itemType, itemId);
-        return ResponseEntity.ok(Map.of("isInWishlist", isInWishlist));
-    }
-    
-    // ===== 지역채팅 관련 =====
-    
-    @PostMapping("/regional-chat")
-    public ResponseEntity<RegionalChatDto> sendMessage(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody RegionalChatDto chatDTO) {
-    	RegionalChatDto sent = regionalChatService.sendMessage(userDetails.getUsername(), chatDTO);
-        return ResponseEntity.ok(sent);
-    }
-    
-    @GetMapping("/regional-chat/{region}")
-    public ResponseEntity<Page<RegionalChatDto>> getRegionalMessages(
-            @PathVariable("region") String region,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<RegionalChatDto> messages = regionalChatService.getRegionalMessages(region, pageable);
-        return ResponseEntity.ok(messages);
-    }
-    
-    @GetMapping("/regional-chat/my-messages")
-    public ResponseEntity<Page<RegionalChatDto>> getUserMessages(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<RegionalChatDto> messages = regionalChatService.getUserMessages(userDetails.getUsername(), pageable);
-        return ResponseEntity.ok(messages);
-    }
-    
-    @DeleteMapping("/regional-chat/{messageId}")
-    public ResponseEntity<Void> deleteMessage(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable("messageId") Long messageId) {
-        regionalChatService.deleteMessage(userDetails.getUsername(), messageId);
-        return ResponseEntity.ok().build();
-    }
+
+	private final UserService userService;
+	private final InquiryService inquiryService;
+	private final WishlistService wishlistService;
+	private final RegionalChatService regionalChatService;
+
+	@Value("${app.upload.path}")
+	private String uploadPath;
+
+	// ===== 사용자 프로필 관련 =====
+
+	@GetMapping("/profile")
+	public ResponseEntity<UserProfileDTO> getUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
+		UserProfileDTO profile = userService.getUserProfile(userDetails.getUsername());
+		return ResponseEntity.ok(profile);
+	}
+
+	@PutMapping("/profile")
+	public ResponseEntity<UserProfileDTO> updateUserProfile(@AuthenticationPrincipal UserDetails userDetails,
+			@Valid @RequestBody UserUpdateDto updateDTO) {
+		UserProfileDTO updated = userService.updateUserProfile(userDetails.getUsername(), updateDTO);
+		return ResponseEntity.ok(updated);
+	}
+
+	// ===== 프로필 이미지 업로드 =====
+	@PostMapping("/profile/upload")
+	public ResponseEntity<UserProfileImageDTO> uploadProfileImage(@AuthenticationPrincipal UserDetails userDetails,
+			@RequestParam("file") MultipartFile file) throws IOException {
+
+		if (file.isEmpty())
+			throw new RuntimeException("파일이 선택되지 않았습니다.");
+
+		String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+		String newFileName = UUID.randomUUID() + "." + extension;
+
+		Path uploadDir = Paths.get(uploadPath);
+		if (!Files.exists(uploadDir))
+			Files.createDirectories(uploadDir);
+
+		Path filePath = uploadDir.resolve(newFileName);
+		file.transferTo(filePath.toFile());
+
+		String relativePath = "/uploads/" + newFileName;
+		userService.updateProfileImage(userDetails.getUsername(), relativePath);
+
+		return ResponseEntity.ok(new UserProfileImageDTO(relativePath));
+	}
+
+	// ===== 1대1 문의 관련 =====
+
+	@PostMapping("/inquiries")
+	public ResponseEntity<InquiryDto> createInquiry(@AuthenticationPrincipal UserDetails userDetails,
+			@Valid @RequestBody InquiryDto inquiryDTO) {
+		InquiryDto created = inquiryService.createInquiry(userDetails.getUsername(), inquiryDTO);
+		return ResponseEntity.ok(created);
+	}
+
+	@GetMapping("/inquiries")
+	public ResponseEntity<Page<InquiryDto>> getUserInquiries(@AuthenticationPrincipal UserDetails userDetails,
+			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		Page<InquiryDto> inquiries = inquiryService.getUserInquiries(userDetails.getUsername(), pageable);
+		return ResponseEntity.ok(inquiries);
+	}
+
+	@GetMapping("/inquiries/{id}")
+	public ResponseEntity<InquiryDto> getInquiry(@AuthenticationPrincipal UserDetails userDetails,
+			@PathVariable("id") Long id) {
+
+		InquiryDto inquiry = inquiryService.getInquiry(userDetails.getUsername(), id);
+
+		return ResponseEntity.ok(inquiry);
+	}
+
+	// ===== 찜 목록 관련 =====
+
+	@PostMapping("/wishlist")
+	public ResponseEntity<WishListDto> addToWishlist(@AuthenticationPrincipal UserDetails userDetails,
+			@RequestBody Map<String, Object> request) {
+		String itemType = (String) request.get("itemType");
+		Long itemId = Long.valueOf(request.get("itemId").toString());
+		String itemTitle = (String) request.get("itemTitle");
+		String itemImage = (String) request.get("itemImage");
+		Integer itemPrice = request.get("itemPrice") != null ? Integer.valueOf(request.get("itemPrice").toString())
+				: null;
+
+		WishListDto wishlist = wishlistService.addToWishlist(userDetails.getUsername(), itemType, itemId, itemTitle,
+				itemImage, itemPrice);
+		return ResponseEntity.ok(wishlist);
+	}
+
+	@DeleteMapping("/wishlist/{itemType}/{itemId}")
+	public ResponseEntity<Void> removeFromWishlist(@AuthenticationPrincipal UserDetails userDetails,
+			@PathVariable("itemType") String itemType, @PathVariable("itemId") Long itemId) {
+		wishlistService.removeFromWishlist(userDetails.getUsername(), itemType, itemId);
+		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("/wishlist")
+	public ResponseEntity<Page<WishListDto>> getUserWishlist(@AuthenticationPrincipal UserDetails userDetails,
+			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		Page<WishListDto> wishlist = wishlistService.getUserWishlist(userDetails.getUsername(), pageable);
+		return ResponseEntity.ok(wishlist);
+	}
+
+	@GetMapping("/wishlist/check/{itemType}/{itemId}")
+	public ResponseEntity<Map<String, Boolean>> checkWishlist(@AuthenticationPrincipal UserDetails userDetails,
+			@PathVariable("itemType") String itemType, @PathVariable("itemId") Long itemId) {
+		boolean isInWishlist = wishlistService.isInWishlist(userDetails.getUsername(), itemType, itemId);
+		return ResponseEntity.ok(Map.of("isInWishlist", isInWishlist));
+	}
+
+	// ===== 지역채팅 관련 =====
+
+	@PostMapping("/regional-chat")
+	public ResponseEntity<RegionalChatDto> sendMessage(@AuthenticationPrincipal UserDetails userDetails,
+			@Valid @RequestBody RegionalChatDto chatDTO) {
+		RegionalChatDto sent = regionalChatService.sendMessage(userDetails.getUsername(), chatDTO);
+		return ResponseEntity.ok(sent);
+	}
+
+	@GetMapping("/regional-chat/{region}")
+	public ResponseEntity<Page<RegionalChatDto>> getRegionalMessages(@PathVariable("region") String region,
+			@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		Page<RegionalChatDto> messages = regionalChatService.getRegionalMessages(region, pageable);
+		return ResponseEntity.ok(messages);
+	}
+
+	@GetMapping("/regional-chat/my-messages")
+	public ResponseEntity<Page<RegionalChatDto>> getUserMessages(@AuthenticationPrincipal UserDetails userDetails,
+			@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		Page<RegionalChatDto> messages = regionalChatService.getUserMessages(userDetails.getUsername(), pageable);
+		return ResponseEntity.ok(messages);
+	}
+
+	@DeleteMapping("/regional-chat/{messageId}")
+	public ResponseEntity<Void> deleteMessage(@AuthenticationPrincipal UserDetails userDetails,
+			@PathVariable("messageId") Long messageId) {
+		regionalChatService.deleteMessage(userDetails.getUsername(), messageId);
+		return ResponseEntity.ok().build();
+	}
 }

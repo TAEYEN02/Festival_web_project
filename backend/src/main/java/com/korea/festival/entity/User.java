@@ -1,12 +1,12 @@
 package com.korea.festival.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.beans.factory.annotation.Value;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -79,5 +79,11 @@ public class User {
 
     @Column
     private String providerId; // OAuth 공급자 고유 ID
+    
+    @Value("${app.upload.path}")
+    private String uploadPath;
+    
+    @Column
+    private String profileImage;
     
 }
