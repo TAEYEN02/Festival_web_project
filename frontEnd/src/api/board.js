@@ -1,4 +1,5 @@
 import { BASE_URL } from "./baseUrl";
+import DOMPurify from "dompurify";
 
 const API_URL = `${BASE_URL}/api/board`;
 const token = localStorage.getItem('token')
@@ -28,10 +29,17 @@ export const boardWrite = async (dto, userId) => {
 
 
 //삭제
-export const boardDelete = async ({ boardId, userId }) => {
+export const boardDelete = async (boardId, userId) => {
+
+    const option = {
+        method: "DELETE",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        },
+    }
 
     try {
-        const response = await fetch(`${API_URL}/${boardId}?userId=${userId}`);
+        const response = await fetch(`${API_URL}/${boardId}?userId=${userId}`, option);
         const result = await response.json();
         return result;
     } catch (error) {
@@ -42,7 +50,7 @@ export const boardDelete = async ({ boardId, userId }) => {
 
 
 //수정
-export const boardUpdate = async ({ dto, userId }) => {
+export const boardUpdate = async (dto, userId) => {
 
     const option = {
         method: "PUT",
@@ -76,9 +84,9 @@ export const boardFindALL = async (userId) => {
 
     try {
         if (userId) {
-            response = await fetch(`${API_URL}?userId=${userId}`,option)
+            response = await fetch(`${API_URL}?userId=${userId}`, option)
         } else {
-            response = await fetch(`${API_URL}`,option)
+            response = await fetch(`${API_URL}`, option)
         }
         const result = await response.json();
         return result;
@@ -89,14 +97,21 @@ export const boardFindALL = async (userId) => {
 }
 
 //불러오기(한개,상세)
-export const boardFindOne = async ({ boardId, userId }) => {
+export const boardFindOne = async (boardId, userId) => {
+
+    const option = {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        },
+    }
 
     try {
         let response;
         if (userId) {
-            response = await fetch(`${API_URL}/${boardId}?userId=${userId}`)
+            response = await fetch(`${API_URL}/${boardId}?userId=${userId}`, option)
         } else {
-            response = await fetch(`${API_URL}/${boardId}`)
+            response = await fetch(`${API_URL}/${boardId}`, option)
         }
         const result = await response.json();
         return result;
@@ -120,11 +135,41 @@ export const boardLikeToggle = async (boardId, userId) => {
     }
 
     try {
-        let response = await fetch(`${API_URL}/${boardId}/like?userId=${userId}`,option)
+        let response = await fetch(`${API_URL}/${boardId}/like?userId=${userId}`, option)
         const result = await response.json();
         return result;
     } catch (error) {
         console.log(error)
         throw new Error("[Like]서버 요청 중 오류 발생")
+    }
+}
+
+
+//html 태그 정제
+export const PostContent = (content) => {
+    const clean = DOMPurify.sanitize(content);
+    return <div dangerouslySetInnerHTML={{ __html: clean }} />;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+export const boardCommentWrite = async (dto) => {
+
+    const option = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(dto)
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/comment`, option);
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.log(error)
+        throw new Error("[Comment]서버 요청 중 오류 발생")
     }
 }

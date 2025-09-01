@@ -1,31 +1,47 @@
 import { useNavigate, useParams } from "react-router-dom"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import './BoardWrite.css';
-import { boardWrite } from "../../api/board";
+import { boardFindOne, boardUpdate, boardWrite } from "../../api/board";
 import { useAuth } from "../../context/AuthContext";
+import Swal from "sweetalert2";
 
 
-export const BoardWrite = () => {
-    const { categoryId } = useParams();
+export const BoardUpdate = () => {
+    const { boardId, categoryId } = useParams();
     const navigate = useNavigate();
-    const {isLoading} = useAuth();
+    const { isLoading } = useAuth();
 
     const userId = Number(localStorage.getItem('userId'));
 
-    const [formData, setFormData] = useState({
-        category: '잡담',
-        title: '',
-        content: '',
-        tags: [],
-    });
     const [tagInput, setTagInput] = useState('');
 
     const categories = [
         { id: 1, value: '잡담', label: '잡담', emoji: '💬', color: 'chat' },
         { id: 2, value: '질문', label: '질문', emoji: '❓', color: 'inquiry' },
     ];
+
+    const [formData, setFormData] = useState({
+        id:Number(boardId),
+        category: '',
+        title: '',
+        content: '',
+        tags: [],
+    });
+
+    //[GET]데이터 로드
+    useEffect(() => {
+        boardFindOne(boardId)
+            .then(response => {
+                setFormData((prev) => ({ ...prev, title: response.title }))
+                setFormData((prev) => ({ ...prev, category: response.category }))
+                setFormData((prev) => ({ ...prev, content: response.content }))
+                setFormData((prev) => ({ ...prev, tags: response.tags }))
+                console.log(response)
+            })
+    }, [])
+
 
     //내용 넣기
     const handleInputChange = (field, value) => {
@@ -55,18 +71,24 @@ export const BoardWrite = () => {
         }));
     };
 
-    //[POST]작성완료 버튼 동작.
-    const handleSubmit = (e) => {
+    //[PUT]작성완료 버튼 동작.
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const response = boardWrite(formData,userId);
+        const response = boardUpdate(formData, Number(userId));
+        console.log(formData)
 
-        if(!response){
-            alert('게시글 작성에 실패했습니다.');    
+        if (!response) {
+            alert('게시글 수정에 실패했습니다.');
         }
 
+        await Swal.fire({
+            title: "성공",
+            text: '게시글이 수정되었습니다! 🎉',
+            showConfirmButton: true
+        })
+
         navigate(-1)
-        alert('게시글이 작성되었습니다! 🎉');
     };
 
     const handleKeyPress = (e) => {
@@ -93,14 +115,14 @@ export const BoardWrite = () => {
                             </button>
                             {/* 간단한 안내 */}
                             <div className="BWheader-text">
-                                <h1 className="BWpage-title">{`${categories[categoryId - 1]?.value||''} 게시판 이야기 작성`}</h1>
+                                <h1 className="BWpage-title">{`${categories[categoryId - 1]?.value || ''} 게시판 수정 하기`}</h1>
                                 <p className="BWpage-subtitle">당신의 경험을 공유해보세요</p>
                             </div>
                         </div>
                         {/* 상단바 오른쪽 발행하기 버튼 */}
                         <button onClick={handleSubmit} className="BWpublish-button">
                             <span className="BWicon-placeholder">📤</span>
-                            <span>발행하기</span>
+                            <span>수정하기</span>
                         </button>
                     </div>
                 </div>
@@ -147,19 +169,19 @@ export const BoardWrite = () => {
                     <div className="BWform-section">
                         <div className="BWquill-wrapper">
                             <ReactQuill
-                            theme="snow"
-                            value={formData.content}
-                            onChange={(content) => handleInputChange('content', content)}
-                            modules={{
-                                toolbar: [
-                                    ["image"], // 링크, 이미지, 동영상
-                                    [{ header: 1 }, { header: 2 }, { header: 3 }], // H1, H2, H3, 일반
-                                    ["bold", "italic", "underline", "strike"], // 굵게, 기울임, 밑줄, 취소선
-                                    [{ color: [] }], // 글자색, 배경색
-                                    [{ align: [] }], // 왼쪽, 가운데, 오른쪽, 양쪽 정렬
-                                ]
-                            }}
-                            placeholder="축제에 대한 생생한 이야기를 들려주세요! 🎊&#10;&#10;• 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
+                                theme="snow"
+                                value={formData.content}
+                                onChange={(content) => handleInputChange('content', content)}
+                                modules={{
+                                    toolbar: [
+                                        ["image"], // 링크, 이미지, 동영상
+                                        [{ header: 1 }, { header: 2 }, { header: 3 }], // H1, H2, H3, 일반
+                                        ["bold", "italic", "underline", "strike"], // 굵게, 기울임, 밑줄, 취소선
+                                        [{ color: [] }], // 글자색, 배경색
+                                        [{ align: [] }], // 왼쪽, 가운데, 오른쪽, 양쪽 정렬
+                                    ]
+                                }}
+                                placeholder="축제에 대한 생생한 이야기를 들려주세요! 🎊&#10;&#10;• 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
                             />
                         </div>
                     </div>

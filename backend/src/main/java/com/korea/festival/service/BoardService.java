@@ -1,6 +1,7 @@
 package com.korea.festival.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,8 +78,12 @@ public class BoardService {
 		Board board = boardRepository.findById(dto.getId())
 				.orElseThrow(()->new RuntimeException("게시글 없음"));
 		
+		System.out.println("[전달]board.getID"+board.getUser().getId());
+		System.out.println("[전달]userID"+userId);
+		
 		//작성자 확인
-		if(!board.getUser().getId().equals(userId)) {
+		if(!board.getUser().getId().equals(userId)&&!userId.equals(1L)) {
+			
 			throw new RuntimeException("작성자가 아닙니다.");
 		}
 		
@@ -101,7 +106,10 @@ public class BoardService {
 		Board board = boardRepository.findById(boardId)
 				.orElseThrow(()->new RuntimeException("게시글 없음"));
 		
-		if(!board.getUser().getId().equals(userId)) {
+		System.out.println("[전달]board.getID"+board.getUser().getId());
+		System.out.println("[전달]userID"+userId);
+		
+		if(!board.getUser().getId().equals(userId)&&!userId.equals(1L)) {
 			throw new RuntimeException("작성자가 아닙니다.");
 		}
 		
@@ -118,8 +126,10 @@ public class BoardService {
 	//like
 	@Transactional
 	public BoardResponseDTO likeToggle(Long boardId,Long userId) {
-		Board board = boardRepository.findById(userId)
+		
+		Board board = boardRepository.findById(boardId)
 				.orElseThrow(()->new RuntimeException("게시글 없음"));
+		
 		User user = userRepository.findById(userId)
 				.orElseThrow(()->new RuntimeException("사용자 없음"));
 		
@@ -140,24 +150,30 @@ public class BoardService {
 	}
 	
 	//toDTO
-	private BoardResponseDTO toDTO(Board board,Long currentUserId) {
-		boolean liked = false;
-		if(currentUserId != null) {
-			liked = boardLikesRepository.existsByBoardIdAndUserId(board.getId(), currentUserId);
-		}
-		
-		return BoardResponseDTO.builder()
-				.id(board.getId())
-				.title(board.getTitle())
-				.content(board.getContent())
-				.category(board.getCategory())
-				.likes(board.getLikes())
-				.likedByCurrentUser(liked)
-				.authorNickname(board.getUser().getNickname())
-				.tags(board.getTags())
-				.createdAt(board.getCreatedAt())
-				.updatedAt(board.getUpdatedAt())
-				.build();
+	private BoardResponseDTO toDTO(Board board, Long currentUserId) {
+	    boolean liked = false;
+	    if (currentUserId != null) {
+	        liked = boardLikesRepository.existsByBoardIdAndUserId(board.getId(), currentUserId);
+	    }
+
+	    // 댓글 변환
+	    List<BoardCommentResponseDTO> commentDTOs = board.getComments().stream()
+	            .map(this::toDTO) // 재귀적 변환
+	            .collect(Collectors.toList());
+
+	    return BoardResponseDTO.builder()
+	            .id(board.getId())
+	            .title(board.getTitle())
+	            .content(board.getContent())
+	            .category(board.getCategory())
+	            .likes(board.getLikes())
+	            .likedByCurrentUser(liked)
+	            .authorNickname(board.getUser().getNickname())
+	            .tags(board.getTags())
+	            .createdAt(board.getCreatedAt())
+	            .updatedAt(board.getUpdatedAt())
+	            .comments(commentDTOs)
+	            .build();
 	}
 	
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -215,21 +231,27 @@ public class BoardService {
         return comments.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    // DTO 변환 (재귀)
+ // DTO 변환 (재귀)
     private BoardCommentResponseDTO toDTO(BoardComment comment) {
+        if (comment == null) {
+            return null;
+        }
+
         BoardCommentResponseDTO dto = BoardCommentResponseDTO.builder()
                 .id(comment.getId())
-                .userId(comment.getUser().getId())
-                .userNickname(comment.getUser().getNickname())
+                .userId(comment.getUser() != null ? comment.getUser().getId() : null)
+                .userNickname(comment.getUser() != null ? comment.getUser().getNickname() : null)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
+                .replies(new ArrayList<>()) // 기본값으로 빈 리스트 설정
                 .build();
 
-        dto.setReplies(
-            comment.getReplies().stream()
-                   .map(this::toDTO)
-                   .collect(Collectors.toList())
-        );
+        if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
+            List<BoardCommentResponseDTO> replyDTOs = comment.getReplies().stream()
+                    .map(this::toDTO)
+                    .collect(Collectors.toList());
+            dto.setReplies(replyDTOs);
+        }
 
         return dto;
     }

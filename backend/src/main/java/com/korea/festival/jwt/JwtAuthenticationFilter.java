@@ -33,6 +33,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
             
+            
+            // /api/board 의 get 요청은 jwt없이 패스 하기로.
+            String path = request.getRequestURI();
+            String method = request.getMethod();
+            if (method.equals("GET") && 
+            		(path.startsWith("/api/board/")||path.startsWith("/api/review/"))
+            		) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 String username = tokenProvider.getUsernameFromToken(jwt);
                 
