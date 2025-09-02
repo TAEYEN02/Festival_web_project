@@ -3,10 +3,14 @@ package com.korea.festival.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ReviewResponseDTO {
 	
@@ -16,6 +20,7 @@ public class ReviewResponseDTO {
 	private String location;
 	
 	private int likes;
+	private int view;
 	private boolean likedByCurrentUser;
 	
 	private String authorNickname;
@@ -23,6 +28,7 @@ public class ReviewResponseDTO {
 	
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private List<ReviewCommentResponseDTO> comments;
 	
 
 }

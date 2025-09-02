@@ -44,7 +44,7 @@ public class BoardController {
 	
 	//r-detail
 	@GetMapping("/{boardId}")
-	public ResponseEntity<?> boardFindOne(@PathVariable Long boardId,@RequestParam(name = "userId",required = false)Long userId){
+	public ResponseEntity<?> boardFindOne(@PathVariable(name = "boardId") Long boardId,@RequestParam(name = "userId",required = false)Long userId){
 		BoardResponseDTO result = boardService.boardFindOne(boardId,userId); 
 		return ResponseEntity.ok().body(result);
 	}
@@ -58,14 +58,14 @@ public class BoardController {
 	
 	//d
 	@DeleteMapping("/{boardId}")
-	public ResponseEntity<?> boardDelete(@PathVariable Long boardId,@RequestParam Long userId){
+	public ResponseEntity<?> boardDelete(@PathVariable(name = "boardId") Long boardId,@RequestParam("userId") Long userId){
 		boolean result = boardService.boardDelete(boardId,userId);
 		return ResponseEntity.ok().body(result);
 	}
 	
 	//like
 	@PostMapping("/{boardId}/like")
-	public ResponseEntity<?> likeToggle(@PathVariable Long boardId,@RequestParam Long userId){
+	public ResponseEntity<?> likeToggle(@PathVariable(name = "boardId") Long boardId,@RequestParam("userId") Long userId){
 		BoardResponseDTO result = boardService.likeToggle(boardId,userId);
 		return ResponseEntity.ok().body(result);
 	}
@@ -81,27 +81,27 @@ public class BoardController {
     // 댓글 수정
     @PutMapping("/comment/{id}")
     public ResponseEntity<BoardCommentResponseDTO> commentUpdate(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @RequestBody BoardCommentRequestDTO requestDTO) {
         return ResponseEntity.ok(boardService.commentUpdate(id, requestDTO));
     }
 
     // 댓글 삭제
     @DeleteMapping("/comment/{id}")
-    public ResponseEntity<Void> commentDelete(@PathVariable Long id) {
+    public ResponseEntity<Void> commentDelete(@PathVariable(name = "id") Long id) {
         boardService.commentDelete(id);
         return ResponseEntity.noContent().build();
     }
 
     // 단일 댓글 조회
     @GetMapping("/comment/{id}")
-    public ResponseEntity<BoardCommentResponseDTO> commentFindOne(@PathVariable Long id) {
+    public ResponseEntity<BoardCommentResponseDTO> commentFindOne(@PathVariable(name = "id") Long id) {
         return ResponseEntity.ok(boardService.commentFindOne(id));
     }
 
     // 게시글 댓글 전체 조회
     @GetMapping("/comment/{boardId}")
-    public ResponseEntity<List<BoardCommentResponseDTO>> commentFindAll(@PathVariable Long boardId) {
+    public ResponseEntity<List<BoardCommentResponseDTO>> commentFindAll(@PathVariable(name = "boardId") Long boardId) {
         return ResponseEntity.ok(boardService.commentFindAll(boardId));
     }
 
