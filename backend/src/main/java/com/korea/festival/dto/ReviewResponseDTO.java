@@ -2,6 +2,7 @@ package com.korea.festival.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,13 +19,17 @@ public class ReviewResponseDTO {
 	private String title;
 	private String content;
 	private String location;
+	private String date;
 	
 	private int likes;
 	private int view;
 	private boolean likedByCurrentUser;
 	
 	private String authorNickname;
-	private List<String> tags;
+	private String authorImg;
+	
+	private Set<String> tags;
+	private Set<String> images;
 	
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;

@@ -27,7 +27,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @Table(name = "review_comment")
 public class ReviewComment {
-	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -48,6 +47,7 @@ public class ReviewComment {
 	@JoinColumn(name = "parent_id")
 	private ReviewComment parent;
 	
+	@Builder.Default
 	@OneToMany(mappedBy = "parent",cascade = CascadeType.ALL)
 	private List<ReviewComment> replies = new ArrayList<>();
 

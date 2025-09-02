@@ -38,6 +38,7 @@ public class BoardComment {
 	private User user;
 	
 	private String content;
+	
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 	

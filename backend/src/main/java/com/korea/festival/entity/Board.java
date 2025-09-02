@@ -52,9 +52,13 @@ public class Board {
 	
 	private int likes;
 	
+	@OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<BoardLikes> boardLikes = new ArrayList<>();
+
+	
 	private int view;
 	
-	@OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
 	private List<BoardComment> comments = new ArrayList<BoardComment>();
 	
 	@ManyToOne(fetch = FetchType.LAZY)

@@ -1,88 +1,281 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { MessageSquareText, Heart, Share, NotebookPen, Trash } from 'lucide-react'
+import { useEffect, useState } from 'react';
+import { reviewCommentDelete, reviewCommentUpdate, reviewCommentWrite, reviewDelete, reviewFindOne, reviewLikeToggle } from '../../../api/review';
+import Swal from 'sweetalert2';
 import './ReviewDetail.css';
+import { useAuth } from '../../../context/AuthContext';
 
 export const ReviewDetail = () => {
     const { reviewId } = useParams()
-    console.log('reviewIdId', reviewId)
+    const [post, setPost] = useState();
+    const navigate = useNavigate();
+    const userId = Number(localStorage.getItem('userId'));
+    const [edit, setEdit] = useState();
+    const { user } = useAuth();
+
+    //댓글 작성용
+    const [formData, setFormData] = useState({
+        reviewId: Number(reviewId),
+        userId: userId,
+        content: '',
+        parentId: ''
+    });
+
+    //댓글 수정용
+    const [editData, setEditData] = useState({
+        reviewId: Number(reviewId),
+        userId: userId,
+        content: '',
+        parentId: ''
+    });
 
 
-    // if (!post) return <div className="BDempty">게시물이 없습니다.</div>;
-    // 예시
-    const post = 
-        {
-            id: 1,
-            category: '잡담',
-            title: '브라질 카니발 직접 다녀왔어요! 🇧🇷',
-            content: '리우 카니발 정말 대박이었어요... 평생 잊지 못할 경험이었습니다.',
-            author: 'festival_lover',
-            avatar: '🎭',
-            date: '2시간 전',
-            likes: 47,
-            comments: 12,
-            location: '리우데자네이루, 브라질',
-            images: ['/festival/festival1.jpg','/festival/festival1.jpg','/festival/festival1.jpg','/festival/festival1.jpg','/festival/festival1.jpg'],
-            tags: ['카니발', '브라질', '여행후기'],
-            user: 1
+    // [Get]데이터 로드
+    useEffect(() => {
+        reviewFindOne(reviewId)
+            .then(response => {
+                setPost(response)
+            })
+    }, [])
+
+
+    // [POST]좋아요
+    const reviewLikeHandler = async () => {
+        reviewLikeToggle(reviewId, userId)
+            .then(response => {
+                // console.log(response)
+                setPost(response)
+            })
+    }
+
+    //공유
+    const reviewShareHandler = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            await Swal.fire({
+                title: '성공',
+                text: "링크가 복사되었습니다!",
+                showConfirmButton: true
+            })
+        } catch (err) {
+            console.error("링크 복사 실패", err);
+        }
+    }
+
+    // [Delete]게시물 삭제
+    const reviewDeleteHandler = async () => {
+        try {
+            const result = await Swal.fire({
+                title: "게시판 삭제",
+                text: "정말로 삭제하시겠습니까?",
+                showCancelButton: true,
+                confirmButtonText: "삭제",
+                cancelButtonText: "취소"
+            });
+
+            if (result.isConfirmed) {
+                reviewDelete(Number(reviewId), userId)
+                const response = await Swal.fire({
+                    title: "성공",
+                    text: "삭제에 성공하였습니다",
+                    showConfirmButton: true
+                })
+                if (response.isConfirmed) navigate(-1)
+            } else {
+                return
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+
+
+    // [POST]댓글 작성
+    const reviewCommentWriteHandler = () => {
+        reviewCommentWrite(formData)
+
+        // navigate(0);
+    }
+
+    // [UPDATE]댓글 수정
+    const reviewCommentUpdateHandler = (commentId) => {
+
+        reviewCommentUpdate(editData, commentId)
+            .then(response => {
+                setPost(prevPost => {
+                    const updatedComments = prevPost.comments.map(c =>
+                        c.id === commentId ? response : c
+                    );
+                    return { ...prevPost, comments: updatedComments };
+                });
+                setEdit(null);
+            })
+            .catch(error => {
+                console.error(error);
+                Swal.fire({
+                    icon: "error",
+                    title: "오류",
+                    text: "댓글 수정 중 오류가 발생했습니다."
+                });
+            });
+
+    }
+
+    // [DELETE]댓글 삭제
+    const reviewCommentDeleteHandler = async (commentId) => {
+
+        const response = await Swal.fire({
+            text: '정말 댓글을 삭제 하시겠습니까?',
+            showCancelButton: true,
+            confirmButtonText: '예',
+            cancelButtonText: '아니요'
+        })
+
+        if (response.isConfirmed) {
+            reviewCommentDelete(commentId)
         }
 
+        // navigate(0);
+    }
+
+    if (!post) return <div className="RDempty">게시물이 없습니다.</div>;
+
     return (
-        <div className={`BDcontainer`}>
+        <div className={`RDcontainer`}>
             {/* Header */}
-            <header className="BDheader" />
+            <header className="RDheader" />
 
             {/* Post Detail */}
-            <main className="BDmain">
-                <article className="BDpost">
+            <main className="RDmain">
+                <article className="RDpost">
                     {/* Post Header */}
-                    <div className="BDpost-header">
-                        <div className="BDauthor-section">
-                            <div className="BDavatar">{post?.avatar}</div>
-                            <div className="BDauthor-info">
-                                <div className="BDauthor-name-category">
-                                    <h3 className="BDauthor-name">{post?.author}</h3>
-                                    <span className={`BDcategory ${post?.category === '잡담'
-                                        ? 'BDchat'
-                                        : post?.category === '문의'
-                                            ? 'BDinquiry'
-                                            : ''
-                                        }`}>{post?.category}</span>
+                    <div className="RDpost-header">
+                        <div className="RDauthor-section">
+                            <div className="RDavatar">
+                                <img className="RDavatar" src={post?.authorImg || '/default-profile.png'} />
+                            </div>
+                            <div className="RDauthor-info">
+                                <div className="RDauthor-name-category">
+                                    <h3 className="RDauthor-name">{post?.author}</h3>
+                                    <span className={`RDcategory RDinquiry`}>리뷰</span>
                                 </div>
-                                <div className="BDlocation-date">
-                                    <span>📍 {post?.location||''}</span>
+                                <div className="RDlocation-date">
+                                    <span>📍 {post?.location || ''}</span>
                                     <span>•</span>
                                     <span>📅 {post?.date}</span>
+                                    <span>•</span>
+                                    <span>📅 {post?.createdAt.slice(0, 10)}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Post Content */}
-                    <h2 className="BDtitle">{post?.title}</h2><br/><br/>
-                    <p className="BDcontent">{post?.content}</p>
+                    <h2 className="RDtitle">{post?.title}</h2><br /><br />
+                    <p className="RDcontent">{post?.content}</p>
 
                     {/* Tags */}
-                    <div className="BDtags">
+                    <div className="RDtags">
                         {post?.tags.map((tag, idx) => (
-                            <span key={idx} className="BDtag">#{tag}</span>
+                            <span key={idx} className="RDtag">#{tag}</span>
                         ))}
                     </div>
 
                     {/* Images */}
                     {post?.images && post?.images.map((img, idx) => (
-                        <div key={idx} className="BDimage-wrapper">
-                            <img src={img} alt={`Festival ${idx + 1}`} className="BDimage" />
+                        <div key={idx} className="RDimage-wrapper">
+                            <img src={img} alt={`Festival ${idx + 1}`} className="RDimage" />
                         </div>
                     ))}
 
                     {/* Post Actions */}
-                    <div className="BDactions">
-                        <div className="BDactions-buttons">
-                            <button className="BDaction-btn">❤️ {post?.likes}</button>
-                            <button className="BDaction-btn">💬 {post?.comments}</button>
-                            <button className="BDaction-btn">📤 공유</button>
+                    <div className="RDactions">
+                        <div className="RDactions-buttons">
+                            <button className="RDaction-btn"><Heart/> {post?.likes}</button>
+                            <button className="RDaction-btn"><MessageSquareText /> {post?.comments.length}</button>
+                            <button className="RDaction-btn"><Share/> 공유</button>
                         </div>
-                        <span className="BDviews">👥 조회 {Math.floor(Math.random() * 500 + 100)}</span>
+                        {/* <span className="RDviews">👥 조회 {post.view}</span> */}
                     </div>
+
+
+                    {/* 댓글 섹션*/}
+                    <section className="RDcommentsection">
+                        <h2 className="RDcommentheading"><MessageSquareText />댓글 <span className="RDcommentcount">{post.comments ? post.comments.length : 0}</span></h2>
+                        <div className="RDcommentform">
+                            {/* 댓글 입력 폼 */}
+                            <textarea value={formData.content} onChange={(e) => { setFormData((prev) => ({ ...prev, content: e.target.value })) }} className="RDcommenttextarea" placeholder="댓글을 입력하세요..."></textarea>
+                            <button onClick={() => reviewCommentWriteHandler()} className="RDcommentsubmitbtn">등록</button>
+                        </div>
+                        {/* 댓글 보여주기 */}
+                        <div className="RDcommentlist">
+                            {post.comments && post.comments.length > 0 ? (
+                                post.comments.map(comment => (
+                                    <div key={comment.id} className="RDcommentitem">
+                                        {edit === comment.id ?
+                                            //수정모드
+                                            <div>
+                                                <textarea
+                                                    value={editData.content ? editData.content : comment.content}
+                                                    onChange={(e) => setEditData(prev => ({ ...prev, content: e.target.value }))}
+                                                    className='RDcommenttextarea'
+                                                />
+                                                <button onClick={() => {
+                                                    reviewCommentUpdateHandler(comment.id);
+                                                    setEdit(null);
+                                                }}
+                                                    className="RDcommenteditbtn"
+                                                >저장</button>
+                                                <button onClick={() => setEdit(null)}
+                                                    className="RDcommentdeletebtn"
+                                                >취소</button>
+                                            </div>
+                                            : <div className="RDcommentheader">
+                                                <img src={comment.userImg || '/default-profile.png'} alt="프로필" className="RDcommentavatar" />
+                                                <span className={comment.userNickname === '관리자' ? 'RDcommentnicknameadmin' : 'RDcommentnickname'}>{comment.userNickname}</span>
+                                                <span className="RDcommentcontent">{comment.content}</span>
+                                                <div>
+                                                    <span className="RDcommentdate">{comment.createdAt.slice(0, 10)}/{comment.createdAt.slice(11, 16)}</span>
+                                                    {(comment.authorNickname === user?.username || userId === 1) && <div className="RDcommentactions">
+                                                        <button className="RDcommenteditbtn"
+                                                            onClick={() => setEdit(comment.id)}>수정</button>
+                                                        <button className="RDcommentdeletebtn"
+                                                            onClick={() => reviewCommentDeleteHandler(comment.id)}>삭제</button>
+                                                    </div>}
+                                                </div>
+                                            </div>}
+
+
+                                        {/* 대댓글 */}
+                                        {comment.replies && comment.replies.length > 0 && (
+                                            <div className="RDcommentreplies">
+                                                {comment.replies.map(reply => (
+                                                    <div key={reply.id} className="RDreplyitem">
+                                                        <div className="RDcommentheader">
+                                                            <img src={reply.userImg || '/default-profile.png'} alt="프로필" className="RDcommentavatar" />
+                                                            <span className={comment.userNickname === '관리자' ? 'RDcommentnicknameadmin' : 'RDcommentnickname'}>{reply.userNickname}</span>
+                                                            <span className="RDcommentdate">{reply.createdAt.slice(0, 10)}</span>
+                                                            <span className="RDcommentcontent">{reply.content}</span>
+                                                        </div>
+
+                                                    </div>
+
+                                                )).reverse()}
+                                            </div>
+                                        )}
+                                    </div>
+                                )).reverse()
+                            ) : (
+                                <div className="RDnocomments">아직 댓글이 없습니다.</div>
+                            )}
+
+
+                        </div>
+
+                    </section>
                 </article>
             </main>
         </div>

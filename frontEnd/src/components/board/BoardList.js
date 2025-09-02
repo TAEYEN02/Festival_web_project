@@ -41,6 +41,7 @@ export const BoardList = () => {
     };
 
     if(!posts) return<div>데이터 로딩중입니다...</div>
+    if(posts.length<=0) return<div>표시할 데이터가 없습니다...</div>
 
     return (
         <div className='BLappcontainer' >

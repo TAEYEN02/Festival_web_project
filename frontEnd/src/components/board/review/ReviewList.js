@@ -1,89 +1,27 @@
 import {MessageSquareText,Heart,SquarePen} from 'lucide-react'
 import { useNavigate} from "react-router-dom"
 import './ReviewList.css';
+import { useEffect, useState } from 'react';
+import { reviewFindALL } from '../../../api/review';
 
 export const ReviewList = () => {
 
     const navigate = useNavigate();
+    const [posts,setPosts] = useState([]);
 
-    const posts = [
-        {
-            id: 6,
-            category: '리뷰',
-            title: '리우 카니발 후기: 화려함의 극치!',
-            content: '리우 카니발에서 느낀 열정과 에너지는 말로 표현할 수 없네요. 춤과 음악, 그리고 사람들의 흥겨움!',
-            author: 'carnival_dancer',
-            avatar: '💃',
-            date: '2일 전',
-            likes: 210,
-            comments: 42,
-            location: '리우데자네이루, 브라질',
-            images: ['/festival/festival6.jpg'],
-            tags: ['리우카니발', '브라질', '춤'],
-            user: 1
-        },
-        {
-            id: 7,
-            category: '리뷰',
-            title: '독일 옥토버페스트 맥주 체험',
-            content: '세계 최대 맥주 축제에서 친구들과 즐긴 맥주와 전통음식! 분위기가 끝내줍니다.',
-            author: 'beer_lover',
-            avatar: '🍺',
-            date: '5일 전',
-            likes: 180,
-            comments: 28,
-            location: '뮌헨, 독일',
-            images: ['/festival/festival7.jpg'],
-            tags: ['옥토버페스트', '독일', '맥주'],
-            user: 1
-        },
-        {
-            id: 8,
-            category: '리뷰',
-            title: '태국 송크란 축제: 물벼락 대전',
-            content: '송크란 축제에서 친구들과 함께 물싸움하며 더위도 날리고 재미도 만끽했어요!',
-            author: 'water_fighter',
-            avatar: '💦',
-            date: '1주일 전',
-            likes: 145,
-            comments: 36,
-            location: '치앙마이, 태국',
-            images: ['/festival/festival8.jpg'],
-            tags: ['송크란', '태국', '물축제'],
-            user: 1
-        },
-        {
-            id: 9,
-            category: '리뷰',
-            title: '인도 홀리 축제 체험기',
-            content: '홀리 축제에서 온몸이 색색의 가루로 뒤덮였지만, 기쁨과 환희가 가득한 하루였어요!',
-            author: 'color_explorer',
-            avatar: '🌈',
-            date: '3일 전',
-            likes: 230,
-            comments: 50,
-            location: '바라나시, 인도',
-            images: ['/festival/festival9.jpg'],
-            tags: ['홀리', '인도', '색축제'],
-            user: 1
-        },
-        {
-            id: 10,
-            category: '리뷰',
-            title: '일본 삿포로 눈 축제 후기',
-            content: '거대한 눈 조각과 빛의 쇼가 정말 장관이었어요. 추운 날씨도 즐거웠습니다!',
-            author: 'snow_fan',
-            avatar: '❄️',
-            date: '4일 전',
-            likes: 175,
-            comments: 22,
-            location: '삿포로, 일본',
-            images: ['/festival/festival10.jpg'],
-            tags: ['삿포로눈축제', '일본', '눈'],
-            user: 1
-        }
+    // [Get]데이터 로딩
+    useEffect(()=>{
+        reviewFindALL()
+        .then(response=>{
+            console.log(response)
+            setPosts(response)
+        })
+    },[])
 
-    ];
+    // ];
+    if(!posts)return<div>로딩중입니다...</div>
+
+    if(posts.length<=0)return<div>표시할 데이터가 없습니다.</div>
 
     return (
         <div className={`app-container`}>
@@ -98,13 +36,13 @@ export const ReviewList = () => {
                                 <div className="post-author-section">
                                     <div className="author-info">
                                         <div className="author-avatar">
-                                            {post.avatar}
+                                            <img className="author-avatar" src={post.authorImg||'/default-profile.png'}/>
                                         </div>
                                         <div className="author-details">
                                             <div className="author-name-section">
-                                                <h3 className="author-name">{post.author}</h3>
+                                                <h3 className="author-name">{post.authorNickname}</h3>
                                                 <span className={`category-badge category-review`}>
-                                                    {post.category}
+                                                    리뷰
                                                 </span>
                                             </div>
                                             <div className="post-meta">
@@ -113,6 +51,8 @@ export const ReviewList = () => {
                                                 <span>•</span>
                                                 {/* Calendar 아이콘 (react-icons: MdCalendarToday) */}
                                                 <span>{post.date}</span>
+                                                <span>•</span>
+                                                <span>{post.createdAt.slice(0,10)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -168,13 +108,13 @@ export const ReviewList = () => {
                                         <div className="action-btn">
                                             {/* MessageCircle 아이콘 (react-icons: FaComment) */}
                                             <span className="icon-placeholder"><MessageSquareText /></span>
-                                            <span>{post.comments}</span>
+                                            <span>{post.comments.length}</span>
                                         </div>
                                     </div>
                                     <div className="view-count">
                                         {/* Users 아이콘 (react-icons: FaUsers) */}
                                         <span className="icon-placeholder">👥</span>
-                                        <span>조회 {Math.floor(Math.random() * 500 + 100)}</span>
+                                        <span>조회 {post.view}</span>
                                     </div>
                                 </div>
                             </div>

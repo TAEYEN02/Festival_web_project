@@ -1,17 +1,22 @@
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
+import { FerrisWheel, Calendar, Share, ImagePlus, Cat,MapPinned } from 'lucide-react'
 import { useState } from "react";
-import {BASE_URL} from '../../../api/baseUrl'
+import { reviewWrite } from "../../../api/review";
 import './ReviewWrite.css';
+import Swal from "sweetalert2";
 
 export const ReviewWrtie = () => {
     const { categoryId } = useParams();
+    const userId = Number(localStorage.getItem('userId'));
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         title: '',
         content: '',
         location: '',
-        date: new Date(),
+        date: '',
         tags: [],
+        images:[]
     });
     const [tagInput, setTagInput] = useState('');
     const [images, setImages] = useState([]);
@@ -84,29 +89,19 @@ export const ReviewWrtie = () => {
     //[POST]작성 완료 버튼 클릭시
     const handleSubmit = (e) => {
         e.preventDefault();
+        setFormData(prev=>({...prev,images:images}))
 
-        // const option = {
-        //     method: 'POST',                
-        //     headers: {
-        //         'Content-Type': 'application/json',   
-        //         'Authorization': `Bearer ${token}`    
-        //     },
-        //     body: JSON.stringify(formData)          
-        // }
+        reviewWrite(formData, userId)
 
-        const apiPost = async() =>{
-            try {
-                const response = await fetch(`${BASE_URL}/api/review/`)
-                const data = await response.json();
-                console.log(data);
-            } catch (error) {
-                console.log(error);
-            }
-        } 
-        apiPost();
+        console.log('보낸 데이터:', formData);
+ 
+        Swal.fire({
+            title:'성공',
+            icon:'success',
+            text:'리뷰 작성에 성공했습니다!'
+        })
 
-        console.log('게시글 데이터:', { ...formData, images });
-        alert('리뷰글이 작성되었습니다! 🎉');
+        // navigate(-1)
     };
 
     const handleKeyPress = (e) => {
@@ -136,7 +131,7 @@ export const ReviewWrtie = () => {
                             </div>
                         </div>
                         <button onClick={handleSubmit} className="BWpublish-button">
-                            <span className="BWicon-placeholder">📤</span>
+                            <span className="BWicon-placeholder"><Share/></span>
                             <span>발행하기</span>
                         </button>
                     </div>
@@ -149,21 +144,21 @@ export const ReviewWrtie = () => {
 
                     {/* Category Selection */}
                     <div className="BWform-section">
-                        <label className="BWsection-label">카테고리 선택</label>
+                        <label className="BWsection-label">리뷰 작성하기</label>
 
                     </div>
 
                     {/* Location & Date */}
-                    {formData.category === '리뷰' && <div className="BWform-section">
+                    <div className="BWform-section">
                         <div className="BWlocation-date-grid">
                             <div className="BWinput-group">
                                 <label className="BWinput-label">
-                                    <span className="BWicon-placeholder">📍</span>
+                                    <span className="BWicon-placeholder"><MapPinned /></span>
                                     <span>축제 장소</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="예: 리우데자네이루, 브라질"
+                                    placeholder="예: 서울, 평창, 속초"
                                     value={formData.location}
                                     onChange={(e) => handleInputChange('location', e.target.value)}
                                     className="BWform-input"
@@ -171,7 +166,7 @@ export const ReviewWrtie = () => {
                             </div>
                             <div className="BWinput-group">
                                 <label className="BWinput-label">
-                                    <span className="BWicon-placeholder">📅</span>
+                                    <span className="BWicon-placeholder"><Calendar /></span>
                                     <span>축제 날짜</span>
                                 </label>
                                 <input
@@ -183,13 +178,13 @@ export const ReviewWrtie = () => {
                                 />
                             </div>
                         </div>
-                    </div>}
+                    </div>
 
                     {/* Title Input */}
                     <div className="BWform-section">
                         <input
                             type="text"
-                            placeholder="어떤 이야기를 들려주실 건가요? ✨"
+                            placeholder="어떤 이야기를 들려주실 건가요? "
                             value={formData.title}
                             onChange={(e) => handleInputChange('title', e.target.value)}
                             className="BWtitle-input"
@@ -201,7 +196,7 @@ export const ReviewWrtie = () => {
                     {/* Content Textarea */}
                     <div className="BWform-section">
                         <textarea
-                            placeholder="축제에 대한 생생한 이야기를 들려주세요! 🎊&#10;&#10;• 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
+                            placeholder="축제에 대한 생생한 이야기를 들려주세요! • 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
                             value={formData.content}
                             onChange={(e) => handleInputChange('content', e.target.value)}
                             rows={8}
@@ -212,7 +207,7 @@ export const ReviewWrtie = () => {
                     {/* Image Upload */}
                     <div className="BWform-section">
                         <label className="BWsection-label">
-                            <span className="BWicon-placeholder">📷</span>
+                            <span className="BWicon-placeholder"><ImagePlus /></span>
                             <span>사진 업로드</span>
                         </label>
 
@@ -265,7 +260,7 @@ export const ReviewWrtie = () => {
                         <div className="BWtag-input-section">
                             <input
                                 type="text"
-                                placeholder="태그 입력 (예: 카니발, 브라질)"
+                                placeholder="태그 입력 (예: 서울, 맛집, 커피, 녹차)"
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
@@ -303,7 +298,7 @@ export const ReviewWrtie = () => {
                 <div className="BWsubmit-section">
                     <div className="BWsubmit-header">
                         <div className="BWauthor-preview">
-                            <div className="BWauthor-avatar">🎭</div>
+                            <div className="BWauthor-avatar"><Cat /></div>
                             <div className="BWauthor-info">
                                 <p className="BWauthor-name">festival_writer</p>
                                 <p className="BWauthor-status">새로운 축제 이야기를 작성 중...</p>
@@ -323,8 +318,8 @@ export const ReviewWrtie = () => {
                             disabled={!formData.title || !formData.content}
                             className={`BWfinal-submit-btn ${formData.title && formData.content ? 'BWfinal-submit-btn-active' : ''}`}
                         >
-                            <span className="BWicon-placeholder">📤</span>
-                            <span>축제 이야기 발행하기 🎪</span>
+                            <span className="BWicon-placeholder"><Share/></span>
+                            <span>축제 이야기 발행하기 <FerrisWheel /></span>
                         </button>
                     </div>
                 </div>

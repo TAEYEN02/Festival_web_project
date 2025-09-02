@@ -31,7 +31,7 @@ public class ReviewController {
 
 	    // c
 	    @PostMapping
-	    public ResponseEntity<?> reviewWrite(@RequestBody ReviewRequestDTO dto, @RequestParam Long userId) {
+	    public ResponseEntity<?> reviewWrite(@RequestBody ReviewRequestDTO dto, @RequestParam(name = "userId") Long userId) {
 	        ReviewResponseDTO result = reviewService.reviewWrite(dto, userId);
 	        return ResponseEntity.ok().body(result);
 	    }
@@ -45,28 +45,28 @@ public class ReviewController {
 
 	    // r-detail
 	    @GetMapping("/{reviewId}")
-	    public ResponseEntity<?> reviewFindOne(@PathVariable Long reviewId, @RequestParam(name = "userId",required = false) Long userId) {
+	    public ResponseEntity<?> reviewFindOne(@PathVariable(name = "reviewId") Long reviewId, @RequestParam(name = "userId",required = false) Long userId) {
 	        ReviewResponseDTO result = reviewService.reviewFindOne(reviewId, userId);
 	        return ResponseEntity.ok().body(result);
 	    }
 
 	    // u
 	    @PutMapping
-	    public ResponseEntity<?> reviewUpdate(@RequestBody ReviewRequestDTO dto, @RequestParam Long userId) {
+	    public ResponseEntity<?> reviewUpdate(@RequestBody ReviewRequestDTO dto, @RequestParam(name = "userId") Long userId) {
 	        ReviewResponseDTO result = reviewService.reviewUpdate(dto, userId);
 	        return ResponseEntity.ok().body(result);
 	    }
 
 	    // d
 	    @DeleteMapping("/{reviewId}")
-	    public ResponseEntity<?> reviewDelete(@PathVariable Long reviewId, @RequestParam Long userId) {
+	    public ResponseEntity<?> reviewDelete(@PathVariable(name = "reviewId") Long reviewId, @RequestParam(name = "userId") Long userId) {
 	        boolean result = reviewService.reviewDelete(reviewId, userId);
 	        return ResponseEntity.ok().body(result);
 	    }
 
 	    // like
 	    @PostMapping("/{reviewId}/like")
-	    public ResponseEntity<?> likeToggle(@PathVariable Long reviewId, @RequestParam Long userId) {
+	    public ResponseEntity<?> likeToggle(@PathVariable("reviewId") Long reviewId, @RequestParam(name = "userId") Long userId) {
 	        ReviewResponseDTO result = reviewService.likeToggle(reviewId, userId);
 	        return ResponseEntity.ok().body(result);
 	    }
@@ -82,27 +82,27 @@ public class ReviewController {
 	    // 댓글 수정
 	    @PutMapping("/comment/{id}")
 	    public ResponseEntity<ReviewCommentResponseDTO> commentUpdate(
-	            @PathVariable Long id,
+	            @PathVariable(name = "id") Long id,
 	            @RequestBody ReviewCommentRequestDTO requestDTO) {
 	        return ResponseEntity.ok(reviewService.commentUpdate(id, requestDTO));
 	    }
 
 	    // 댓글 삭제
 	    @DeleteMapping("/comment/{id}")
-	    public ResponseEntity<Void> commentDelete(@PathVariable Long id) {
+	    public ResponseEntity<Void> commentDelete(@PathVariable(name = "id") Long id) {
 	        reviewService.commentDelete(id);
 	        return ResponseEntity.noContent().build();
 	    }
 
 	    // 단일 댓글 조회
 	    @GetMapping("/comment/{id}")
-	    public ResponseEntity<ReviewCommentResponseDTO> commentFindOne(@PathVariable Long id) {
+	    public ResponseEntity<ReviewCommentResponseDTO> commentFindOne(@PathVariable(name = "id") Long id) {
 	        return ResponseEntity.ok(reviewService.commentFindOne(id));
 	    }
 
 	    // 리뷰 댓글 전체 조회
 	    @GetMapping("/comment/{reviewId}")
-	    public ResponseEntity<List<ReviewCommentResponseDTO>> commentFindAll(@PathVariable Long reviewId) {
+	    public ResponseEntity<List<ReviewCommentResponseDTO>> commentFindAll(@PathVariable(name = "reviewId") Long reviewId) {
 	        return ResponseEntity.ok(reviewService.commentFindAll(reviewId));
 	    }
 }

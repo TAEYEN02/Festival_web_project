@@ -1,8 +1,8 @@
 package com.korea.festival.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -33,43 +33,46 @@ import lombok.NoArgsConstructor;
 @Table(name = "review")
 public class Review {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	
-	private String location;
-	
-	private String title;	
-	
-	@Column(columnDefinition = "TEXT")
-	private String content;
-	
-	@CreationTimestamp
-	private LocalDateTime createdAt;
-	
-	@UpdateTimestamp
-	private LocalDateTime updatedAt;
-	
-	private int likes;
-	
-	private int view;
-	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id",nullable = false)
-	private User user;
-	
-	@OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<ReviewComment> comments = new ArrayList<ReviewComment>();
-	
-	@ElementCollection
-	@CollectionTable(name = "review_tags",joinColumns = @JoinColumn(name="review_id"))
-	@Column(name = "tag")
-	private List<String> tags;
-	
-	@ElementCollection
-	@CollectionTable(name = "review_images",joinColumns = @JoinColumn(name="review_id"))
-	@Column(name = "image")
-	private List<String> images;
-	
-	
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String location;
+    
+    private String title;
+    
+    private String date;
+    
+    @Column(columnDefinition = "TEXT")
+    private String content;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+    
+    private int likes;
+
+    @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ReviewLikes> reviewLikes = new HashSet<>();
+    
+    private int view;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id",nullable = false)
+    private User user;
+    
+    @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ReviewComment> comments = new HashSet<>();
+    
+    @ElementCollection
+    @CollectionTable(name = "review_tags", joinColumns = @JoinColumn(name="review_id"))
+    @Column(name = "tag")
+    private Set<String> tags = new HashSet<>();
+    
+    @ElementCollection
+    @CollectionTable(name = "review_images", joinColumns = @JoinColumn(name="review_id"))
+    @Column(name = "image")
+    private Set<String> images = new HashSet<>();
 }
