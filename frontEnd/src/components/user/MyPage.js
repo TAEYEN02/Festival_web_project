@@ -143,8 +143,8 @@ const MyPage = () => {
     return (
       <PageContainer>
         <ErrorContainer>
-          <h2>오류가 발생했습니다</h2>
-          <p>{error}</p>
+          <h2 style={{color:'black'}}>오류가 발생했습니다</h2>
+          <p style={{color:'black'}}>{error}</p>
           <button
             onClick={() => {
               hasLoadedRef.current = false; // 재로드 허용
@@ -152,8 +152,8 @@ const MyPage = () => {
             }}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#fff',
-              color: '#667eea',
+              backgroundColor: 'blue',
+              color: '#fff',
               border: 'none',
               borderRadius: '0.5rem',
               cursor: 'pointer',

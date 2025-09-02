@@ -101,6 +101,7 @@ public class UserService {
             user.getUsername(),
             user.getNickname(),
             user.getEmail(),
+            user.getProfileImage(),
             user.getCreatedAt(),
             user.getUpdatedAt()
         );
@@ -166,17 +167,24 @@ public class UserService {
             updatedUser.getUsername(),
             updatedUser.getNickname(),
             updatedUser.getEmail(),
+            updatedUser.getProfileImage(),
             updatedUser.getCreatedAt(),
             updatedUser.getUpdatedAt()
         );
     }
     
     //이미지 업로드
+    @Transactional
     public void updateProfileImage(String username, String profileImagePath) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
-        user.setProfileImage(profileImagePath);
-        userRepository.save(user);
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("사용자 없음"));
+            user.setProfileImage(profileImagePath);
+            userRepository.save(user);
+        } catch (Exception e) {
+            e.printStackTrace(); // 예외 확인
+            throw e;
+        }
     }
     
     // DTO 변환 헬퍼 메서드

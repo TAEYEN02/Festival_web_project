@@ -337,7 +337,7 @@ const SearchContainer = styled.div`
 `;
 
 const SearchInput = styled.input`
-  width: 100%;
+  width: 95%;
   padding: 0.75rem 0.75rem 0.75rem 2.5rem;
   border: 2px solid #e5e7eb;
   border-radius: 0.75rem;
@@ -441,6 +441,10 @@ const StatusBadge = styled.span`
       case 'FALSE':
       case 'INACTIVE':
         return `background: #f3f4f6; color: #6b7280;`;
+      case 'REPORTED':
+        return `background: #fef3c7; color: #92400e;`;
+      case 'NORMAL':
+        return `background: #d1fae5; color: #065f46;`;
       default:
         return `background: #f3f4f6; color: #6b7280;`;
     }
@@ -451,7 +455,7 @@ const UserAvatar = styled.div`
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -469,11 +473,6 @@ const UserInfo = styled.div`
 const UserName = styled.div`
   font-weight: 500;
   color: #1f2937;
-`;
-
-const UserMeta = styled.div`
-  font-size: 0.75rem;
-  color: #6b7280;
 `;
 
 const MessageContent = styled.div`
@@ -575,26 +574,13 @@ const PageButton = styled.button`
   }
 `;
 
-const RealTimeIndicator = styled.div`
+const LastUpdated = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: #10b981;
+  color: #6b7280;
   margin-top: 0.5rem;
-`;
-
-const PulsingDot = styled.div`
-  width: 0.5rem;
-  height: 0.5rem;
-  background: #10b981;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
 `;
 
 const ChatManagement = () => {
@@ -607,7 +593,6 @@ const ChatManagement = () => {
   const [realTimeStats, setRealTimeStats] = useState(null);
   const [regionalStats, setRegionalStats] = useState([]);
   const [reports, setReports] = useState([]);
-  const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
 
   // 페이지네이션 상태
@@ -619,7 +604,6 @@ const ChatManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [regionFilter, setRegionFilter] = useState('all');
-  const [userStatusFilter, setUserStatusFilter] = useState('all');
 
   // API 헬퍼 함수
   const callAPI = async (url, options = {}) => {
@@ -652,7 +636,7 @@ const ChatManagement = () => {
     } else {
       const responseText = await response.text();
       console.error("Received non-JSON response:", responseText);
-      throw new SyntaxError("서버로부터 유효하지 않은 JSON 응답을 받았습니다. (응답이 HTML일 수 있습니다)");
+      throw new SyntaxError("서버로부터 유효하지 않은 JSON 응답을 받았습니다.");
     }
   };
 
@@ -660,23 +644,37 @@ const ChatManagement = () => {
   const loadDashboardData = useCallback(async () => {
     if (activeTab !== 'overview') return;
 
-    setLoading(true);
+    // 초기 로딩이 아닌 경우에는 로딩 상태를 표시하지 않음
+    if (!realTimeStats) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
-      console.log('실시간 대시보드 데이터 로드...');
+      console.log('실시간 대시보드 데이터 로드...', new Date().toLocaleTimeString());
 
       const chatDashboard = await callAPI('/api/admin/dashboard');
       console.log('채팅 대시보드 데이터:', chatDashboard);
 
       const realTimeData = chatDashboard;
-      setRealTimeStats({
+      const newStats = {
         totalMessages: realTimeData.totalMessages || 0,
-        activeUsers: realTimeData.activeUsers || 0, // DTO 필드명 변경
-        totalRegions: realTimeData.activeRegions || 0, // DTO 필드명 변경
-        pendingReports: realTimeData.pendingReports || 0,
+        activeUsers: realTimeData.onlineUsers || realTimeData.activeChatUsers || 0, // API 필드명에 맞춤
+        totalRegions: realTimeData.activeRegions || realTimeData.totalRegions || 0,
+        pendingReports: realTimeData.pendingReports || realTimeData.pendingInquiries || 0, // API 필드명에 맞춤
         lastUpdated: new Date().toLocaleTimeString('ko-KR')
-      });
+      };
+
+      // 이전 데이터와 비교하여 변화가 있는지 확인
+      if (realTimeStats) {
+        console.log('데이터 변화 확인:', {
+          이전: realTimeStats,
+          현재: newStats,
+          변화있음: JSON.stringify(realTimeStats) !== JSON.stringify({...newStats, lastUpdated: realTimeStats.lastUpdated})
+        });
+      }
+
+      setRealTimeStats(newStats);
 
       const regionalData = chatDashboard.regionalStats || [];
       setRegionalStats(regionalData.map(region => ({
@@ -684,16 +682,18 @@ const ChatManagement = () => {
         totalMessages: region.totalMessages || 0,
         todayMessages: region.todayMessages || 0,
         activeUsers: region.activeUsers || 0,
-        reports: region.reportCount || 0 // DTO 필드명 변경
+        reports: region.reportCount || 0
       })));
 
     } catch (error) {
       console.error('대시보드 로드 실패:', error);
       setError(`대시보드를 불러올 수 없습니다: ${error.message}`);
     } finally {
-      setLoading(false);
+      if (!realTimeStats) {
+        setLoading(false);
+      }
     }
-  }, [activeTab]);
+  }, [activeTab, realTimeStats]);
 
   // 신고 목록 로드
   const loadReports = useCallback(async () => {
@@ -726,40 +726,7 @@ const ChatManagement = () => {
     }
   }, [activeTab, statusFilter, regionFilter, currentPage]);
 
-  // 사용자 목록 로드  
-  const loadUsers = useCallback(async () => {
-    if (activeTab !== 'users') return;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        size: '20'
-      });
-      if (userStatusFilter !== 'all') {
-        params.set('isActive', userStatusFilter === 'active' ? 'true' : 'false');
-      }
-      if (searchTerm) params.set('search', searchTerm);
-
-      console.log(`사용자 목록 로드: ${params.toString()}`);
-      const usersData = await callAPI(`/api/admin/users?${params.toString()}`);
-
-      setUsers(usersData.content || []);
-      setTotalPages(usersData.totalPages || 0);
-      setTotalElements(usersData.totalElements || 0);
-      setCurrentPage(usersData.number || 0);
-
-      console.log(`사용자 ${usersData.totalElements}명 로드 완료`);
-    } catch (err) {
-      setError(`사용자 목록 로드 실패: ${err.message}`);
-      console.error('사용자 목록 로드 실패:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, userStatusFilter, searchTerm, currentPage]);
-
-  // 메시지 목록 로드 (실제 API 사용)
+  // 메시지 목록 로드
   const loadMessages = useCallback(async () => {
     if (activeTab !== 'messages') return;
 
@@ -790,20 +757,18 @@ const ChatManagement = () => {
     }
   }, [activeTab, regionFilter, searchTerm, currentPage]);
 
-  // 실시간 업데이트 (5초마다)
+  // 실시간 업데이트 (3초마다 자동 새로고침)
   useEffect(() => {
     if (activeTab === 'overview') {
       loadDashboardData();
-      const interval = setInterval(loadDashboardData, 5000);
+      const interval = setInterval(loadDashboardData, 3000);
       return () => clearInterval(interval);
+    } else if (activeTab === 'reports') {
+      loadReports();
+    } else if (activeTab === 'messages') {
+      loadMessages();
     }
-  }, [activeTab, loadDashboardData]);
-
-  // 탭별 데이터 로드
-  useEffect(() => {
-    if (activeTab === 'reports') loadReports();
-    else if (activeTab === 'messages') loadMessages();
-  }, [activeTab, loadReports, loadMessages]);
+  }, [activeTab, loadDashboardData, loadReports, loadMessages]);
 
   // 탭 변경시 상태 리셋
   useEffect(() => {
@@ -816,12 +781,17 @@ const ChatManagement = () => {
     setCurrentPage(0);
   }, [searchTerm, statusFilter, regionFilter]);
 
+  // 새로고침 버튼 클릭 시 수동 업데이트
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      if (activeTab === 'overview') await loadDashboardData();
-      else if (activeTab === 'reports') await loadReports();
-      else if (activeTab === 'messages') await loadMessages();
+      if (activeTab === 'overview') {
+        await loadDashboardData();
+      } else if (activeTab === 'reports') {
+        await loadReports();
+      } else if (activeTab === 'messages') {
+        await loadMessages();
+      }
     } finally {
       setTimeout(() => setRefreshing(false), 1000);
     }
@@ -888,11 +858,6 @@ const ChatManagement = () => {
 
   const pendingReportsCount = reports.filter(r => (r.status || '').toUpperCase() === 'PENDING').length;
 
-  const answeredReportsCount = reports.filter(
-    r => (r.status || '').toUpperCase() === 'RESOLVED'
-  ).length;
-
-
   return (
     <Container>
       <Header>
@@ -907,102 +872,6 @@ const ChatManagement = () => {
           </ActionButton>
         </HeaderActions>
       </Header>
-
-      {/* 실시간 통계 대시보드 */}
-      {activeTab === 'overview' && (
-        <>
-          {error && (
-            <ErrorState>
-              <AlertTriangle size={24} />
-              <p>{error}</p>
-              <ActionButton $variant="primary" onClick={loadDashboardData}>
-                다시 시도
-              </ActionButton>
-            </ErrorState>
-          )}
-
-          {loading ? (
-            <LoadingState>
-              <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite' }} />
-              <p>실시간 데이터를 불러오는 중...</p>
-            </LoadingState>
-          ) : realTimeStats ? (
-            <>
-              <StatsGrid>
-                <StatCard $color="green">
-                  <StatHeader>
-                    <StatIcon $color="green">
-                      <Users size={24} />
-                    </StatIcon>
-                  </StatHeader>
-                  <StatValue>{realTimeStats.activeUsers?.toLocaleString()}</StatValue>
-                  <StatLabel>현재 접속자</StatLabel>
-                  <RealTimeIndicator>
-                    <PulsingDot />
-                    실시간 ({realTimeStats.lastUpdated})
-                  </RealTimeIndicator>
-                </StatCard>
-
-
-                <StatCard $color="red">
-                  <StatHeader>
-                    <StatIcon $color="red">
-                      <AlertTriangle size={24} />
-                    </StatIcon>
-                  </StatHeader>
-                  <StatValue>{realTimeStats.pendingReports}</StatValue>
-                  <StatLabel>대기 중 신고</StatLabel>
-                  <StatChange $positive={realTimeStats.pendingReports === 0}>
-                    <Shield size={12} />
-                    {realTimeStats.pendingReports === 0 ? '처리 완료' : '처리 필요'}
-                  </StatChange>
-                </StatCard>
-
-              </StatsGrid>
-
-              {/* 지역별 현황 */}
-              <RegionGrid>
-                {regionalStats.map((region, index) => (
-                  <RegionCard key={region.region || index}>
-                    <RegionHeader>
-                      <RegionName>
-                        <MapPin size={16} />
-                        {region.region}
-                      </RegionName>
-                      <RegionStatus $online={region.activeUsers}>
-                        <Users size={12} />
-                        {region.activeUsers}명 접속
-                      </RegionStatus>
-                    </RegionHeader>
-                    <RegionStats>
-                      <RegionStat>
-                        <RegionStatValue>{region.totalMessages?.toLocaleString()}</RegionStatValue>
-                        <RegionStatLabel>총 메시지</RegionStatLabel>
-                      </RegionStat>
-                      <RegionStat>
-                        <RegionStatValue>{region.todayMessages?.toLocaleString()}</RegionStatValue>
-                        <RegionStatLabel>오늘 메시지</RegionStatLabel>
-                      </RegionStat>
-                      <RegionStat>
-                        <RegionStatValue>{region.reports}</RegionStatValue>
-                        <RegionStatLabel>신고 건수</RegionStatLabel>
-                      </RegionStat>
-                    </RegionStats>
-                  </RegionCard>
-                ))}
-              </RegionGrid>
-            </>
-          ) : (
-            <EmptyState>
-              <Activity size={48} />
-              <p>대시보드 데이터를 불러올 수 없습니다.</p>
-              <ActionButton $variant="primary" onClick={loadDashboardData}>
-                다시 시도
-              </ActionButton>
-            </EmptyState>
-          )}
-        </>
-      )}
 
       {/* 탭 컨테이너 */}
       <TabContainer>
@@ -1026,6 +895,129 @@ const ChatManagement = () => {
         </TabHeader>
 
         <TabContent>
+          {/* 실시간 대시보드 탭 */}
+          {activeTab === 'overview' && (
+            <>
+              {error && (
+                <ErrorState>
+                  <AlertTriangle size={24} />
+                  <p>{error}</p>
+                  <ActionButton $variant="primary" onClick={loadDashboardData}>
+                    다시 시도
+                  </ActionButton>
+                </ErrorState>
+              )}
+
+              {loading ? (
+                <LoadingState>
+                  <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite' }} />
+                  <p>실시간 데이터를 불러오는 중...</p>
+                </LoadingState>
+              ) : realTimeStats ? (
+                <>
+                  {/* 실시간 통계 카드 */}
+                  <StatsGrid>
+                    <StatCard $color="green">
+                      <StatHeader>
+                        <StatIcon $color="green">
+                          <Users size={24} />
+                        </StatIcon>
+                      </StatHeader>
+                      <StatValue>{realTimeStats.activeUsers?.toLocaleString()}</StatValue>
+                      <StatLabel>현재 접속자</StatLabel>
+                      <LastUpdated>
+                        <Clock size={12} />
+                        마지막 업데이트: {realTimeStats.lastUpdated}
+                      </LastUpdated>
+                    </StatCard>
+
+                    <StatCard $color="red">
+                      <StatHeader>
+                        <StatIcon $color="red">
+                          <AlertTriangle size={24} />
+                        </StatIcon>
+                      </StatHeader>
+                      <StatValue>{realTimeStats.pendingReports}</StatValue>
+                      <StatLabel>대기 중 신고</StatLabel>
+                      <StatChange $positive={realTimeStats.pendingReports === 0}>
+                        <Shield size={12} />
+                        {realTimeStats.pendingReports === 0 ? '처리 완료' : '처리 필요'}
+                      </StatChange>
+                    </StatCard>
+
+                    <StatCard $color="blue">
+                      <StatHeader>
+                        <StatIcon $color="blue">
+                          <MessageCircle size={24} />
+                        </StatIcon>
+                      </StatHeader>
+                      <StatValue>{realTimeStats.totalMessages?.toLocaleString()}</StatValue>
+                      <StatLabel>총 메시지</StatLabel>
+                      <StatChange $positive={true}>
+                        <TrendingUp size={12} />
+                        활발한 활동
+                      </StatChange>
+                    </StatCard>
+
+                    <StatCard $color="purple">
+                      <StatHeader>
+                        <StatIcon $color="purple">
+                          <MapPin size={24} />
+                        </StatIcon>
+                      </StatHeader>
+                      <StatValue>{realTimeStats.totalRegions}</StatValue>
+                      <StatLabel>활성 지역</StatLabel>
+                      <StatChange $positive={true}>
+                        <Activity size={12} />
+                        전체 운영 중
+                      </StatChange>
+                    </StatCard>
+                  </StatsGrid>
+
+                  {/* 지역별 현황 */}
+                  <RegionGrid>
+                    {regionalStats.map((region, index) => (
+                      <RegionCard key={region.region || index}>
+                        <RegionHeader>
+                          <RegionName>
+                            <MapPin size={16} />
+                            {region.region}
+                          </RegionName>
+                          <RegionStatus $online={region.activeUsers}>
+                            <Users size={12} />
+                            {region.activeUsers}명 접속
+                          </RegionStatus>
+                        </RegionHeader>
+                        <RegionStats>
+                          <RegionStat>
+                            <RegionStatValue>{region.totalMessages?.toLocaleString()}</RegionStatValue>
+                            <RegionStatLabel>총 메시지</RegionStatLabel>
+                          </RegionStat>
+                          <RegionStat>
+                            <RegionStatValue>{region.todayMessages?.toLocaleString()}</RegionStatValue>
+                            <RegionStatLabel>오늘 메시지</RegionStatLabel>
+                          </RegionStat>
+                          <RegionStat>
+                            <RegionStatValue>{region.reports}</RegionStatValue>
+                            <RegionStatLabel>신고 건수</RegionStatLabel>
+                          </RegionStat>
+                        </RegionStats>
+                      </RegionCard>
+                    ))}
+                  </RegionGrid>
+                </>
+              ) : (
+                <EmptyState>
+                  <Activity size={48} />
+                  <p>대시보드 데이터를 불러올 수 없습니다.</p>
+                  <ActionButton $variant="primary" onClick={loadDashboardData}>
+                    다시 시도
+                  </ActionButton>
+                </EmptyState>
+              )}
+            </>
+          )}
+
           {/* 신고 관리 탭 */}
           {activeTab === 'reports' && (
             <>
@@ -1046,15 +1038,6 @@ const ChatManagement = () => {
                   <option value="REVIEWING">검토 중</option>
                   <option value="RESOLVED">해결됨</option>
                   <option value="REJECTED">기각됨</option>
-                </Select>
-
-                <Select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
-                  <option value="all">모든 지역</option>
-                  {regionalStats.map(region => (
-                    <option key={region.region} value={region.region}>
-                      {region.region}
-                    </option>
-                  ))}
                 </Select>
               </FilterSection>
 
@@ -1186,15 +1169,6 @@ const ChatManagement = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </SearchContainer>
-
-                <Select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
-                  <option value="all">모든 지역</option>
-                  {regionalStats.map(region => (
-                    <option key={region.region} value={region.region}>
-                      {region.region}
-                    </option>
-                  ))}
-                </Select>
               </FilterSection>
 
               {error && (
@@ -1305,4 +1279,3 @@ const ChatManagement = () => {
 };
 
 export default ChatManagement;
-

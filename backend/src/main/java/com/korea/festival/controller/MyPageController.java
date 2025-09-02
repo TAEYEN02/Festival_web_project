@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.Principal;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -73,27 +76,30 @@ public class MyPageController {
 
 	// ===== 프로필 이미지 업로드 =====
 	@PostMapping("/profile/upload")
-	public ResponseEntity<UserProfileImageDTO> uploadProfileImage(@AuthenticationPrincipal UserDetails userDetails,
-			@RequestParam("file") MultipartFile file) throws IOException {
+	public ResponseEntity<UserProfileImageDTO> uploadProfileImage(
+	        @AuthenticationPrincipal UserDetails userDetails,
+	        @RequestParam("file") MultipartFile file) throws IOException {
 
-		if (file.isEmpty())
-			throw new RuntimeException("파일이 선택되지 않았습니다.");
+	    if (file.isEmpty())
+	        throw new RuntimeException("파일이 선택되지 않았습니다.");
 
-		String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
-		String newFileName = UUID.randomUUID() + "." + extension;
+	    String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+	    String newFileName = UUID.randomUUID() + "." + extension;
 
-		Path uploadDir = Paths.get(uploadPath);
-		if (!Files.exists(uploadDir))
-			Files.createDirectories(uploadDir);
+	    Path uploadDir = Paths.get(uploadPath);
+	    if (!Files.exists(uploadDir))
+	        Files.createDirectories(uploadDir);
 
-		Path filePath = uploadDir.resolve(newFileName);
-		file.transferTo(filePath.toFile());
+	    Path filePath = uploadDir.resolve(newFileName);
+	    file.transferTo(filePath.toFile());
 
-		String relativePath = "/uploads/" + newFileName;
-		userService.updateProfileImage(userDetails.getUsername(), relativePath);
+	    // ⚠️ 앞에 슬래시 제거, 상대경로로 저장
+	    String relativePath = "uploads/" + newFileName;
+	    userService.updateProfileImage(userDetails.getUsername(), relativePath);
 
-		return ResponseEntity.ok(new UserProfileImageDTO(relativePath));
+	    return ResponseEntity.ok(new UserProfileImageDTO(relativePath));
 	}
+
 
 	// ===== 1대1 문의 관련 =====
 

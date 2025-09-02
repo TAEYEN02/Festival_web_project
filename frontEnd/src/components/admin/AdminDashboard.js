@@ -147,6 +147,11 @@ const AdminDashboard = () => {
           activeUsers: r.activeUsers,
           todayMessages: r.todayMessages
         }));
+
+        console.log('regionRes.data raw:', regionRes.data);
+        console.log('formattedRegionData:', formattedRegionData);
+
+
         setRegionData(formattedRegionData);
       } catch (err) {
         console.error('차트 데이터 로딩 실패:', err);
@@ -156,6 +161,8 @@ const AdminDashboard = () => {
 
     fetchData();
   }, []);
+
+
 
   const loadDashboardData = async () => {
     try {

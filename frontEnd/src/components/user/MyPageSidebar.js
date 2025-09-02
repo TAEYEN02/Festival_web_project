@@ -145,22 +145,7 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
   ];
 
   console.log("JWT token:", token);
-  
-  useEffect(() => {
-    if (!isLoggedIn || !token) return;
 
-    axios.get("/api/mypage/profile", {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => {
-        setUserData(res.data);
-        setPreview(res.data.profileImage);
-      })
-      .catch(err => {
-        console.error(err);
-        alert("프로필 정보를 불러오는 데 실패했습니다.");
-      });
-  }, [isLoggedIn, token]);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -183,13 +168,36 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
         },
       });
 
-      setUserData(prev => ({ ...prev, profileImage: response.data.profileImage }));
-      setPreview(response.data.profileImage);
+      // 서버에서 profileImage 반환 시 맨 앞 / 제거
+      const serverPath = response.data.profileImage.replace(/^\/+/, '');
+      setUserData(prev => ({ ...prev, profileImage: serverPath }));
+
+      // 안전하게 preview URL 생성
+      setPreview(`http://localhost:8081/${serverPath}`);
     } catch (err) {
       console.error(err);
       alert("업로드 실패");
     }
   };
+
+  // useEffect에서 프로필 불러올 때도 안전하게 처리
+  useEffect(() => {
+    if (!isLoggedIn || !token) return;
+
+    axios.get("/api/mypage/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => {
+        const cleanPath = res.data.profileImage ? res.data.profileImage.replace(/^\/+/, '') : null;
+        setUserData(res.data);
+        setPreview(cleanPath ? `http://localhost:8081/${cleanPath}` : null);
+      })
+      .catch(err => {
+        console.error(err);
+        alert("프로필 정보를 불러오는 데 실패했습니다.");
+      });
+  }, [isLoggedIn, token]);
+
 
   const getInitial = () => userData?.nickname ? userData.nickname.charAt(0) : userData?.username?.charAt(0) || "?";
 

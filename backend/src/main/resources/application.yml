@@ -61,11 +61,6 @@ spring:
         max-size: 5
         queue-capacity: 100
         thread-name-prefix: email-
-  #/uploads/파일명 으로 접근해서 사진 업로드
-  mvc:
-    static-path-pattern: /uploads/**
-  resources:
-    static-locations: file:C:/festival/uploads/
 
 server:
   port: 8081

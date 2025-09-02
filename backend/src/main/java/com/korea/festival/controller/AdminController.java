@@ -229,7 +229,6 @@ public class AdminController {
     public ResponseEntity<List<RegionalChatStatsDTO>> getRegionalChatStats() {
         try {
             List<RegionalChatStatsDTO> stats = adminService.getRegionalChatStats();
-            log.info("Retrieved regional chat stats");
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             log.error("Error retrieving regional chat stats", e);
