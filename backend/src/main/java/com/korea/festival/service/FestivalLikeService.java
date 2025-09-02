@@ -3,8 +3,8 @@ package com.korea.festival.service;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.korea.festival.dto.FestivalLikeDTO;
 import com.korea.festival.entity.FestivalLikeEntity;
 import com.korea.festival.entity.Festival_MainPage;
 import com.korea.festival.entity.User;
@@ -12,58 +12,62 @@ import com.korea.festival.repository.FestivalLikeRepository;
 import com.korea.festival.repository.MainPageRepository;
 import com.korea.festival.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class FestivalLikeService {
-    
-	private final FestivalLikeRepository likeRepo;
-    private final MainPageRepository mainRepo;
-    private final UserRepository userRepo;
 
-    
+    private final FestivalLikeRepository likeRepository;
+    private final MainPageRepository mainPageRepository;
+    private final UserRepository userRepository;
+
     // 좋아요 토글
     @Transactional
-    public FestivalLikeDTO toggleLike(Long festivalId, Long userId) {
-        User user = userRepo.findById(userId).orElseThrow();
-        Festival_MainPage festival = mainRepo.findById(festivalId).orElseThrow();
+    public String toggleLike(String username, String contentId) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
 
-        Optional<FestivalLikeEntity> existing = likeRepo.findByUserAndFestival(user, festival);
+        Optional<FestivalLikeEntity> existingLike = likeRepository.findByUserAndFestival_ContentId(user, contentId);
 
-        boolean liked;
-        if (existing.isPresent()) {
-            likeRepo.delete(existing.get());
-            liked = false;
-            festival.setLikesCount(festival.getLikesCount() - 1); // 컬럼 감소
+        Festival_MainPage festival = mainPageRepository.findByContentId(contentId)
+                .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다"));
+
+        if (existingLike.isPresent()) {
+            likeRepository.delete(existingLike.get());
+            festival.setLikesCount(festival.getLikesCount() - 1);
+            return "unliked";
         } else {
-            likeRepo.save(FestivalLikeEntity.builder()
-                    .user(user)
-                    .festival(festival)
-                    .build());
-            liked = true;
-            festival.setLikesCount(festival.getLikesCount() + 1); // 컬럼 증가
+        	
+        	FestivalLikeEntity like = new FestivalLikeEntity();
+        	like.setUser(user);
+        	like.setFestival(festival);
+        	likeRepository.save(like);
+        	
+            likeRepository.save(like);
+            festival.setLikesCount(festival.getLikesCount() + 1);
+            return "liked";
         }
-
-        mainRepo.save(festival); // 반드시 저장
-        return new FestivalLikeDTO(liked, festival.getLikesCount());
-    }
-
-
-    // 특정 축제에 대해 현재 로그인한 사용자가 좋아요 눌렀는지 확인
-    public FestivalLikeDTO getLikeStatus(Long festivalId, Long userId) {
-        User user = userRepo.findById(userId).orElseThrow();
-        Festival_MainPage festival = mainRepo.findById(festivalId).orElseThrow();
-        boolean liked = likeRepo.findByUserAndFestival(user, festival).isPresent();
-        int likeCount = likeRepo.countByFestival(festival);
-        return new FestivalLikeDTO(liked, likeCount);
     }
 
     
-    // 좋아요 수
-    public long countLikes(Long festivalId) {
-        Festival_MainPage festival = mainRepo.findById(festivalId).orElseThrow();
-        return likeRepo.countByFestival(festival);
+
+    // 좋아요 수 조회
+    @Transactional(readOnly = true)
+    public int getLikeCount(String contentId) {
+        Festival_MainPage festival = mainPageRepository.findByContentId(contentId)
+                .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다"));
+        return festival.getLikesCount();
     }
+
+    // 사용자의 좋아요 여부 확인
+    @Transactional(readOnly = true)
+    public boolean isLikedByUser(String contentId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        // 이제 contentId 자체를 전달
+        return likeRepository.existsByUserAndFestival_ContentId(user, contentId);
+    }
+
 }

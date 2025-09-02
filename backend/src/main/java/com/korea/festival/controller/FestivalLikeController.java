@@ -1,16 +1,19 @@
 package com.korea.festival.controller;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.korea.festival.dto.FestivalLikeDTO;
-import com.korea.festival.entity.User;
+import com.korea.festival.jwt.JwtTokenProvider;
 import com.korea.festival.service.FestivalLikeService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -18,28 +21,69 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FestivalLikeController {
     
-	private final FestivalLikeService likeService;
+	private final FestivalLikeService festivalLikeService;
+    private final JwtTokenProvider tokenProvider;
 
-	// 좋아요 토글
-    @PostMapping("/{festivalId}/like")
-    public FestivalLikeDTO toggleLike(
-            @PathVariable Long festivalId,
-            @AuthenticationPrincipal User user) { // UserEntity 바로 받기
-        return likeService.toggleLike(festivalId, user.getId());
+    @PostMapping("/{contentId}")
+    public ResponseEntity<?> toggleLike(@PathVariable("contentId") String contentId, HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Authorization 헤더 없음 또는 형식 오류");
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        if (!tokenProvider.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("유효하지 않은 토큰");
+        }
+
+        String username = tokenProvider.getUsernameFromToken(token);
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("JWT에서 username 추출 실패");
+        }
+
+        String result = festivalLikeService.toggleLike(username, contentId);
+        int likeCount = festivalLikeService.getLikeCount(contentId);
+
+        return ResponseEntity.ok(Map.of("result", result, "likeCount", likeCount));
     }
 
-    // 좋아요 상태 + 개수 조회
-    @GetMapping("/{festivalId}/like-status")
-    public FestivalLikeDTO getLikeStatus(
-            @PathVariable Long festivalId,
-            @AuthenticationPrincipal User user) {
-        return likeService.getLikeStatus(festivalId, user.getId());
+    @GetMapping("/{contentId}/status")
+    public ResponseEntity<?> getLikeStatus(@PathVariable("contentId") String contentId, HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Authorization 헤더 없음 또는 형식 오류");
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        if (!tokenProvider.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("유효하지 않은 토큰");
+        }
+
+        String username = tokenProvider.getUsernameFromToken(token);
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("JWT에서 username 추출 실패");
+        }
+
+        boolean liked = festivalLikeService.isLikedByUser(contentId, username);
+        return ResponseEntity.ok(Map.of("liked", liked));
     }
+
+    // 좋아요 수 조회 (로그인 필요 없음)
+//    @GetMapping("/{festivalId}")
+//    public ResponseEntity<?> getLikeCount(@PathVariable("festivalId") Long festivalId) {
+//        try {
+//            int count = festivalLikeService.getLikeCount(festivalId);
+//            return ResponseEntity.ok(Map.of("likeCount", count));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("축제를 찾을 수 없습니다");
+//        }
+//    }
 
     
-    // 좋아요 개수 조회
-    @GetMapping("/count")
-    public long getLikes(@PathVariable Long festivalId) {
-        return likeService.countLikes(festivalId);
-    }
 }

@@ -21,7 +21,7 @@ public interface MainPageRepository extends JpaRepository<Festival_MainPage, Lon
     List<Festival_MainPage> findAllByOrderByViewsDesc();
 
     // 인기순 (좋아요 기준)
-    List<Festival_MainPage> findTop10ByOrderByLikesDesc();
+    List<Festival_MainPage> findTop10ByOrderByLikesCountDesc();
     
     // 축제 중복 체크
     Optional<Festival_MainPage> findByContentId(String contentId);

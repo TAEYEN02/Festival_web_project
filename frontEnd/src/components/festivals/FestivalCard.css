@@ -96,12 +96,12 @@
 /* 순위 뱃지 */
 .rank-badge {
   position: absolute;
-  top: -35px;               /* 카드 위로 튀어나오도록 */
-  left: -13px;              /* 왼쪽으로도 살짝 튀어나오게 */
+  top: -20px;               /* 카드 위로 튀어나오도록 */
+  left: -10px;              /* 왼쪽으로도 살짝 튀어나오게 */
   font-size: 70px;          /* 크게 */
   font-weight: bold;
   color: #000000;
-  transform: rotate(5deg);
+  /* transform: rotate(5deg); */
   /* text-shadow: 3px 3px 6px rgba(0,0,0,0.5); */
   z-index: 20;              /* 카드보다 위에 표시 */
   pointer-events: none;     /* 클릭 방해 안함 */

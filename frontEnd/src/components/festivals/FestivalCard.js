@@ -55,7 +55,7 @@ const FestivalCard = ({ festival, token, rank }) => {
   return (
     <div className="festival-card" onClick={handleClick} style={{ position: "relative" }}>
       {/* 순위 배지 */}
-      {rank && <div className="rank-badge">{rank}</div>}
+      {/* {rank && <div className="rank-badge">{rank}</div>} */}
 
       <img
         src={festival.firstimage && festival.firstimage !== "" 

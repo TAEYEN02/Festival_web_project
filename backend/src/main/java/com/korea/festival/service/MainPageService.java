@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -39,8 +40,9 @@ public class MainPageService {
     
     // 공공데이터에서 불러와 DB에 저장
     public void importFestivals() {
-        String startDate = "20230101";
-        String endDate = "20251231";
+        LocalDate today = LocalDate.now();
+        String startDate = today.format(DateTimeFormatter.BASIC_ISO_DATE); // 오늘 날짜
+        String endDate = "20261231"; 
         int numOfRows = 1000;
         int pageNo = 1;
         boolean hasMore = true;
@@ -55,7 +57,8 @@ public class MainPageService {
                         .queryParam("MobileApp", "AppTest")
                         .queryParam("_type", "json")
                         .queryParam("eventStartDate", startDate)
-                        .queryParam("eventEndDate", endDate);
+                        .queryParam("eventEndDate", endDate)
+                        .queryParam("arrange", "A"); // 시작일 오름차순
 
                 ResponseEntity<String> response = restTemplate.getForEntity(builder.toUriString(), String.class);
                 System.out.println("API Response (page " + pageNo + "): " + response.getBody());
@@ -74,6 +77,10 @@ public class MainPageService {
                 } else {
                     items.add(itemsNode);
                 }
+
+                // 시작일 기준 정렬 
+                items.sort(Comparator.comparing(node ->
+                        LocalDate.parse(node.path("eventstartdate").asText(), DateTimeFormatter.BASIC_ISO_DATE)));
 
                 for (JsonNode node : items) {
                     String contentId = node.path("contentid").asText();
@@ -99,9 +106,6 @@ public class MainPageService {
                     }
                     f.setFirstimage(image);
 
-                    // 좋아요 리스트는 엔티티 초기화 시 빈 리스트 그대로
-                    // f.setLikes(new ArrayList<>()); // 이미 엔티티에서 초기화됨
-
                     mainPageRepository.save(f);
                 }
 
@@ -119,6 +123,7 @@ public class MainPageService {
     }
 
 
+
     
     // 최신순
     public List<Festival_MainPage> getFestivalsByLatest() {
@@ -132,7 +137,7 @@ public class MainPageService {
 
     // 인기순 (좋아요 기준)
     public List<Festival_MainPage> getFestivalsByLikes() {
-        return mainPageRepository.findTop10ByOrderByLikesDesc();
+        return mainPageRepository.findTop10ByOrderByLikesCountDesc();
     }
     
     

@@ -9,6 +9,10 @@ import com.korea.festival.entity.Festival_MainPage;
 import com.korea.festival.entity.User;
 
 public interface FestivalLikeRepository extends JpaRepository<FestivalLikeEntity, Long> {
- Optional<FestivalLikeEntity> findByUserAndFestival(User user, Festival_MainPage festival);
- int countByFestival(Festival_MainPage festival);
+
+	boolean existsByUserAndFestival_ContentId(User user, String contentId);
+
+	Optional<FestivalLikeEntity> findByUserAndFestival_ContentId(User user, String contentId);
+
+	int countByFestival_ContentId(String contentId);
 }

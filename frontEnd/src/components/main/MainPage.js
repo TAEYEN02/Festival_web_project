@@ -8,6 +8,7 @@ import {
 import FestivalCardList from "../festivals/FestivalCardList";
 
 import "./MainPage.css";
+import MainFooter from "./MainFooter";
 
 const MainPage = () => {
   const [festivals, setFestivals] = useState([]); // 외부 API
@@ -74,14 +75,14 @@ const MainPage = () => {
       <div className="festival-card-list-container">
         <h3 className="section-title">
           🎉 요즘 여기가 HOT 하다며?
-          <select
+          {/* <select
             value={popularSort}
             onChange={(e) => setPopularSort(e.target.value)}
             className="popular-sort-select"
           >
             <option value="likes">좋아요 순</option>
             <option value="views">조회수 순</option>
-          </select>
+          </select> */}
         </h3>
         <FestivalCardList festivals={popular} token={token}/>
       </div>
@@ -91,10 +92,7 @@ const MainPage = () => {
         <FestivalCardList festivals={latest} token={token}/>
       </div>
 
-      <h3 className="section-title"> 👋 "우리 지역 모여라!" 실시간 채팅하러 가기 </h3>
-        <div className="online-chat">
-          실시간 채팅창 추가 예정
-        </div>
+      <MainFooter />
     </div>
   );
 };
