@@ -21,6 +21,7 @@ import { ReviewWrtie } from "./components/board/review/ReviewWrite";
 import { ReviewDetail } from "./components/board/review/ReviewDetail";
 import FindCredentialsForm from "./components/auth/FindCredentialsForm";
 import { BoardUpdate } from "./components/board/BoardUpdate";
+import { Local } from "./components/board/Local";
 
 
 
@@ -143,6 +144,8 @@ function AppContent() {
                     <Route path=':categoryId/write' element={<BoardWrite />} />
                     <Route path=':categoryId/update/:boardId' element={<BoardUpdate />} />
                     <Route path=':categoryId/detail/:boardId' element={<BoardDetail />} />
+
+                    <Route path='local' element={<Local />} />
 
                     <Route path='review' element={<ReviewList />} />
                     <Route path='review/write' element={<ReviewWrtie />} />

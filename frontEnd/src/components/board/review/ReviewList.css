@@ -53,13 +53,14 @@
 .author-avatar {
     width: 3.25rem; /* 아바타 크기 약간 키움 */
     height: 3.25rem;
-    background: linear-gradient(to right, #ff9a8b, #ff6a88); /* 따뜻한 그라데이션 */
+    background: linear-gradient(to right, #ffd194, #d1913c);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.4rem; /* 이모지 크기 키움 */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 아바타 그림자 추가 */
+    object-fit: cover;
 }
 
 .author-name-section {

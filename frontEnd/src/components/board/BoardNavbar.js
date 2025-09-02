@@ -56,7 +56,7 @@ export const BoardNavBar = () => {
                                                 key={category.id}
                                                 onClick={() => {
                                                     setActiveTab(category.name)
-                                                    navigate(`/board/${category.id}`)
+                                                    navigate(category.id===3?`/board/local`:`/board/${category.id}`)
                                                 }}
                                                 className={`BNnav-tab BNnav-tab-special ${activeTab === category.name ? 'BNnav-tab-active BNnav-tab-special-active' : ''}`}
                                             >
