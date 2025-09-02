@@ -29,6 +29,7 @@ import com.korea.festival.entity.Inquiry;
 import com.korea.festival.entity.InquiryStatus;
 import com.korea.festival.entity.User;
 import com.korea.festival.repository.InquiryRepository;
+import com.korea.festival.repository.RegionalChatReportRepository;
 import com.korea.festival.repository.RegionalChatRepository;
 import com.korea.festival.repository.UserRepository;
 
@@ -44,6 +45,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final InquiryRepository inquiryRepository;
     private final RegionalChatRepository chatRepository;
+    private final RegionalChatReportRepository regionalChatReportRepository;
     
     @Transactional(readOnly = true)
     public AdminDashboardDTO getDashboardStats() {
@@ -198,10 +200,17 @@ public class AdminService {
     }
     
     //사용자 삭제
+    @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
-        
+
+        // 1. 이 유저가 reporter인 신고 내역 먼저 삭제
+        regionalChatReportRepository.deleteByReporterId(userId);
+
+        // (추가) 이 유저가 작성한 RegionalChat, 댓글, 좋아요 등 다른 FK 참조도 있다면 순서대로 삭제
+
+        // 2. 유저 삭제
         userRepository.delete(user);
     }
     

@@ -33,4 +33,7 @@ public interface RegionalChatReportRepository extends JpaRepository<RegionalChat
     Long countReportsByMessageId(@Param("messageId") Long messageId);
     
     boolean existsByMessageIdAndReporterId(Long messageId, Long reporterId);
+    
+    // ✅ 유저 삭제 시 필요한 메서드
+    void deleteByReporterId(Long reporterId);
 }
