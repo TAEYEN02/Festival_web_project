@@ -917,20 +917,6 @@ const ChatManagement = () => {
                 <>
                   {/* 실시간 통계 카드 */}
                   <StatsGrid>
-                    <StatCard $color="green">
-                      <StatHeader>
-                        <StatIcon $color="green">
-                          <Users size={24} />
-                        </StatIcon>
-                      </StatHeader>
-                      <StatValue>{realTimeStats.activeUsers?.toLocaleString()}</StatValue>
-                      <StatLabel>현재 접속자</StatLabel>
-                      <LastUpdated>
-                        <Clock size={12} />
-                        마지막 업데이트: {realTimeStats.lastUpdated}
-                      </LastUpdated>
-                    </StatCard>
-
                     <StatCard $color="red">
                       <StatHeader>
                         <StatIcon $color="red">
@@ -956,20 +942,6 @@ const ChatManagement = () => {
                       <StatChange $positive={true}>
                         <TrendingUp size={12} />
                         활발한 활동
-                      </StatChange>
-                    </StatCard>
-
-                    <StatCard $color="purple">
-                      <StatHeader>
-                        <StatIcon $color="purple">
-                          <MapPin size={24} />
-                        </StatIcon>
-                      </StatHeader>
-                      <StatValue>{realTimeStats.totalRegions}</StatValue>
-                      <StatLabel>활성 지역</StatLabel>
-                      <StatChange $positive={true}>
-                        <Activity size={12} />
-                        전체 운영 중
                       </StatChange>
                     </StatCard>
                   </StatsGrid>
