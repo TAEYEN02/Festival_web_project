@@ -1,16 +1,13 @@
 package com.korea.festival.repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import com.korea.festival.entity.User;
 
 @Repository
@@ -43,10 +40,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllWithRelations(Pageable pageable);
     
     @Query("SELECT u FROM User u WHERE " +
-    	       "(u.username LIKE %:search% OR u.nickname LIKE %:search% OR u.email LIKE %:search%) " +
-    	       "AND (:isActive IS NULL OR u.isActive = :isActive) " +
-    	       "ORDER BY u.createdAt DESC")
-    	Page<User> findUsersWithSearch(@Param("search") String search, 
-    	                               @Param("isActive") Boolean isActive, 
-    	                               Pageable pageable);
+           "(u.username LIKE %:search% OR u.nickname LIKE %:search% OR u.email LIKE %:search%) " +
+           "AND (:isActive IS NULL OR u.isActive = :isActive) " +
+           "ORDER BY u.createdAt DESC")
+    Page<User> findUsersWithSearch(@Param("search") String search, 
+                                   @Param("isActive") Boolean isActive, 
+                                   Pageable pageable);
+    
+    // 활성/비활성 사용자 수 카운트
+    Long countByIsActiveTrue();
+    Long countByIsActiveFalse();
 }

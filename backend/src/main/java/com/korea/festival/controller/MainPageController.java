@@ -25,6 +25,7 @@ public class MainPageController {
 	
 	
 	// 공공테이터포털 api -> DB 저장 -> DB에서 축제 정보 불러옴
+	// http://localhost:8081/api/festivals/import
     @PostMapping("/import")
     public ResponseEntity<String> importFestivals() {
     	mainPageService.importFestivals();

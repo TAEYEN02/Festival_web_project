@@ -63,8 +63,19 @@ public class AdminController {
     @GetMapping("/dashboard")
     public ResponseEntity<AdminDashboardDTO> getDashboard() {
         try {
+            // 기존 대시보드 통계
             AdminDashboardDTO dashboard = adminService.getDashboardStats();
-            log.info("Dashboard stats retrieved successfully");
+            
+            // 채팅 관련 통계 추가
+            long totalChatMessages = chatRepository.count(); // 총 채팅 메시지 수
+            long pendingChatReports = regionalChatService.getPendingReportsCount(); // 대기 중인 채팅 신고 수
+            
+            // 대시보드에 채팅 통계 설정
+            dashboard.setTotalMessages(totalChatMessages);
+            dashboard.setPendingReports(pendingChatReports);
+            
+            log.info("Dashboard stats retrieved successfully - totalMessages: {}, pendingReports: {}", 
+                    totalChatMessages, pendingChatReports);
             return ResponseEntity.ok(dashboard);
         } catch (Exception e) {
             log.error("Error retrieving dashboard stats", e);

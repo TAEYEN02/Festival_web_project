@@ -659,9 +659,10 @@ const ChatManagement = () => {
       const realTimeData = chatDashboard;
       const newStats = {
         totalMessages: realTimeData.totalMessages || 0,
-        activeUsers: realTimeData.onlineUsers || realTimeData.activeChatUsers || 0, // API 필드명에 맞춤
+        activeUsers: realTimeData.onlineUsers || realTimeData.activeChatUsers || 0,
         totalRegions: realTimeData.activeRegions || realTimeData.totalRegions || 0,
-        pendingReports: realTimeData.pendingReports || realTimeData.pendingInquiries || 0, // API 필드명에 맞춤
+        // 수정: pendingInquiries가 아닌 pendingReports 사용
+        pendingReports: realTimeData.pendingReports || 0,
         lastUpdated: new Date().toLocaleTimeString('ko-KR')
       };
 
@@ -670,7 +671,7 @@ const ChatManagement = () => {
         console.log('데이터 변화 확인:', {
           이전: realTimeStats,
           현재: newStats,
-          변화있음: JSON.stringify(realTimeStats) !== JSON.stringify({...newStats, lastUpdated: realTimeStats.lastUpdated})
+          변화있음: JSON.stringify(realTimeStats) !== JSON.stringify({ ...newStats, lastUpdated: realTimeStats.lastUpdated })
         });
       }
 

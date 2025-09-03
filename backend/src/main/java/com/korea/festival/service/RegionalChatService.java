@@ -230,4 +230,12 @@ public class RegionalChatService {
             .adminNotes(report.getAdminNotes())
             .build();
     }
+    
+    /**
+     * 대기 중인 신고 건수 조회
+     * @return 대기 중인 신고 수
+     */
+    public long getPendingReportsCount() {
+        return reportRepository.countByStatus(ReportStatus.PENDING);
+    }
 }
