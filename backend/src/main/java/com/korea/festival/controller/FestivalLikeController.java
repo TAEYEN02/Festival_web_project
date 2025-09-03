@@ -24,8 +24,13 @@ public class FestivalLikeController {
 	private final FestivalLikeService festivalLikeService;
     private final JwtTokenProvider tokenProvider;
 
+    
+    // 좋아요 토글
     @PostMapping("/{contentId}")
-    public ResponseEntity<?> toggleLike(@PathVariable("contentId") String contentId, HttpServletRequest request) {
+    public ResponseEntity<?> toggleLike(
+            @PathVariable("contentId") String contentId,
+            HttpServletRequest request
+    ) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -47,9 +52,14 @@ public class FestivalLikeController {
         String result = festivalLikeService.toggleLike(username, contentId);
         int likeCount = festivalLikeService.getLikeCount(contentId);
 
-        return ResponseEntity.ok(Map.of("result", result, "likeCount", likeCount));
+        return ResponseEntity.ok(Map.of(
+                "result", result,
+                "likeCount", likeCount
+        ));
     }
 
+
+    // 좋아요 눌렀는지 여부 조회
     @GetMapping("/{contentId}/status")
     public ResponseEntity<?> getLikeStatus(@PathVariable("contentId") String contentId, HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -74,16 +84,16 @@ public class FestivalLikeController {
         return ResponseEntity.ok(Map.of("liked", liked));
     }
 
-    // 좋아요 수 조회 (로그인 필요 없음)
-//    @GetMapping("/{festivalId}")
-//    public ResponseEntity<?> getLikeCount(@PathVariable("festivalId") Long festivalId) {
-//        try {
-//            int count = festivalLikeService.getLikeCount(festivalId);
-//            return ResponseEntity.ok(Map.of("likeCount", count));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("축제를 찾을 수 없습니다");
-//        }
-//    }
+     //좋아요 수 조회 (로그인 필요 없음)
+    @GetMapping("/{festivalId}/count")
+    public ResponseEntity<?> getLikeCount(@PathVariable("festivalId") String festivalId) {
+        try {
+            int count = festivalLikeService.getLikeCount(festivalId);
+            return ResponseEntity.ok(Map.of("likeCount", count));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("축제를 찾을 수 없습니다");
+        }
+    }
 
     
 }

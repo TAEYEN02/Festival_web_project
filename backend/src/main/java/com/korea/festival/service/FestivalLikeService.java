@@ -2,6 +2,8 @@ package com.korea.festival.service;
 
 import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,32 +27,34 @@ public class FestivalLikeService {
     // 좋아요 토글
     @Transactional
     public String toggleLike(String username, String contentId) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+        // 현재 로그인한 사용자 이름 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        username = authentication.getName();
 
-        Optional<FestivalLikeEntity> existingLike = likeRepository.findByUserAndFestival_ContentId(user, contentId);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
         Festival_MainPage festival = mainPageRepository.findByContentId(contentId)
-                .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다"));
+                .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다."));
+
+        Optional<FestivalLikeEntity> existingLike = likeRepository.findByUserAndFestivalContentId(user, contentId);
 
         if (existingLike.isPresent()) {
             likeRepository.delete(existingLike.get());
             festival.setLikesCount(festival.getLikesCount() - 1);
             return "unliked";
         } else {
-        	
-        	FestivalLikeEntity like = new FestivalLikeEntity();
-        	like.setUser(user);
-        	like.setFestival(festival);
-        	likeRepository.save(like);
-        	
+            FestivalLikeEntity like = new FestivalLikeEntity();
+            like.setUser(user);
+            like.setFestival(festival);
             likeRepository.save(like);
+            
             festival.setLikesCount(festival.getLikesCount() + 1);
             return "liked";
         }
     }
 
-    
+   
 
     // 좋아요 수 조회
     @Transactional(readOnly = true)
@@ -59,6 +63,8 @@ public class FestivalLikeService {
                 .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다"));
         return festival.getLikesCount();
     }
+    
+    
 
     // 사용자의 좋아요 여부 확인
     @Transactional(readOnly = true)

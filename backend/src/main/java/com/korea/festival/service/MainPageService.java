@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.korea.festival.dto.FestivalDTO_MainPage;
 import com.korea.festival.entity.Festival_MainPage;
 import com.korea.festival.repository.MainPageRepository;
 
@@ -43,7 +46,7 @@ public class MainPageService {
         LocalDate today = LocalDate.now();
         String startDate = today.format(DateTimeFormatter.BASIC_ISO_DATE); // 오늘 날짜
         String endDate = "20261231"; 
-        int numOfRows = 1000;
+        int numOfRows = 500;
         int pageNo = 1;
         boolean hasMore = true;
 
@@ -121,14 +124,20 @@ public class MainPageService {
             throw new RuntimeException("축제 데이터 저장 실패", e);
         }
     }
-
-
+    
+    
+    // DB 전체 삭제
+    public void deleteAllFestivals() {
+        mainPageRepository.deleteAll();
+    }
 
     
     // 최신순
-    public List<Festival_MainPage> getFestivalsByLatest() {
-        return mainPageRepository.findTop10ByOrderByStartDateDesc();
+    public List<Festival_MainPage> getFestivalsByLatestUpcoming() {
+        LocalDate today = LocalDate.now();
+        return mainPageRepository.findTop10Upcoming(today, PageRequest.of(0, 10));
     }
+
 
     // 인기순 (조회수 기준)
     public List<Festival_MainPage> getFestivalsByPopularity() {
@@ -136,9 +145,29 @@ public class MainPageService {
     }
 
     // 인기순 (좋아요 기준)
-    public List<Festival_MainPage> getFestivalsByLikes() {
-        return mainPageRepository.findTop10ByOrderByLikesCountDesc();
+    public List<FestivalDTO_MainPage> getFestivalsByLikesDTO() {
+        List<Festival_MainPage> list = mainPageRepository.findTop10ByOrderByLikesCountDesc();
+        return list.stream()
+            .map((Festival_MainPage f) -> FestivalDTO_MainPage.builder()
+                .id(f.getId())
+                .contentId(f.getContentId())
+                .name(f.getName())
+                .startDate(f.getStartDate())
+                .endDate(f.getEndDate())
+                .location(f.getLocation())
+                .firstimage(f.getFirstimage())
+                .description(f.getDescription())
+                .bookingUrl(f.getBookingUrl())
+                .views(f.getViews())
+                .likes(f.getLikesCount())
+                .clicks(f.getClicks())
+                .createdAt(f.getCreatedAt())
+                .build()
+            )
+            .collect(Collectors.toList());
     }
+
+
     
     
     // 조회수 증가

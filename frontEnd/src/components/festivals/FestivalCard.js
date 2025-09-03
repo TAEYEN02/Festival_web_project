@@ -4,7 +4,7 @@ import { incrementViews } from "../../api/festival";
 
 import "./FestivalCard.css"; 
 
-const FestivalCard = ({ festival, token, rank }) => {
+const FestivalCard = ({ festival, token, rank, onToggleLike }) => {
   const navigate = useNavigate();
 
   const handleClick = async () => {
@@ -57,6 +57,13 @@ const FestivalCard = ({ festival, token, rank }) => {
       {/* 순위 배지 */}
       {/* {rank && <div className="rank-badge">{rank}</div>} */}
 
+      {/* 좋아요 버튼 */}
+        <LikeButton 
+          festivalId={festival.contentid} 
+          token={token}
+          className="like-button" 
+          onToggleLike={onToggleLike}
+        />
       <img
         src={festival.firstimage && festival.firstimage !== "" 
               ? festival.firstimage 
@@ -78,13 +85,6 @@ const FestivalCard = ({ festival, token, rank }) => {
             return <span className={`festival-dday ${status}`}>{text}</span>;
           })()}
         </div>
-
-        {/* 좋아요 버튼 */}
-        <LikeButton 
-          festivalId={festival.contentid} 
-          token={token}
-          className="like-button" 
-        />
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ import lombok.Setter;
 @Table(
     name = "festival_likes",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "contentId"})
+        @UniqueConstraint(columnNames = {"user_id", "content_id"})
     }
 )
 @Getter 

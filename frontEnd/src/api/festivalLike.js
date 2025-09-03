@@ -50,13 +50,13 @@ export const toggleFestivalLike = async (festivalId) => {
 };
 
 
-// 축제 좋아요 수 조회 (로그인 필요 없음)
-// export const fetchFestivalLikesCount = async (festivalId) => {
-//   try {
-//     const res = await axios.get(`${BASE_URL}/${festivalId}/count`);
-//     return res.data.likeCount || res.data; // 서버 응답에 따라 조정
-//   } catch (err) {
-//     console.error("좋아요 개수 조회 실패", err);
-//     throw err;
-//   }
-// };
+//축제 좋아요 수 조회 (로그인 필요 없음)
+export const fetchFestivalLikesCount = async (festivalId) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/${festivalId}/count`);
+    return res.data.likeCount || res.data; // 서버 응답에 따라 조정
+  } catch (err) {
+    console.error("좋아요 개수 조회 실패", err);
+    throw err;
+  }
+};

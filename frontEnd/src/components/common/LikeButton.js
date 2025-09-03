@@ -7,22 +7,32 @@ import {
   toggleFestivalLike,
 } from "../../api/festivalLike";
 
-const LikeButton = ({ festivalId, className }) => {
+import "./LikeButton.css";
+
+const LikeButton = ({ festivalId, className, onToggleLike }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
 
-  const token = localStorage.getItem("token"); // JWT 토큰
+  const token = localStorage.getItem("token");
 
+  // 축제별 상태 초기화
   useEffect(() => {
     if (!festivalId) return;
 
-    // 로그인한 경우에만 좋아요 상태 조회
     if (token) {
+      // 해당 축제 좋아요 상태
       fetchFestivalLikeStatus(festivalId)
-        .then((liked) => setLiked(liked))
+        .then((status) => setLiked(status))
         .catch((err) =>
           console.error("좋아요 상태 조회 실패:", err.response?.data || err.message)
         );
+
+      // 해당 축제 좋아요 개수
+      // fetchFestivalLikesCount(festivalId)
+      //   .then((count) => setLikeCount(count))
+      //   .catch((err) =>
+      //     console.error("좋아요 개수 조회 실패:", err.response?.data || err.message)
+      //   );
     }
   }, [festivalId, token]);
 
@@ -35,27 +45,25 @@ const LikeButton = ({ festivalId, className }) => {
     }
 
     try {
+      // festivalId를 매번 동적으로 전달
       const { result, likeCount: updatedCount } = await toggleFestivalLike(festivalId);
+
+      // 상태 업데이트
       setLiked(result === "liked");
       setLikeCount(updatedCount);
+
+      // 부모 컴포넌트로 알림
+      if (onToggleLike) {
+        onToggleLike(festivalId, result, updatedCount);
+      }
     } catch (err) {
       console.error("좋아요 토글 실패:", err.response?.data || err.message);
     }
   };
 
   return (
-    <button
-      className={className}
-      onClick={handleToggle}
-      style={{ border: "none", background: "transparent", cursor: "pointer" }}
-    >
-      <img
-        src={liked ? fullHeart : emptyHeart}
-        alt={liked ? "좋아요" : "좋아요 안함"}
-        width={24}
-        height={24}
-      />
-      {/* <span style={{ marginLeft: 6 }}>{likeCount}</span> */}
+    <button className="like-button" onClick={handleToggle}>
+      <img src={liked ? fullHeart : emptyHeart} alt={liked ? "좋아요" : "좋아요 안함"} />
     </button>
   );
 };

@@ -41,7 +41,7 @@ public class ReviewService {
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .location(dto.getLocation())
-                .tags(dto.getTags())
+                //.tags(dto.getTags())
                 .user(user)
                 .likes(0)
                 .createdAt(LocalDateTime.now())
@@ -83,7 +83,7 @@ public class ReviewService {
         review.setTitle(dto.getTitle());
         review.setContent(dto.getContent());
         review.setLocation(dto.getLocation());
-        review.setTags(dto.getTags());
+        //review.setTags(dto.getTags());
         review.setUpdatedAt(LocalDateTime.now());
         reviewRepository.save(review);
 
@@ -145,14 +145,14 @@ public class ReviewService {
                 .title(review.getTitle())
                 .content(review.getContent())
                 .location(review.getLocation())
-                .authorImg(review.getUser().getProfileImage())
+                //.authorImg(review.getUser().getProfileImage())
                 .likes(review.getLikes())
                 .view(review.getView())
                 .likedByCurrentUser(liked)
                 .authorNickname(review.getUser().getNickname())
-                .tags(review.getTags())
-                .date(review.getDate())
-                .images(review.getImages())
+                //.tags(review.getTags())
+                //.date(review.getDate())
+                //.images(review.getImages())
                 .comments(commentDTOs)
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())

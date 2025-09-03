@@ -9,6 +9,7 @@ import RecentInquiries from './RecentInquiries';
 import RecentUsers from './RecentUsers';
 import ChartSection from './ChartSection';
 import ConnectionTest from './ConnectionTest';
+import AdminButtons from '../common/AdminButtons';
 
 // 페이지 컴포넌트들
 import UserManagement from './UserManagement';
@@ -105,7 +106,7 @@ const regionIdMapping = {
 };
 
 
-const AdminDashboard = () => {
+const AdminDashboard = ({token}) => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -355,6 +356,7 @@ const AdminDashboard = () => {
           onRefresh={handleRefresh}
         />
         {renderContent()}
+        <AdminButtons token={token} />
       </Main>
     </Container>
   );

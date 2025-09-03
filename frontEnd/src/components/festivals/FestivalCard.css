@@ -1,36 +1,58 @@
 /* 카드 공통 */
 .festival-card {
   border-radius: 12px;
-  overflow: visible;
+  overflow: hidden;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   margin: 10px;
   transition: transform 0.2s;
   background: #fff;
   cursor: pointer;
   position: relative;
-  height: 100px;
-  min-height: 350px;
-  /* min-width: 200px; */
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
 }
+
 
 .festival-card:hover {
   transform: translateY(-5px);
 }
 
+/* 화면 900px 이하 (슬라이드 2개) */
+@media (max-width: 900px) {
+  .festival-card {
+    min-height: 200px;
+    height: auto;
+    margin: 5px;
+    border-radius: 8px;
+  }
+
+  .festival-image {
+    height: 180px; /* 좁은 화면에서는 조금 줄이기 */
+  }
+
+  .festival-info {
+    padding: 6px;
+  }
+}
+
+
+
 .festival-image {
   width: 100%;
-  height: 200px;
+  height: 250px;   
   object-fit: cover;
   display: block;
 }
 
 .festival-info { 
-  padding: 10px;
+  padding: 8px;   
   display: flex;
   flex-direction: column;
-  flex: 1;
-  position: relative;   /* D-DAY 절대 위치용 */
-  overflow: hidden;     /* 내용 넘치면 숨김 */ 
+  flex: 0 0 auto;  
+  position: relative;
+  overflow: hidden;     
+  font-size: 0.9rem;   
 }
 
 .festival-title {
@@ -50,6 +72,11 @@
 .festival-location {
   font-size: 14px;
   color: gray;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;  /* 1줄로 제한 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 기간/디데이 */
@@ -63,6 +90,11 @@
 .festival-period {
   font-size: 13px;
   color: #555;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;  /* 1줄로 제한 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .festival-dday {

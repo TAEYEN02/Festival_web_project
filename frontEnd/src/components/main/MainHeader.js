@@ -24,7 +24,7 @@ export default function MainHeader() {
                         한눈에 보기
                     </Link>
                     <Link to="/board" className="nav-item" onClick={closeMenu}>
-                        게시판
+                        커뮤니티
                     </Link>
                     {isAuthenticated && !isAdmin && (
                         <Link to="/mypage" className="nav-item" onClick={closeMenu}>
@@ -46,7 +46,8 @@ export default function MainHeader() {
             <div className="header-center">
                 <div className="search-box" role="search">
                     <input type="text" placeholder="더 뜨거운 여름휴가 보내기" />
-                    <button className="search-btn" type="button">🔍</button>
+                    <button 
+                        className="search-btn" type="button">🔍</button>
                 </div>
             </div>
 

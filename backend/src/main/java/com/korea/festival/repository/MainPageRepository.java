@@ -1,8 +1,10 @@
 package com.korea.festival.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,13 +16,20 @@ import com.korea.festival.entity.Festival_MainPage;
 @Repository
 public interface MainPageRepository extends JpaRepository<Festival_MainPage, Long> {
 	
-	// 최신순 정렬
-    List<Festival_MainPage> findTop10ByOrderByStartDateDesc();
+
+	// 앞으로 열릴 축제 또는 현재 진행중인 축제 최신순
+	// 오늘 이후 시작하거나 오늘 진행 중인 축제
+	@Query("SELECT f FROM Festival_MainPage f " +
+		       "WHERE f.endDate >= :today " +
+		       "ORDER BY f.startDate ASC")
+		List<Festival_MainPage> findTop10Upcoming(@Param("today") LocalDate today, Pageable pageable);
+
 
     // 인기순 정렬 (조회수 기준)
     List<Festival_MainPage> findAllByOrderByViewsDesc();
 
-    // 인기순 (좋아요 기준)
+   
+    // 좋아요 기준 상위 10개 가져오기
     List<Festival_MainPage> findTop10ByOrderByLikesCountDesc();
     
     // 축제 중복 체크

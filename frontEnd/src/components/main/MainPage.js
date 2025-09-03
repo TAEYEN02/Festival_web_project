@@ -6,6 +6,7 @@ import {
   fetchPopularFestivalsByViews
 } from "../../api/festival"
 import FestivalCardList from "../festivals/FestivalCardList";
+import LatestFestivalCardList from "../festivals/LatestFestivalCardList";
 
 import "./MainPage.css";
 import MainFooter from "./MainFooter";
@@ -16,7 +17,6 @@ const MainPage = () => {
   const [popular, setPopular] = useState([]);     // 인기순
   const [popularSort, setPopularSort] = useState("likes"); // 정렬 기준: likes / views
 
-  // JWT 토큰
   const token = localStorage.getItem("token");
 
   // 외부 API 데이터 불러오기
@@ -30,40 +30,57 @@ const MainPage = () => {
       }
     };
     loadExternalFestivals();
+    
   }, []);
 
   // 최신순 불러오기
-  useEffect(() => {
-    const loadLatest = async () => {
-      try {
-        const data = await fetchLatestFestivals();
+   const loadLatest = async () => {
+    try {
+      const data = await fetchLatestFestivals();
+      if (!data || data.length === 0) {
+        // 서버가 빈 배열 반환하면 fallback 처리
+        setLatest([]); // 혹은 랜덤 10개 데이터
+      } else {
         setLatest(data);
-      } catch (err) {
-        console.error("최신순 축제 불러오기 실패:", err);
       }
-    };
-    loadLatest();
+    } catch (err) {
+      console.error("최신순 축제 불러오기 실패:", err);
+    }
+  };
+
+  // 인기순 불러오기
+  const loadPopular = async () => {
+    try {
+      let data = [];
+      if (popularSort === "likes") {
+        data = await fetchPopularFestivalsByLikes();
+        const nonZeroLikes = data.filter(f => f.likes > 0);
+        data = nonZeroLikes.length > 0
+          ? nonZeroLikes.slice(0, 10)
+          : data.sort(() => 0.5 - Math.random()).slice(0, 10);
+      } else {
+        data = await fetchPopularFestivalsByViews();
+        const nonZeroViews = data.filter(f => f.views > 0);
+        data = nonZeroViews.length > 0
+          ? nonZeroViews.slice(0, 10)
+          : data.sort(() => 0.5 - Math.random()).slice(0, 10);
+      }
+      setPopular(data);
+    } catch (err) {
+      console.error("인기순 축제 불러오기 실패:", err);
+    }
+  };
+
+  useEffect(() => {
+     loadLatest(); loadPopular(); 
+
   }, []);
 
-  // 인기순 불러오기 (정렬 기준에 따라, 0 제외)
-  useEffect(() => {
-    const loadPopular = async () => {
-      try {
-        let data = [];
-        if (popularSort === "likes") {
-          data = await fetchPopularFestivalsByLikes();
-          data = data.filter(f => f.likes > 0);
-        } else {
-          data = await fetchPopularFestivalsByViews();
-          data = data.filter(f => f.views > 0);
-        }
-        setPopular(data.slice(0, 10)); // 최대 10개
-      } catch (err) {
-        console.error("인기순 축제 불러오기 실패:", err);
-      }
-    };
-    loadPopular();
-  }, [popularSort]);
+  // 좋아요 토글 시 최신순에서 좋아요 수만 업데이트
+  const handleToggleLike = (contentId, updatedCount) => {
+    setLatest(prev => prev.map(f => f.contentid === contentId ? { ...f, likes: updatedCount } : f));
+    loadPopular(); // 인기순은 다시 fetch
+  };
 
   return (
     <div className="main-page">
@@ -73,23 +90,20 @@ const MainPage = () => {
       </div>
 
       <div className="festival-card-list-container">
-        <h3 className="section-title">
-          🎉 요즘 여기가 HOT 하다며?
-          {/* <select
-            value={popularSort}
-            onChange={(e) => setPopularSort(e.target.value)}
-            className="popular-sort-select"
-          >
-            <option value="likes">좋아요 순</option>
-            <option value="views">조회수 순</option>
-          </select> */}
-        </h3>
-        <FestivalCardList festivals={popular} token={token}/>
+        <h3 className="section-title">🎊 Comming Soon! 최신 페스티벌은 어디? </h3>
+        <FestivalCardList festivals={latest} token={token} onToggleLike={handleToggleLike} />
       </div>
 
+
       <div className="festival-card-list-container">
-        <h3 className="section-title">🎊 Comming Soon! 최신 페스티벌은 어디? </h3>
-        <FestivalCardList festivals={latest} token={token}/>
+        <h3 className="section-title">
+          🎉 사용자들이 좋아요 누른
+        </h3>
+        <FestivalCardList
+          festivals={popular}
+          token={token}
+          onToggleLike={handleToggleLike}
+        />
       </div>
 
       <MainFooter />

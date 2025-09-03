@@ -3,12 +3,14 @@ package com.korea.festival.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.korea.festival.dto.FestivalDTO_MainPage;
 import com.korea.festival.entity.Festival_MainPage;
 import com.korea.festival.service.MainPageService;
 
@@ -30,13 +32,32 @@ public class MainPageController {
     	mainPageService.importFestivals();
         return ResponseEntity.ok("축제 데이터가 성공적으로 저장되었습니다.");
     }
+    
+    // DB 전체 삭제
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteFestivals() {
+        mainPageService.deleteAllFestivals();
+        return ResponseEntity.ok("모든 축제 데이터가 삭제되었습니다.");
+    }
+    
+    // delete 후 import
+    @PostMapping("/reset-and-import")
+    public ResponseEntity<String> resetAndImportFestivals() {
+        try {
+            mainPageService.deleteAllFestivals();  // DB 전체 삭제
+            mainPageService.importFestivals();     // 최신 데이터 가져오기
+            return ResponseEntity.ok("DB 초기화 후 최신 축제 데이터를 가져왔습니다.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("축제 데이터 초기화 및 가져오기 실패");
+        }
+    }
 	
 	
 	// 최신순 조회
     @GetMapping("/latest")
     public ResponseEntity<List<Festival_MainPage>> getLatestFestivals() {
-    	System.out.println("너 들어오니1");
-        return ResponseEntity.ok(mainPageService.getFestivalsByLatest());
+        return ResponseEntity.ok(mainPageService.getFestivalsByLatestUpcoming());
     }
 
     // 인기순 조회 (조회수 기준)
@@ -48,9 +69,11 @@ public class MainPageController {
 
     // 인기순 조회 (좋아요 기준)
     @GetMapping("/likes")
-    public ResponseEntity<List<Festival_MainPage>> getFestivalsByLikes() {
-        return ResponseEntity.ok(mainPageService.getFestivalsByLikes());
+    public ResponseEntity<List<FestivalDTO_MainPage>> getFestivalsByLikes() {
+        List<FestivalDTO_MainPage> festivals = mainPageService.getFestivalsByLikesDTO();
+        return ResponseEntity.ok(festivals);
     }
+
     
     
 	 // 조회수 증가
