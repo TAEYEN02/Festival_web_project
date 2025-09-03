@@ -49,24 +49,26 @@ public class AdminService {
     
     @Transactional(readOnly = true)
     public AdminDashboardDTO getDashboardStats() {
-        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        AdminDashboardDTO dto = new AdminDashboardDTO();
         
-        Long totalUsers = userRepository.countActiveUsers();
-        Long todayNewUsers = userRepository.countUsersByDateRange(today, today.plusDays(1));
+        // 기존 사용자/문의 통계
+        dto.setTotalUsers(userRepository.count());
+        dto.setActiveUsers(userRepository.countByIsActiveTrue());
+        dto.setInactiveUsers(userRepository.countByIsActiveFalse());
+        dto.setTotalInquiries(inquiryRepository.count());
+        dto.setPendingInquiries(inquiryRepository.countByStatus(InquiryStatus.PENDING));
+        dto.setAnsweredInquiries(inquiryRepository.countByStatus(InquiryStatus.ANSWERED));
         
-        // 실제 문의 데이터 조회
-        Long totalInquiries = inquiryRepository.count();
-        Long pendingInquiries = inquiryRepository.countByStatus(InquiryStatus.PENDING);
+        // 채팅 관련 통계는 AdminController에서 설정하므로 여기서는 기본값만 설정
+        dto.setTotalMessages(0L);
+        dto.setPendingReports(0L);
+        dto.setOnlineUsers(0);
+        dto.setActiveRegions(0);
         
-        AdminDashboardDTO dashboard = new AdminDashboardDTO();
-        dashboard.setTotalUsers(totalUsers);
-        dashboard.setTodayNewUsers(todayNewUsers);
-        dashboard.setTotalInquiries(totalInquiries);
-        dashboard.setPendingInquiries(pendingInquiries);
-        dashboard.setOnlineUsers(0L); // 추후 구현 (실시간 세션 관리 필요)
-        dashboard.setActiveChatUsers(0L); // 추후 구현
+        // 지역별 통계 (필요한 경우)
+        dto.setRegionalStats(getRegionalChatStats());
         
-        return dashboard;
+        return dto;
     }
     
     // 임시로 검색 기능을 간소화한 getUsers 메서드

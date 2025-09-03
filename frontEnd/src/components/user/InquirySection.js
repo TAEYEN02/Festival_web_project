@@ -118,14 +118,18 @@ const Status = styled.span`
   }}
 `;
 
-const Modal = styled.div`
+const StyledModal = styled.div`
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; /* 화면 전체 */
+  background: rgba(0, 0, 0, 0.4); /* 회색 배경 */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999999; /* 헤더보다 높게 */
-  padding: 1rem;
+  z-index: 99999;
+  padding: 1rem; /* 내부 여백 */
 `;
 
 const ModalContent = styled.div`
@@ -360,9 +364,9 @@ const InquirySection = ({ userId }) => {
       )}
 
       {/* 문의 작성 모달 */}
-      {showCreateModal && (
-        <Modal onClose={() => setShowCreateModal(false)}>
-          <ModalContent>
+      {showCreateModal && ReactDOM.createPortal(
+        <StyledModal onClick={() => setShowCreateModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>새 문의 작성</ModalTitle>
               <CloseButton onClick={() => setShowCreateModal(false)}>
@@ -392,8 +396,10 @@ const InquirySection = ({ userId }) => {
               </Button>
             </Form>
           </ModalContent>
-        </Modal>
+        </StyledModal>,
+        document.body
       )}
+
 
       {/* 문의 상세 모달 */}
       {showDetailModal && selectedInquiry && (
