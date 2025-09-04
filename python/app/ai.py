@@ -1,89 +1,94 @@
-# app/ai.py
+# tabs: 4
+# app/ai.py — FAKE 제거, Vertex만 사용
 import json
 import hashlib
 from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field, ValidationError
-import vertexai
-from vertexai.generative_models import GenerativeModel, GenerationConfig
-
+from datetime import datetime, timedelta
+from pydantic import BaseModel, Field
 from app.config import settings
 
+# ============ 공용 유틸 ============
+def _yyyymmdd_to_iso(s: Optional[str]) -> str:
+    if not s or len(s) != 8:
+        return s or ""
+    return f"{s[:4]}-{s[4:6]}-{s[6:8]}"
 
-# =========================
-# Pydantic: 입력/출력 스키마
-# =========================
+def _parse_date(s: str) -> Optional[datetime]:
+    for fmt in ("%Y-%m-%d", "%Y%m%d"):
+        try:
+            return datetime.strptime(s, fmt)
+        except Exception:
+            pass
+    return None
+
+def _init_vertex_model():
+    try:
+        import vertexai as vx
+        from vertexai.generative_models import GenerativeModel
+    except Exception as e:
+        raise RuntimeError(f"vertexai 패키지 미설치: {e}")
+    if not settings.vertex_project_id or not settings.vertex_model:
+        raise RuntimeError("VERTEX_PROJECT_ID 또는 VERTEX_MODEL 미설정")
+    vx.init(project=settings.vertex_project_id, location=settings.vertex_location)
+    return GenerativeModel(model_name=settings.vertex_model)
+
+# ============ 여행지 추천 ============
 class TravelQuery(BaseModel):
-    """
-    여행지 추천을 위한 사용자의 선호/제약 조건.
-    프론트엔드에서 이 스키마대로 넘기면 그대로 사용 가능합니다.
-    """
-    origin: Optional[str] = Field(None, description="출발 국가/도시 예: 'Seoul, KR'")
-    duration_days: Optional[int] = Field(None, ge=1, le=60, description="여행 기간(일)")
-    budget_per_day_usd: Optional[int] = Field(None, ge=10, le=2000, description="일일 예산(USD)")
-    companions: Optional[str] = Field(None, description="동행 형태: solo | couple | family | friends | group")
-    travel_styles: Optional[List[str]] = Field(
-        default=None,
-        description="여행 스타일 태그: ['nature','culture','food','nightlife','relax','adventure','shopping','photography'] 등"
-    )
-    months: Optional[List[int]] = Field(
-        default=None,
-        description="여행 예정 월(1~12). 비우면 '연중' 가정"
-    )
-    climate: Optional[str] = Field(
-        default=None,
-        description="선호 기후: warm | mild | cold | dry | humid | doesn't matter"
-    )
-    must_have: Optional[List[str]] = Field(
-        default=None,
-        description="꼭 포함할 요소 키워드(예: 'beach','mountain','museum','local food')"
-    )
-    avoid: Optional[List[str]] = Field(
-        default=None,
-        description="피하고 싶은 요소 키워드(예: 'extreme sports','long hikes','spicy food')"
-    )
-    language: Optional[str] = Field(default="ko", description="응답 언어. 기본 'ko'.")
-
+    origin: Optional[str] = Field(None)
+    duration_days: Optional[int] = Field(None, ge=1, le=60)
+    budget_per_day_usd: Optional[int] = Field(None, ge=10, le=2000)
+    companions: Optional[str] = Field(None)
+    travel_styles: Optional[List[str]] = Field(default=None)
+    months: Optional[List[int]] = Field(default=None)
+    climate: Optional[str] = Field(default=None)
+    must_have: Optional[List[str]] = Field(default=None)
+    avoid: Optional[List[str]] = Field(default=None)
+    language: Optional[str] = Field(default="ko")
 
 class ItineraryItem(BaseModel):
-    day: int = Field(..., ge=1)
+    day: int
     title: str
     activities: List[str]
     notes: Optional[str] = None
-
 
 class Destination(BaseModel):
     name: str
     country: Optional[str] = None
     summary: str
-    best_time: Optional[str] = Field(
-        default=None,
-        description="방문 최적 시기(월/시즌)"
-    )
+    best_time: Optional[str] = None
     highlights: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     est_budget_per_day_usd: Optional[int] = None
 
-
 class TravelRecResponse(BaseModel):
-    """
-    모델이 반드시 이 JSON 스키마로 응답하도록 유도합니다.
-    """
     top_pick: Destination
-    alternatives: List[Destination] = Field(default_factory=list, description="최대 4개 정도")
-    itinerary: List[ItineraryItem] = Field(default_factory=list, description="top_pick 기준 2~5일 샘플 일정")
+    alternatives: List[Destination] = Field(default_factory=list)
+    itinerary: List[ItineraryItem] = Field(default_factory=list)
     rationale: str
 
+def _build_system_prompt(language: str = "ko") -> str:
+    return "역할: 여행 큐레이터. 조건을 분석해 현실적 추천을 제공하고 JSON만 출력하라."
 
-# =========================
-# Vertex AI 초기화 & 모델
-# =========================
-vertexai.init(project=settings.vertex_project_id, location=settings.vertex_location)
+def _build_user_prompt(q: TravelQuery) -> str:
+    parts = [
+        f"- 출발지: {q.origin or '미지정'}",
+        f"- 기간: {q.duration_days or '미지정'}일",
+        f"- 일일 예산(USD): {q.budget_per_day_usd or '미지정'}",
+        f"- 동행: {q.companions or '미지정'}",
+        f"- 스타일: {', '.join(q.travel_styles or []) or '미지정'}",
+        f"- 예정 월: {', '.join(map(str, q.months or [])) or '미지정'}",
+        f"- 선호 기후: {q.climate or '미지정'}",
+        f"- 반드시 포함: {', '.join(q.must_have or []) or '없음'}",
+        f"- 피하고 싶은 것: {', '.join(q.avoid or []) or '없음'}",
+        f"- 응답 언어: {q.language or 'ko'}",
+    ]
+    return "조건:\n" + "\n".join(parts)
 
-# 모델 이름은 .env 의 VERTEX_MODEL (기본: gemini-1.5-flash)
-_MODEL = GenerativeModel(model_name=settings.vertex_model)
+def query_fingerprint(q: TravelQuery) -> str:
+    payload_dict = q.model_dump(mode="json", exclude_none=True)
+    stable_json = json.dumps(payload_dict, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(stable_json.encode("utf-8")).hexdigest()
 
-# JSON 스키마(dict) — vertexai 의 response_schema 로 전달
 _RESPONSE_SCHEMA: Dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -135,61 +140,11 @@ _RESPONSE_SCHEMA: Dict[str, Any] = {
     "additionalProperties": False,
 }
 
-
-# =========================
-# Prompt 빌드
-# =========================
-def _build_system_prompt(language: str = "ko") -> str:
-    if language == "ko":
-        return (
-            "역할: 당신은 여행 큐레이터입니다. 사용자의 조건을 분석해 현실적이고 구체적인 여행 추천을 제공합니다. "
-            "예산·기간·동행·스타일을 고려하고, 안전하고 일반적 신뢰 가능한 정보를 기준으로 제안하세요. "
-            "응답은 반드시 JSON으로만 출력하세요."
-        )
-    # 기본 한국어
-    return _build_system_prompt("ko")
-
-
-def _build_user_prompt(q: TravelQuery) -> str:
-    parts = [
-        f"- 출발지: {q.origin or '미지정'}",
-        f"- 기간: {q.duration_days or '미지정'}일",
-        f"- 일일 예산(USD): {q.budget_per_day_usd or '미지정'}",
-        f"- 동행: {q.companions or '미지정'}",
-        f"- 스타일: {', '.join(q.travel_styles or []) or '미지정'}",
-        f"- 예정 월: {', '.join(map(str, q.months or [])) or '미지정'}",
-        f"- 선호 기후: {q.climate or '미지정'}",
-        f"- 반드시 포함: {', '.join(q.must_have or []) or '없음'}",
-        f"- 피하고 싶은 것: {', '.join(q.avoid or []) or '없음'}",
-        f"- 응답 언어: {q.language or 'ko'}",
-    ]
-    return "다음 조건에 맞게 여행지를 추천해 주세요:\n" + "\n".join(parts)
-
-
-# =========================
-# 해시 키 (캐시용)
-# =========================
-def query_fingerprint(q: TravelQuery) -> str:
-    """
-    Pydantic v2: model_dump_json(sort_keys=...) 미지원.
-    dict로 덤프 후 json.dumps(..., sort_keys=True)로 안정적 해시를 생성.
-    """
-    payload_dict = q.model_dump(mode="json", exclude_none=True)
-    stable_json = json.dumps(payload_dict, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(stable_json.encode("utf-8")).hexdigest()
-
-
-# =========================
-# 호출 함수 (핵심)
-# =========================
 def get_travel_recommendations(q: TravelQuery) -> TravelRecResponse:
-    """
-    Vertex AI(Gemini)로부터 여행지 추천을 받아
-    TravelRecResponse 스키마로 파싱하여 반환합니다.
-    """
+    model = _init_vertex_model()
+    from vertexai.generative_models import GenerationConfig
     system_prompt = _build_system_prompt(q.language or "ko")
     user_prompt = _build_user_prompt(q)
-
     gen_config = GenerationConfig(
         temperature=0.6,
         top_p=0.9,
@@ -197,74 +152,167 @@ def get_travel_recommendations(q: TravelQuery) -> TravelRecResponse:
         response_mime_type="application/json",
         response_schema=_RESPONSE_SCHEMA,
     )
-
-    response = _MODEL.generate_content(
-        [
-            system_prompt,
-            user_prompt,
-            (
-                "출력은 반드시 위 스키마를 준수하는 JSON이어야 합니다. "
-                "facts에 자신 없거나 변동성이 큰 세부 정보(가격/운영시간/특가 등)는 일반화하여 표현하세요. "
-                "허구의 출처를 만들지 마세요."
-            ),
-        ],
+    resp = model.generate_content(
+        [system_prompt, user_prompt, "JSON만 출력하라. 허구의 출처 금지."],
         generation_config=gen_config,
     )
+    raw = getattr(resp, "text", "") or getattr(resp, "output_text", "")
+    if not raw:
+        cand = (getattr(resp, "candidates", None) or [None])[0]
+        if cand and getattr(cand, "content", None):
+            parts = getattr(cand.content, "parts", [])
+            if parts and hasattr(parts[0], "text"):
+                raw = parts[0].text
+    if not raw:
+        raise RuntimeError("Vertex 응답 비어 있음")
 
-    raw_text: Optional[str] = None
     try:
-        raw_text = getattr(response, "text", None)
-        if not raw_text:
-            cand = (response.candidates or [None])[0]
-            if cand and getattr(cand, "content", None):
-                parts = getattr(cand.content, "parts", [])
-                if parts and hasattr(parts[0], "text"):
-                    raw_text = parts[0].text
-    except Exception:
-        raw_text = None
-
-    if not raw_text:
-        raw_text = getattr(response, "output_text", "")
-
-    if not raw_text:
-        raise RuntimeError("모델 응답이 비어 있습니다.")
-
-    # JSON 파싱 & 유효성 검사
-    try:
-        data = json.loads(raw_text)
+        data = json.loads(raw)
     except json.JSONDecodeError:
-        cleaned = raw_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.strip("`")
-            if cleaned.startswith("json"):
-                cleaned = cleaned[4:].strip()
+        cleaned = raw.strip().strip("`")
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:].strip()
         data = json.loads(cleaned)
 
-    try:
-        validated = TravelRecResponse.model_validate(data)
-    except ValidationError as e:
-        snippet = raw_text[:400]
-        raise RuntimeError(f"모델 응답이 스키마에 맞지 않습니다: {e}\nraw: {snippet}")
+    return TravelRecResponse.model_validate(data)
 
-    return validated
+# ============ 위저드 일정 생성 ============
+class Place(BaseModel):
+    name: Optional[str] = ""
+    address: Optional[str] = ""
+    lat: Optional[float] = None
+    lng: Optional[float] = None
 
+class WizardDestination(BaseModel):
+    title: Optional[str] = ""
+    addr1: Optional[str] = ""
+    mapx: Optional[float] = None
+    mapy: Optional[float] = None
+    contentid: Optional[str] = ""
+    eventstartdate: Optional[str] = ""
+    eventenddate: Optional[str] = ""
+    firstimage: Optional[str] = ""
 
-# =========================
-# 모듈 단독 실행 테스트
-# =========================
-if __name__ == "__main__":
-    sample = TravelQuery(
-        origin="Seoul, KR",
-        duration_days=5,
-        budget_per_day_usd=120,
-        companions="couple",
-        travel_styles=["food", "culture", "relax"],
-        months=[9, 10],
-        climate="mild",
-        must_have=["beach", "local food"],
-        avoid=["extreme sports"],
-        language="ko",
+class Preferences(BaseModel):
+    contentTypeIds: List[int] = []
+
+class Options(BaseModel):
+    people: Optional[int] = 2
+    startDate: Optional[str] = ""
+    endDate: Optional[str] = ""
+    days: Optional[int] = 0
+    tempo: Optional[str] = "relaxed"
+    gapMinutes: Optional[int] = 90
+    stopsPerDay: Optional[int] = 3
+
+class PlanRequest(BaseModel):
+    origin: Place
+    destination: WizardDestination
+    preferences: Optional[Preferences] = Preferences()
+    options: Optional[Options] = Options()
+
+class ItineraryStop(BaseModel):
+    time: str
+    name: str
+    type: int
+    address: str
+    notes: Optional[str] = ""
+
+class ItineraryDay(BaseModel):
+    day: int
+    date: str
+    stops: List[ItineraryStop]
+
+class ItineraryPlanResponse(BaseModel):
+    title: str
+    days: int
+    summary: str
+    daily: List[ItineraryDay]
+    notes: Optional[str] = ""
+
+_ITINERARY_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "days": {"type": "integer"},
+        "summary": {"type": "string"},
+        "daily": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "day": {"type": "integer"},
+                    "date": {"type": "string"},
+                    "stops": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "time": {"type": "string"},
+                                "name": {"type": "string"},
+                                "type": {"type": "integer"},
+                                "address": {"type": "string"},
+                                "notes": {"type": "string"},
+                            },
+                            "required": ["time", "name", "type", "address"]
+                        },
+                    },
+                },
+                "required": ["day", "date", "stops"]
+            },
+        },
+        "notes": {"type": "string"},
+    },
+    "required": ["title", "days", "summary", "daily"],
+    "additionalProperties": False,
+}
+
+def _build_itinerary_user_prompt(req: PlanRequest) -> str:
+    o = req.origin
+    d = req.destination
+    p = req.preferences or Preferences()
+    opt = req.options or Options()
+    return (
+        "역할: 한국 여행 일정 플래너. JSON만 출력.\n"
+        '스키마: {"title":string,"days":number,"summary":string,'
+        '"daily":[{"day":number,"date":string,"stops":[{"time":string,"name":string,"type":number,"address":string,"notes":string}]}],"notes":string}\n\n'
+        "입력:\n"
+        f"- 출발지: {o.name or ''} / {o.address or ''} / 좌표({o.lat},{o.lng})\n"
+        f"- 도착지(축제): {d.title or ''} / {d.addr1 or ''} / 좌표({d.mapy},{d.mapx})\n"
+        f"- 축제기간: {_yyyymmdd_to_iso(d.eventstartdate or '')} ~ {_yyyymmdd_to_iso(d.eventenddate or '')}\n"
+        f"- 선호 타입: {p.contentTypeIds}\n"
+        f"- 인원: {opt.people}, 기간: {opt.startDate} ~ {opt.endDate} ({opt.days}일)\n"
+        f"- 스타일: {opt.tempo}, 텀: {opt.gapMinutes}분, 코스/일: {opt.stopsPerDay}\n\n"
+        "요구사항: 09:00~21:00 내 배치. 축제일엔 축제 중심. 이동 간격 반영. JSON 하나만."
     )
-    print("fingerprint:", query_fingerprint(sample))
-    rec = get_travel_recommendations(sample)
-    print(json.dumps(rec.model_dump(mode="json"), indent=2, ensure_ascii=False))
+
+def get_itinerary_plan(req: PlanRequest) -> ItineraryPlanResponse:
+    model = _init_vertex_model()
+    from vertexai.generative_models import GenerationConfig
+    gen_conf = GenerationConfig(
+        temperature=0.5,
+        top_p=0.9,
+        max_output_tokens=2048,
+        response_mime_type="application/json",
+        response_schema=_ITINERARY_SCHEMA,
+    )
+    resp = model.generate_content(
+        ["역할: 여행 일정 생성기. JSON만 출력.", _build_itinerary_user_prompt(req), "JSON 하나만 출력."],
+        generation_config=gen_conf,
+    )
+    raw = getattr(resp, "text", "") or getattr(resp, "output_text", "")
+    if not raw:
+        cand = (getattr(resp, "candidates", None) or [None])[0]
+        if cand and getattr(cand, "content", None):
+            parts = getattr(cand.content, "parts", [])
+            if parts and hasattr(parts[0], "text"):
+                raw = parts[0].text
+    if not raw:
+        raise RuntimeError("Vertex 응답 비어 있음")
+
+    try:
+        data = json.loads(raw.strip().strip("`").replace("json\n", ""))
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Vertex JSON 파싱 실패: {e}")
+
+    return ItineraryPlanResponse.model_validate(data)

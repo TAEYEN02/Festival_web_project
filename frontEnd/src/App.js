@@ -7,7 +7,7 @@ import RegionOverviewPage from "./components/RegionOverview/RegionOverviewPage";
 import MainHeader from "./components/main/MainHeader";
 import FestivalDetail from "./components/festivals/FestivalDetail";
 import MainPage from "./components/main/MainPage";
-// import AITestPage from "./components/festivalAI/AITestPage";
+import TripPlannerWizard from "./components/tripPlanner/TripPlannerWizard";
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // 게시판 관련
@@ -71,7 +71,7 @@ function AppContent() {
                 <Route path="/" element={<MainPage />} />
 
                 {/* AI 일정 추천 */}
-                {/* <Route path="/ai-test" element={<AITestPage />} /> */}
+                <Route path="/ai-test" element={<TripPlannerWizard />} />
 
                 {/* 공개 페이지 */}
                 <Route path="/overview" element={<RegionOverviewPage />} />
