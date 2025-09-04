@@ -13,7 +13,7 @@ const FestivalCard = ({ festival, token, rank, onToggleLike }) => {
       await incrementViews(festival.contentid);
 
       // 상세 페이지 이동
-      navigate(`/festivals/${festival.contentid}`);
+      navigate(`/festival/${festival.contentid}`);
     } catch (error) {
       console.error("조회수 증가 중 오류 발생", error);
     }
