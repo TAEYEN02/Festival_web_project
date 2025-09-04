@@ -11,13 +11,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.korea.festival.dto.ReviewCommentRequestDTO;
 import com.korea.festival.dto.ReviewCommentResponseDTO;
 import com.korea.festival.dto.ReviewRequestDTO;
 import com.korea.festival.dto.ReviewResponseDTO;
-import com.korea.festival.service.BoardService;
 import com.korea.festival.service.ReviewService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,11 +31,15 @@ public class ReviewController {
 	 private final ReviewService reviewService;
 
 	    // c
-	    @PostMapping
-	    public ResponseEntity<?> reviewWrite(@RequestBody ReviewRequestDTO dto, @RequestParam(name = "userId") Long userId) {
-	        ReviewResponseDTO result = reviewService.reviewWrite(dto, userId);
-	        return ResponseEntity.ok().body(result);
-	    }
+	 @PostMapping
+	 public ResponseEntity<?> reviewWrite(
+	         @RequestPart("dto") ReviewRequestDTO dto, 
+	         @RequestParam("userId") Long userId,
+	         @RequestPart(value = "images", required = false) List<MultipartFile> images
+	 ) {
+	     ReviewResponseDTO result = reviewService.reviewWrite(dto, userId, images);
+	     return ResponseEntity.ok().body(result);
+	 }
 
 	    // r-all
 	    @GetMapping
@@ -95,7 +100,7 @@ public class ReviewController {
 	    }
 
 	    // 단일 댓글 조회
-	    @GetMapping("/comment/{id}")
+	    @GetMapping("/comment/all/{id}")
 	    public ResponseEntity<ReviewCommentResponseDTO> commentFindOne(@PathVariable(name = "id") Long id) {
 	        return ResponseEntity.ok(reviewService.commentFindOne(id));
 	    }

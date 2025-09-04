@@ -10,6 +10,6 @@ import com.korea.festival.entity.ReviewComment;
 @Repository
 public interface ReviewCommentRepository extends JpaRepository<ReviewComment, Long>{
 
-    // 특정 리뷰의 최상위 댓글들 조회 (부모가 없는 것만)
+    // 특정 리뷰에 속한 최상위 댓글 목록을 조회하는 메서드
     List<ReviewComment> findByReviewIdAndParentIsNull(Long reviewId);
 }

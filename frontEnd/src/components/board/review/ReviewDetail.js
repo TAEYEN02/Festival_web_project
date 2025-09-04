@@ -35,6 +35,7 @@ export const ReviewDetail = () => {
     useEffect(() => {
         reviewFindOne(reviewId)
             .then(response => {
+                console.log("detail",response)
                 setPost(response)
             })
     }, [])
@@ -96,8 +97,9 @@ export const ReviewDetail = () => {
     // [POST]댓글 작성
     const reviewCommentWriteHandler = () => {
         reviewCommentWrite(formData)
+        console.log(formData)
 
-        // navigate(0);
+        navigate(0);
     }
 
     // [UPDATE]댓글 수정

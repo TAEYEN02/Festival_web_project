@@ -54,6 +54,7 @@ public class Review {
     
     private int likes;
 
+    @Builder.Default
     @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReviewLikes> reviewLikes = new HashSet<>();
     
@@ -63,15 +64,18 @@ public class Review {
     @JoinColumn(name = "user_id",nullable = false)
     private User user;
     
+    @Builder.Default
     @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReviewComment> comments = new HashSet<>();
     
     @ElementCollection
+    @Builder.Default
     @CollectionTable(name = "review_tags", joinColumns = @JoinColumn(name="review_id"))
     @Column(name = "tag")
     private Set<String> tags = new HashSet<>();
     
     @ElementCollection
+    @Builder.Default
     @CollectionTable(name = "review_images", joinColumns = @JoinColumn(name="review_id"))
     @Column(name = "image")
     private Set<String> images = new HashSet<>();

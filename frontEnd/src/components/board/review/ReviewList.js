@@ -1,5 +1,5 @@
-import {MessageSquareText,Heart,SquarePen} from 'lucide-react'
-import { useNavigate} from "react-router-dom"
+import { MessageSquareText, Heart, SquarePen } from 'lucide-react'
+import { useNavigate } from "react-router-dom"
 import './ReviewList.css';
 import { useEffect, useState } from 'react';
 import { reviewFindALL } from '../../../api/review';
@@ -7,21 +7,35 @@ import { reviewFindALL } from '../../../api/review';
 export const ReviewList = () => {
 
     const navigate = useNavigate();
-    const [posts,setPosts] = useState([]);
+    const [posts, setPosts] = useState([]);
 
     // [Get]데이터 로딩
-    useEffect(()=>{
+    useEffect(() => {
         reviewFindALL()
-        .then(response=>{
-            console.log(response)
-            setPosts(response)
-        })
-    },[])
+            .then(response => {
+                setPosts(response)
+            })
+    }, [])
 
-    // ];
-    if(!posts)return<div>로딩중입니다...</div>
+    if (!posts) return <div>로딩중입니다...</div>
 
-    if(posts.length<=0)return<div>표시할 데이터가 없습니다.</div>
+    if (posts.length <= 0)
+        return (
+            <>
+                <div>표시할 데이터가 없습니다.</div>
+                {/* Floating Action Button */}
+                <button
+                    onClick={(e) => {
+                        //이벤트 전파 방지
+                        e.stopPropagation();
+                        navigate(`/board/review/write`)
+                        window.scroll(0, 0)
+                    }}
+                    className="floating-btn">
+                    <SquarePen />
+                </button>
+            </>
+        )
 
     return (
         <div className={`app-container`}>
@@ -36,7 +50,7 @@ export const ReviewList = () => {
                                 <div className="post-author-section">
                                     <div className="author-info">
                                         <div className="author-avatar">
-                                            <img className="author-avatar" src={post.authorImg||'/default-profile.png'}/>
+                                            <img className="author-avatar" src={post.authorImg || '/default-profile.png'} />
                                         </div>
                                         <div className="author-details">
                                             <div className="author-name-section">
@@ -52,7 +66,7 @@ export const ReviewList = () => {
                                                 {/* Calendar 아이콘 (react-icons: MdCalendarToday) */}
                                                 <span>{post.date}</span>
                                                 <span>•</span>
-                                                <span>{post.createdAt.slice(0,10)}</span>
+                                                <span>{post.createdAt.slice(0, 10)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -64,7 +78,7 @@ export const ReviewList = () => {
                                         //이벤트 전파 방지
                                         e.stopPropagation();
                                         navigate(`/board/review/detail/${post.id}`)
-                                        window.scroll(0,0)
+                                        window.scroll(0, 0)
                                     }}
                                     className="post-title">{post.title}</button>
                                 <p className="post-content">{post.content}</p>
@@ -90,7 +104,7 @@ export const ReviewList = () => {
                                             //이벤트 전파 방지
                                             e.stopPropagation();
                                             navigate(`/board/review/detail/${post.id}`)
-                                            window.scroll(0,0)
+                                            window.scroll(0, 0)
                                         }}
                                     />
                                 </div>
@@ -105,11 +119,10 @@ export const ReviewList = () => {
                                             <span className="icon-placeholder"><Heart /></span>
                                             <span>{post.likes}</span>
                                         </div>
-                                        <div className="action-btn">
-                                            {/* MessageCircle 아이콘 (react-icons: FaComment) */}
+                                        {/* <div className="action-btn">
                                             <span className="icon-placeholder"><MessageSquareText /></span>
                                             <span>{post.comments.length}</span>
-                                        </div>
+                                        </div> */}
                                     </div>
                                     <div className="view-count">
                                         {/* Users 아이콘 (react-icons: FaUsers) */}
@@ -119,7 +132,7 @@ export const ReviewList = () => {
                                 </div>
                             </div>
                         </article>
-                    ))}
+                    )).reverse()}
                 </div>
 
                 {/* Load More Button */}
@@ -136,7 +149,7 @@ export const ReviewList = () => {
                     //이벤트 전파 방지
                     e.stopPropagation();
                     navigate(`/board/review/write`)
-                    window.scroll(0,0)
+                    window.scroll(0, 0)
                 }}
                 className="floating-btn">
                 <SquarePen />

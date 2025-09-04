@@ -93,11 +93,11 @@ public class BoardController {
         return ResponseEntity.noContent().build();
     }
 
-    // 단일 댓글 조회
-    @GetMapping("/comment/{id}")
-    public ResponseEntity<BoardCommentResponseDTO> commentFindOne(@PathVariable(name = "id") Long id) {
-        return ResponseEntity.ok(boardService.commentFindOne(id));
-    }
+//    // 단일 댓글 조회
+//    @GetMapping("/comment/{id}")
+//    public ResponseEntity<BoardCommentResponseDTO> commentFindOne(@PathVariable(name = "id") Long id) {
+//        return ResponseEntity.ok(boardService.commentFindOne(id));
+//    }
 
     // 게시글 댓글 전체 조회
     @GetMapping("/comment/{boardId}")

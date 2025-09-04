@@ -1,329 +1,347 @@
-// import { useNavigate, useParams } from "react-router-dom"
-// import { FerrisWheel, Calendar, Share, ImagePlus, Cat,MapPinned } from 'lucide-react'
-// import { useState } from "react";
-// import { reviewWrite } from "../../../api/review";
-// import './ReviewWrite.css';
-// import Swal from "sweetalert2";
+import { useNavigate, useParams } from "react-router-dom"
+import { FerrisWheel, Calendar, Share, ImagePlus, Cat, MapPinned } from 'lucide-react'
+import { useState } from "react";
+import { reviewWrite } from "../../../api/review";
+import './ReviewWrite.css';
+import Swal from "sweetalert2";
 
-// export const ReviewWrtie = () => {
-//     const { categoryId } = useParams();
-//     const userId = Number(localStorage.getItem('userId'));
-//     const navigate = useNavigate();
+export const ReviewWrtie = () => {
+    const { categoryId } = useParams();
+    const userId = Number(localStorage.getItem('userId'));
+    const navigate = useNavigate();
 
-//     const [formData, setFormData] = useState({
-//         title: '',
-//         content: '',
-//         location: '',
-//         date: '',
-//         tags: [],
-//         images:[]
-//     });
-//     const [tagInput, setTagInput] = useState('');
-//     const [images, setImages] = useState([]);
-//     const [isDragging, setIsDragging] = useState(false);
+    const [formData, setFormData] = useState({
+        title: '',
+        content: '',
+        location: '',
+        date: '',
+        tags: [],
+    });
+    const [tagInput, setTagInput] = useState('');
+    const [images, setImages] = useState([]);
+    const [isDragging, setIsDragging] = useState(false);
 
-//     const handleInputChange = (field, value) => {
-//         setFormData(prev => ({
-//             ...prev,
-//             [field]: value
-//         }));
-//     };
+    const handleInputChange = (field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
-//     const handleTagAdd = (e) => {
-//         e.preventDefault();
-//         if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-//             setFormData(prev => ({
-//                 ...prev,
-//                 tags: [...prev.tags, tagInput.trim()]
-//             }));
-//             setTagInput('');
-//         }
-//     };
+    const handleTagAdd = (e) => {
+        e.preventDefault();
+        if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+            setFormData(prev => ({
+                ...prev,
+                tags: [...prev.tags, tagInput.trim()]
+            }));
+            setTagInput('');
+        }
+    };
 
-//     const handleTagRemove = (tagToRemove) => {
-//         setFormData(prev => ({
-//             ...prev,
-//             tags: prev.tags.filter(tag => tag !== tagToRemove)
-//         }));
-//     };
+    const handleTagRemove = (tagToRemove) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(tag => tag !== tagToRemove)
+        }));
+    };
 
-//     const handleImageUpload = (e) => {
-//         const files = Array.from(e.target.files);
-//         files.forEach(file => {
-//             const reader = new FileReader();
-//             reader.onload = (event) => {
-//                 setImages(prev => [...prev, {
-//                     id: Date.now() + Math.random(),
-//                     url: event.target.result,
-//                     name: file.name
-//                 }]);
-//             };
-//             reader.readAsDataURL(file);
-//         });
-//     };
+    const handleImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setImages(prev => [...prev, {
+                    id: Date.now() + Math.random(),
+                    url: event.target.result,
+                    name: file.name
+                }]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
 
-//     const handleDrop = (e) => {
-//         e.preventDefault();
-//         setIsDragging(false);
-//         const files = Array.from(e.dataTransfer.files);
-//         files.forEach(file => {
-//             if (file.type.startsWith('image/')) {
-//                 const reader = new FileReader();
-//                 reader.onload = (event) => {
-//                     setImages(prev => [...prev, {
-//                         id: Date.now() + Math.random(),
-//                         url: event.target.result,
-//                         name: file.name
-//                     }]);
-//                 };
-//                 reader.readAsDataURL(file);
-//             }
-//         });
-//     };
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(file => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    setImages(prev => [...prev, {
+                        id: Date.now() + Math.random(),
+                        url: event.target.result,
+                        name: file.name,
+                        file: file
+                    }]);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    };
 
-//     //이미지 삭제
-//     const handleImageRemove = (imageId) => {
-//         setImages(prev => prev.filter(img => img.id !== imageId));
-//     };
+    //이미지 삭제
+    const handleImageRemove = (imageId) => {
+        setImages(prev => prev.filter(img => img.id !== imageId));
+    };
 
-//     //[POST]작성 완료 버튼 클릭시
-//     const handleSubmit = (e) => {
-//         e.preventDefault();
-//         setFormData(prev=>({...prev,images:images}))
+    //[POST]작성 완료 버튼 클릭시
+    const handleSubmit = (e) => {
+        e.preventDefault();
 
-//         reviewWrite(formData, userId)
+        const form = new FormData();
 
-//         console.log('보낸 데이터:', formData);
- 
-//         Swal.fire({
-//             title:'성공',
-//             icon:'success',
-//             text:'리뷰 작성에 성공했습니다!'
-//         })
+        // DTO를 JSON으로 Blob 처리
+        const dtoBlob = new Blob([JSON.stringify({
+            title: formData.title,
+            content: formData.content,
+            location: formData.location,
+            date: formData.date,
+            tags: formData.tags
+        })], { type: "application/json" });
 
-//         // navigate(-1)
-//     };
+        form.append("dto", dtoBlob);       // @RequestPart("dto")와 이름 맞춤
+        form.append("userId", userId);     // @RequestParam("userId")
 
-//     const handleKeyPress = (e) => {
-//         if (e.key === 'Enter') {
-//             handleTagAdd(e);
-//         }
-//     };
+        images.forEach(img => {
+            if (img.file) form.append("images", img.file); // 파일 첨부
+        });
 
-//     return (
-//         <div className={`BWwrite-container review-bg`}>
+        reviewWrite(form,userId); // headers에 content-type 지정하지 않기
 
-//             {/* Header */}
-//             <header className="BWwrite-header">
-//                 <div className="BWheader-content">
-//                     <div className="BWheader-main">
-//                         <div className="BWheader-left">
-//                             {/* 뒤로가기 버튼 */}
-//                             <button className="BWback-button"
-//                                 onClick={() => {
-//                                     window.location.href = `/board/${categoryId}`
-//                                 }}>
-//                                 <span className="BWicon-placeholder">←</span>
-//                             </button>
-//                             <div className="BWheader-text">
-//                                 <h1 className="BWpage-title">{`축제 이야기 작성`}</h1>
-//                                 <p className="BWpage-subtitle">당신의 축제 경험을 공유해보세요</p>
-//                             </div>
-//                         </div>
-//                         <button onClick={handleSubmit} className="BWpublish-button">
-//                             <span className="BWicon-placeholder"><Share/></span>
-//                             <span>발행하기</span>
-//                         </button>
-//                     </div>
-//                 </div>
-//             </header>
+        console.log('보낸 데이터:', form);
+        console.log('보낸 데이터:', userId);
 
-//             {/* Main Form */}
-//             <main className="BWwrite-main">
-//                 <div className="BWform-container">
+        Swal.fire({
+            title: '성공',
+            icon: 'success',
+            text: '리뷰 작성에 성공했습니다!'
+        })
 
-//                     {/* Category Selection */}
-//                     <div className="BWform-section">
-//                         <label className="BWsection-label">리뷰 작성하기</label>
+        navigate(-1,{replace:true})
+    };
 
-//                     </div>
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleTagAdd(e);
+        }
+    };
 
-//                     {/* Location & Date */}
-//                     <div className="BWform-section">
-//                         <div className="BWlocation-date-grid">
-//                             <div className="BWinput-group">
-//                                 <label className="BWinput-label">
-//                                     <span className="BWicon-placeholder"><MapPinned /></span>
-//                                     <span>축제 장소</span>
-//                                 </label>
-//                                 <input
-//                                     type="text"
-//                                     placeholder="예: 서울, 평창, 속초"
-//                                     value={formData.location}
-//                                     onChange={(e) => handleInputChange('location', e.target.value)}
-//                                     className="BWform-input"
-//                                 />
-//                             </div>
-//                             <div className="BWinput-group">
-//                                 <label className="BWinput-label">
-//                                     <span className="BWicon-placeholder"><Calendar /></span>
-//                                     <span>축제 날짜</span>
-//                                 </label>
-//                                 <input
-//                                     type="text"
-//                                     placeholder="예: 2024년 2월"
-//                                     value={formData.date}
-//                                     onChange={(e) => handleInputChange('date', e.target.value)}
-//                                     className="BWform-input"
-//                                 />
-//                             </div>
-//                         </div>
-//                     </div>
+    return (
+        <div className={`BWwrite-container review-bg`}>
 
-//                     {/* Title Input */}
-//                     <div className="BWform-section">
-//                         <input
-//                             type="text"
-//                             placeholder="어떤 이야기를 들려주실 건가요? "
-//                             value={formData.title}
-//                             onChange={(e) => handleInputChange('title', e.target.value)}
-//                             className="BWtitle-input"
-//                         />
-//                     </div>
+            {/* Header */}
+            <header className="BWwrite-header">
+                <div className="BWheader-content">
+                    <div className="BWheader-main">
+                        <div className="BWheader-left">
+                            {/* 뒤로가기 버튼 */}
+                            <button className="BWback-button"
+                                onClick={() => {
+                                    window.location.href = `/board/${categoryId}`
+                                }}>
+                                <span className="BWicon-placeholder">←</span>
+                            </button>
+                            <div className="BWheader-text">
+                                <h1 className="BWpage-title">{`축제 이야기 작성`}</h1>
+                                <p className="BWpage-subtitle">당신의 축제 경험을 공유해보세요</p>
+                            </div>
+                        </div>
+                        <button onClick={handleSubmit} className="BWpublish-button">
+                            <span className="BWicon-placeholder"><Share /></span>
+                            <span>발행하기</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Form */}
+            <main className="BWwrite-main">
+                <div className="BWform-container">
+
+                    {/* Category Selection */}
+                    <div className="BWform-section">
+                        <label className="BWsection-label">리뷰 작성하기</label>
+
+                    </div>
+
+                    {/* Location & Date */}
+                    <div className="BWform-section">
+                        <div className="BWlocation-date-grid">
+                            <div className="BWinput-group">
+                                <label className="BWinput-label">
+                                    <span className="BWicon-placeholder"><MapPinned /></span>
+                                    <span>축제 장소</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="예: 서울, 평창, 속초"
+                                    value={formData.location}
+                                    onChange={(e) => handleInputChange('location', e.target.value)}
+                                    className="BWform-input"
+                                />
+                            </div>
+                            <div className="BWinput-group">
+                                <label className="BWinput-label">
+                                    <span className="BWicon-placeholder"><Calendar /></span>
+                                    <span>축제 날짜</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="예: 2024년 2월"
+                                    value={formData.date}
+                                    onChange={(e) => handleInputChange('date', e.target.value)}
+                                    className="BWform-input"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Title Input */}
+                    <div className="BWform-section">
+                        <input
+                            type="text"
+                            placeholder="어떤 이야기를 들려주실 건가요? "
+                            value={formData.title}
+                            onChange={(e) => handleInputChange('title', e.target.value)}
+                            className="BWtitle-input"
+                        />
+                    </div>
 
 
 
-//                     {/* Content Textarea */}
-//                     <div className="BWform-section">
-//                         <textarea
-//                             placeholder="축제에 대한 생생한 이야기를 들려주세요! • 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
-//                             value={formData.content}
-//                             onChange={(e) => handleInputChange('content', e.target.value)}
-//                             rows={8}
-//                             className="BWcontent-textarea"
-//                         />
-//                     </div>
+                    {/* Content Textarea */}
+                    <div className="BWform-section">
+                        <textarea
+                            placeholder="축제에 대한 생생한 이야기를 들려주세요! • 어떤 축제였나요?&#10;• 가장 인상깊었던 순간은?&#10;• 다른 분들에게 추천하고 싶은 포인트는?"
+                            value={formData.content}
+                            onChange={(e) => handleInputChange('content', e.target.value)}
+                            rows={8}
+                            className="BWcontent-textarea"
+                        />
+                    </div>
 
-//                     {/* Image Upload */}
-//                     <div className="BWform-section">
-//                         <label className="BWsection-label">
-//                             <span className="BWicon-placeholder"><ImagePlus /></span>
-//                             <span>사진 업로드</span>
-//                         </label>
+                    {/* Image Upload */}
+                    <div className="BWform-section">
+                        <label className="BWsection-label">
+                            <span className="BWicon-placeholder"><ImagePlus /></span>
+                            <span>사진 업로드</span>
+                        </label>
 
-//                         <div
-//                             onDrop={handleDrop}
-//                             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-//                             onDragLeave={() => setIsDragging(false)}
-//                             className={`BWimage-drop-zone ${isDragging ? 'BWimage-drop-zone-active' : ''}`}
-//                             onClick={() => document.getElementById('imageInput').click()}
-//                         >
-//                             <span className="BWupload-icon">🖼️</span>
-//                             <p className="BWupload-text">클릭하거나 이미지를 드래그해서 업로드하세요</p>
-//                             <p className="BWupload-subtext">PNG, JPG, GIF 파일을 지원합니다</p>
-//                         </div>
+                        <div
+                            onDrop={handleDrop}
+                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                            onDragLeave={() => setIsDragging(false)}
+                            className={`BWimage-drop-zone ${isDragging ? 'BWimage-drop-zone-active' : ''}`}
+                            onClick={() => document.getElementById('imageInput').click()}
+                        >
+                            <span className="BWupload-icon">🖼️</span>
+                            <p className="BWupload-text">클릭하거나 이미지를 드래그해서 업로드하세요</p>
+                            <p className="BWupload-subtext">PNG, JPG, GIF 파일을 지원합니다</p>
+                        </div>
 
-//                         <input
-//                             id="imageInput"
-//                             type="file"
-//                             multiple
-//                             accept="image/*"
-//                             onChange={handleImageUpload}
-//                             className="BWfile-input"
-//                         />
+                        <input
+                            id="imageInput"
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="BWfile-input"
+                        />
 
-//                         {images.length > 0 && (
-//                             <div className="BWimage-preview-grid">
-//                                 {images.map((image) => (
-//                                     <div key={image.id} className="BWimage-preview-item">
-//                                         <img src={image.url} alt={image.name} className="BWpreview-image" />
-//                                         <button
-//                                             type="button"
-//                                             onClick={() => handleImageRemove(image.id)}
-//                                             className="BWremove-image-btn"
-//                                         >
-//                                             <span className="BWicon-placeholder">✕</span>
-//                                         </button>
-//                                     </div>
-//                                 ))}
-//                             </div>
-//                         )}
-//                     </div>
+                        {images.length > 0 && (
+                            <div className="BWimage-preview-grid">
+                                {images.map((image) => (
+                                    <div key={image.id} className="BWimage-preview-item">
+                                        <img src={image.url} alt={image.name} className="BWpreview-image" />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleImageRemove(image.id)}
+                                            className="BWremove-image-btn"
+                                        >
+                                            <span className="BWicon-placeholder">✕</span>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-//                     {/* Tags */}
-//                     <div className="BWform-section">
-//                         <label className="BWsection-label">
-//                             <span className="BWicon-placeholder">#</span>
-//                             <span>태그 추가</span>
-//                         </label>
+                    {/* Tags */}
+                    <div className="BWform-section">
+                        <label className="BWsection-label">
+                            <span className="BWicon-placeholder">#</span>
+                            <span>태그 추가</span>
+                        </label>
 
-//                         <div className="BWtag-input-section">
-//                             <input
-//                                 type="text"
-//                                 placeholder="태그 입력 (예: 서울, 맛집, 커피, 녹차)"
-//                                 value={tagInput}
-//                                 onChange={(e) => setTagInput(e.target.value)}
-//                                 onKeyPress={handleKeyPress}
-//                                 className="BWtag-input"
-//                             />
-//                             <button
-//                                 type="button"
-//                                 onClick={handleTagAdd}
-//                                 className="BWtag-add-btn"
-//                             >
-//                                 추가
-//                             </button>
-//                         </div>
+                        <div className="BWtag-input-section">
+                            <input
+                                type="text"
+                                placeholder="태그 입력 (예: 서울, 맛집, 커피, 녹차)"
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="BWtag-input"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleTagAdd}
+                                className="BWtag-add-btn"
+                            >
+                                추가
+                            </button>
+                        </div>
 
-//                         {formData.tags.length > 0 && (
-//                             <div className="BWtags-display">
-//                                 {formData.tags.map((tag, index) => (
-//                                     <span key={index} className="BWtag-item">
-//                                         <span>#{tag}</span>
-//                                         <button
-//                                             type="button"
-//                                             onClick={() => handleTagRemove(tag)}
-//                                             className="BWtag-remove-btn"
-//                                         >
-//                                             <span className="BWicon-placeholder">✕</span>
-//                                         </button>
-//                                     </span>
-//                                 ))}
-//                             </div>
-//                         )}
-//                     </div>
-//                 </div>
+                        {formData.tags.length > 0 && (
+                            <div className="BWtags-display">
+                                {formData.tags.map((tag, index) => (
+                                    <span key={index} className="BWtag-item">
+                                        <span>#{tag}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleTagRemove(tag)}
+                                            className="BWtag-remove-btn"
+                                        >
+                                            <span className="BWicon-placeholder">✕</span>
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-//                 {/* Submit Section */}
-//                 <div className="BWsubmit-section">
-//                     <div className="BWsubmit-header">
-//                         <div className="BWauthor-preview">
-//                             <div className="BWauthor-avatar"><Cat /></div>
-//                             <div className="BWauthor-info">
-//                                 <p className="BWauthor-name">festival_writer</p>
-//                                 <p className="BWauthor-status">새로운 축제 이야기를 작성 중...</p>
-//                             </div>
-//                         </div>
-//                         <div className={`BWwriting-status ${formData.title && formData.content ? 'BWwriting-complete' : ''}`}>
-//                             {formData.title && formData.content ? '작성 완료!' : '작성 중...'}
-//                         </div>
-//                     </div>
+                {/* Submit Section */}
+                <div className="BWsubmit-section">
+                    <div className="BWsubmit-header">
+                        <div className="BWauthor-preview">
+                            <div className="BWauthor-avatar"><Cat /></div>
+                            <div className="BWauthor-info">
+                                <p className="BWauthor-name">festival_writer</p>
+                                <p className="BWauthor-status">새로운 축제 이야기를 작성 중...</p>
+                            </div>
+                        </div>
+                        <div className={`BWwriting-status ${formData.title && formData.content ? 'BWwriting-complete' : ''}`}>
+                            {formData.title && formData.content ? '작성 완료!' : '작성 중...'}
+                        </div>
+                    </div>
 
-//                     <div className="BWsubmit-footer">
-//                         <div className="BWsubmit-tip">
-//                             💡 팁: 생생한 사진과 함께 경험을 공유해보세요!
-//                         </div>
-//                         <button
-//                             onClick={handleSubmit}
-//                             disabled={!formData.title || !formData.content}
-//                             className={`BWfinal-submit-btn ${formData.title && formData.content ? 'BWfinal-submit-btn-active' : ''}`}
-//                         >
-//                             <span className="BWicon-placeholder"><Share/></span>
-//                             <span>축제 이야기 발행하기 <FerrisWheel /></span>
-//                         </button>
-//                     </div>
-//                 </div>
-//             </main>
-//         </div>
-//     );
-// }
+                    <div className="BWsubmit-footer">
+                        <div className="BWsubmit-tip">
+                            💡 팁: 생생한 사진과 함께 경험을 공유해보세요!
+                        </div>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={!formData.title || !formData.content}
+                            className={`BWfinal-submit-btn ${formData.title && formData.content ? 'BWfinal-submit-btn-active' : ''}`}
+                        >
+                            <span className="BWicon-placeholder"><Share /></span>
+                            <span>축제 이야기 발행하기 <FerrisWheel /></span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

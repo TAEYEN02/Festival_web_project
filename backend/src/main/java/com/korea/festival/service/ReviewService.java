@@ -1,11 +1,15 @@
 package com.korea.festival.service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.korea.festival.dto.ReviewCommentRequestDTO;
 import com.korea.festival.dto.ReviewCommentResponseDTO;
@@ -20,6 +24,7 @@ import com.korea.festival.repository.ReviewLikesRepository;
 import com.korea.festival.repository.ReviewRepository;
 import com.korea.festival.repository.UserRepository;
 
+import java.io.IOException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -33,7 +38,7 @@ public class ReviewService {
     private final UserRepository userRepository;
 
     // 리뷰 작성
-    public ReviewResponseDTO reviewWrite(ReviewRequestDTO dto, Long userId) {
+    public ReviewResponseDTO reviewWrite(ReviewRequestDTO dto, Long userId, List<MultipartFile> images) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
@@ -41,7 +46,7 @@ public class ReviewService {
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .location(dto.getLocation())
-                //.tags(dto.getTags())
+                .tags(dto.getTags())
                 .user(user)
                 .likes(0)
                 .createdAt(LocalDateTime.now())
@@ -49,13 +54,23 @@ public class ReviewService {
                 .build();
 
         reviewRepository.save(newReview);
+
+        // 이미지 저장 처리
+        if (images != null) {
+            for (MultipartFile file : images) {
+                String savedPath = saveFile(file); // 파일 저장 로직
+                newReview.getImages().add(savedPath);
+            }
+        }
+        reviewRepository.save(newReview);
+
         return toDTO(newReview, userId);
     }
 
- // 단건 조회
+    // 단건 조회
     @Transactional
     public ReviewResponseDTO reviewFindOne(Long reviewId, Long userId) {
-        Review review = reviewRepository.findById(reviewId) // findById() 그대로 사용
+        Review review = reviewRepository.findByIdWithComments(reviewId)
                 .orElseThrow(() -> new RuntimeException("리뷰 없음"));
         return toDTO(review, userId);
     }
@@ -63,13 +78,12 @@ public class ReviewService {
     // 전체 조회
     @Transactional
     public List<ReviewResponseDTO> reviewFindAll(Long userId) {
-        List<Review> reviews = reviewRepository.findAll(); // findAll() 그대로 사용
+        // N+1 쿼리 문제를 해결하기 위해 findAllWithComments()를 호출
+        List<Review> reviews = reviewRepository.findAllWithComments(); 
         return reviews.stream()
                 .map(review -> toDTO(review, userId))
                 .collect(Collectors.toList());
     }
-
-
 
     // 리뷰 수정
     public ReviewResponseDTO reviewUpdate(ReviewRequestDTO dto, Long userId) {
@@ -83,7 +97,7 @@ public class ReviewService {
         review.setTitle(dto.getTitle());
         review.setContent(dto.getContent());
         review.setLocation(dto.getLocation());
-        //review.setTags(dto.getTags());
+        review.setTags(dto.getTags());
         review.setUpdatedAt(LocalDateTime.now());
         reviewRepository.save(review);
 
@@ -135,24 +149,26 @@ public class ReviewService {
     private ReviewResponseDTO toDTO(Review review, Long currentUserId) {
         boolean liked = currentUserId != null &&
                         reviewLikesRepository.existsByReviewIdAndUserId(review.getId(), currentUserId);
-
+        
         List<ReviewCommentResponseDTO> commentDTOs = review.getComments().stream()
-                .map(this::toDTO) // 재귀적 변환
+                .filter(comment -> comment.getParent() == null) // 최상위 댓글만 필터링
+                .map(this::toDTO)
                 .collect(Collectors.toList());
+       
 
         return ReviewResponseDTO.builder()
                 .id(review.getId())
                 .title(review.getTitle())
                 .content(review.getContent())
                 .location(review.getLocation())
-                //.authorImg(review.getUser().getProfileImage())
+                .authorImg(review.getUser().getProfileImage())
                 .likes(review.getLikes())
                 .view(review.getView())
                 .likedByCurrentUser(liked)
                 .authorNickname(review.getUser().getNickname())
-                //.tags(review.getTags())
-                //.date(review.getDate())
-                //.images(review.getImages())
+                .tags(review.getTags())
+                .date(review.getDate())
+                .images(review.getImages())
                 .comments(commentDTOs)
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())
@@ -160,6 +176,7 @@ public class ReviewService {
     }
 
     // 댓글 작성
+    @Transactional
     public ReviewCommentResponseDTO commentWrite(ReviewCommentRequestDTO requestDTO) {
         Review review = reviewRepository.findById(requestDTO.getReviewId())
                 .orElseThrow(() -> new RuntimeException("리뷰 없음"));
@@ -172,16 +189,26 @@ public class ReviewService {
             parent = commentRepository.findById(requestDTO.getParentId())
                     .orElseThrow(() -> new RuntimeException("부모 댓글 없음"));
         }
-
+        
         ReviewComment comment = ReviewComment.builder()
                 .review(review)
                 .user(user)
                 .content(requestDTO.getContent())
                 .parent(parent)
                 .build();
-
+        
         ReviewComment saved = commentRepository.save(comment);
-        return toDTO(saved);
+        
+        // DB에서 다시 댓글 조회
+        List<ReviewComment> topComments = commentRepository.findByReviewIdAndParentIsNull(review.getId());
+
+        // DTO 변환
+        return topComments.stream()
+                .map(this::toDTO)
+                .findFirst() // 방금 작성한 댓글을 포함한 최상위 댓글 하나만 반환
+                .orElseThrow();
+        
+        
     }
 
     // 댓글 수정
@@ -200,6 +227,7 @@ public class ReviewService {
     }
 
     // 단일 댓글 조회
+    @Transactional
     public ReviewCommentResponseDTO commentFindOne(Long commentId) {
         ReviewComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글 없음"));
@@ -207,6 +235,7 @@ public class ReviewService {
     }
 
     // 리뷰 댓글 전체 조회 (최상위 + 대댓글)
+    @Transactional
     public List<ReviewCommentResponseDTO> commentFindAll(Long reviewId) {
         List<ReviewComment> comments = commentRepository.findByReviewIdAndParentIsNull(reviewId);
         return comments.stream().map(this::toDTO).collect(Collectors.toList());
@@ -220,7 +249,7 @@ public class ReviewService {
                 .userNickname(comment.getUser() != null ? comment.getUser().getNickname() : null)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
-                .replies(new ArrayList<>()) // 빈 리스트로 초기화
+                .replies(new ArrayList<>())
                 .build();
 
         if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
@@ -231,5 +260,25 @@ public class ReviewService {
         }
 
         return dto;
+    }
+    
+    private String saveFile(MultipartFile file) {
+        try {
+            // 업로드 경로 (application.yml의 upload.path 참고)
+            String uploadDir = "C:/festival/uploads/";
+            
+            // 고유 이름 생성 (중복 방지)
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            
+            // 실제 파일 저장
+            Path path = Paths.get(uploadDir + filename);
+            Files.createDirectories(path.getParent()); // 폴더 없으면 생성
+            file.transferTo(path.toFile());
+
+            // DB에 저장할 경로 반환
+            return filename;
+        } catch (IOException e) {
+            throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
+        }
     }
 }

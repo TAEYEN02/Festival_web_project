@@ -10,10 +10,9 @@ export const reviewWrite = async (dto, userId) => {
     const option = {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify(dto)
+        body: dto
     }
 
     try {
@@ -98,12 +97,22 @@ export const reviewFindALL = async (userId) => {
 
 //불러오기(한개,상세)
 export const reviewFindOne = async (reviewId, userId) => {
+    let comments;
 
     const option = {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         },
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/comment/${reviewId}`, option)
+        const result = await response.json();
+        comments = result;
+    } catch (error) {
+        console.log(error)
+        throw new Error("[Find]서버 요청 중 오류 발생")
     }
 
     try {
@@ -114,12 +123,14 @@ export const reviewFindOne = async (reviewId, userId) => {
             response = await fetch(`${API_URL}/${reviewId}`, option)
         }
         const result = await response.json();
-        return result;
+        return {...result,comments:comments};
 
     } catch (error) {
         console.log(error)
         throw new Error("[Find]서버 요청 중 오류 발생")
     }
+
+
 }
 
 
@@ -207,7 +218,7 @@ export const reviewCommentDelete = async (commentId) => {
     }
 
     try {
-        const response = await fetch(`${API_URL}/comment/${commentId}`,option)
+        const response = await fetch(`${API_URL}/comment/${commentId}`, option)
         const result = await response.json();
         return result;
     } catch (error) {
