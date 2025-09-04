@@ -1,0 +1,35 @@
+/* namespace */
+.sp2 { --pri:#4f46e5; --pri-600:#4338ca; --bd:#d1d5db; --ink:#111827; --muted:#374151; }
+
+/* wrapper */
+.sp2-wrap{ max-width:720px; margin:0 auto; padding:16px; }
+
+/* grid */
+.sp2-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:12px; }
+@media (max-width:640px){ .sp2-grid{ grid-template-columns:1fr; } }
+
+/* option button */
+.sp2-opt{
+  padding:14px 12px; border-radius:12px; border:1px solid var(--bd); background:#fff;
+  text-align:left; cursor:pointer; transition:box-shadow .15s, background .15s, border-color .15s;
+}
+.sp2-opt:hover{ box-shadow:0 6px 16px rgba(0,0,0,.06); }
+.sp2-opt.is-active{ background:#eef2ff; box-shadow:inset 0 0 0 2px #2563eb; }
+
+/* labels */
+.sp2-title{ font-size:16px; font-weight:700; color:var(--ink); }
+.sp2-sub{ font-size:12px; opacity:.8; }
+
+/* selection text */
+.sp2-selected{ margin-top:12px; font-size:14px; color:var(--muted); }
+
+/* footer actions */
+.sp2-actions{ display:flex; justify-content:space-between; margin-top:16px; }
+.sp2-btn{
+  padding:10px 14px; border-radius:10px; border:1px solid var(--bd); background:#fff; font-weight:700;
+  cursor:pointer; transition:box-shadow .15s;
+}
+.sp2-btn:hover{ box-shadow:0 6px 16px rgba(0,0,0,.08); }
+.sp2-btn:disabled{ opacity:.5; cursor:not-allowed; box-shadow:none; }
+.sp2-btn--pri{ background:var(--pri); border-color:var(--pri); color:#fff; }
+.sp2-btn--pri:hover{ background:var(--pri-600); border-color:var(--pri-600); }

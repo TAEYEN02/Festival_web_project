@@ -1,0 +1,49 @@
+/* namespace */
+.sr4 { --pri:#4f46e5; --pri-600:#4338ca; --bd:#e5e7eb; --bd2:#d1d5db; --ink:#111827; --muted:#6b7280; }
+
+.sr4-wrap{ max-width:720px; margin:0 auto; padding:16px; }
+
+/* cards */
+.sr4-card{
+  border:1px solid var(--bd);
+  border-radius:12px;
+  background:#fff;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+/* rows */
+.sr4-row{ display:flex; gap:12px; align-items:center; }
+.sr4-kv{ display:flex; align-items:center; gap:8px; margin:4px 0; }
+.sr4-grid2{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+
+/* loader */
+.sr4-loader{
+  display:grid; place-items:center; height:180px;
+  border:1px solid var(--bd); border-radius:12px; background:#fff;
+}
+.sr4-spin{ width:38px; height:38px; border:4px solid var(--bd); border-top-color:#2563eb; border-radius:50%; animation:sr4-spin 1s linear infinite; }
+@keyframes sr4-spin{ to{ transform:rotate(360deg) } }
+
+/* list */
+.sr4-list{ list-style:none; margin:0; padding:0; border:1px solid var(--bd); border-radius:8px; }
+.sr4-item{ padding:10px; border-bottom:1px solid #f1f5f9; }
+.sr4-item:last-child{ border-bottom:none; }
+.sr4-name{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sr4-addr{ font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sr4-dist{ font-size:12px; color:#374151; }
+
+/* buttons */
+.sr4-actions{ display:flex; justify-content:space-between; margin-top:16px; }
+.sr4-btn{
+  padding:10px 14px; border-radius:10px; border:1px solid var(--bd2);
+  background:#fff; font-weight:700; cursor:pointer; transition:box-shadow .15s, background .15s, border-color .15s;
+}
+.sr4-btn:hover{ box-shadow:0 6px 16px rgba(0,0,0,.08); }
+.sr4-btn--pri{ background:var(--pri); border-color:var(--pri); color:#fff; }
+.sr4-btn--pri:hover{ background:var(--pri-600); border-color:var(--pri-600); }
+.sr4-btn:disabled{ opacity:.5; cursor:not-allowed; box-shadow:none; }
+
+/* status colors */
+.sr4-err-card{ border-color:#fecaca; background:#fef2f2; color:#7f1d1d; }
+.sr4-hint{ font-size:13px; color:var(--muted); }

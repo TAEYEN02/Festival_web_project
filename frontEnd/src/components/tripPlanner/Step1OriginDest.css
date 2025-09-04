@@ -1,0 +1,43 @@
+.step1-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.step1-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: #fff;
+}
+
+.step1-info {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.step1-info .addr {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.step1-actions {
+  text-align: right;
+  margin-top: 16px;
+}
+
+.step1-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.step1-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,0 +1,39 @@
+/* wrapper */
+.psk-wrap { display:grid; gap:8px; }
+
+/* row */
+.psk-row { display:flex; gap:8px; }
+
+/* input */
+.psk-input{
+  flex:1; padding:8px 10px; border-radius:8px;
+  border:1px solid #d1d5db; background:#fff; color:#111827;
+}
+.psk-input:focus{ outline:none; border-color:#4f46e5; box-shadow:0 0 0 3px rgba(79,70,229,.15); }
+
+/* buttons */
+.psk-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:40px; padding:0 14px; border-radius:10px;
+  border:1px solid #e5e7eb; background:#fff; font-weight:700; cursor:pointer;
+  transition:box-shadow .15s, background .15s, border-color .15s;
+}
+.psk-btn:hover{ box-shadow:0 6px 16px rgba(0,0,0,.08); }
+.psk-btn:disabled{ opacity:.5; cursor:not-allowed; box-shadow:none; }
+.psk-btn--pri{ background:#4f46e5; border-color:#4f46e5; color:#fff; }
+.psk-btn--pri:hover{ background:#4338ca; border-color:#4338ca; }
+
+/* states */
+.psk-err{ color:#b91c1c; font-size:13px; }
+.psk-hint{ color:#6b7280; font-size:13px; }
+
+/* list */
+.psk-list{
+  list-style:none; margin:0; padding:0; max-height:280px; overflow-y:auto;
+  border:1px solid #e5e7eb; border-radius:8px; background:#fff;
+}
+.psk-item{ padding:12px; border-bottom:1px solid #f1f5f9; display:grid; gap:6px; }
+.psk-item:last-child{ border-bottom:none; }
+.psk-item .name{ font-weight:700; color:#111827; }
+.psk-item .addr{ font-size:12px; color:#6b7280; }
+.psk-item .act{ text-align:right; }
