@@ -1,0 +1,47 @@
+.main-page {
+  padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.festival-card-list-container {
+  margin-bottom: 50px;
+}
+
+.popular-sort-select {
+  margin-left: 10px;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.popular-sort-select:hover {
+  background-color: #e0e0e0;
+}
+
+.section-title { 
+  margin: 20px 10px;
+}
+
+
+.online-chat {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  margin: 10px;
+  transition: transform 0.2s;
+  background: #fff;
+  cursor: pointer;
+  height: 100px;
+  min-height: 350px;
+
+}
+
+@media (max-width:768px) {
+    
+}

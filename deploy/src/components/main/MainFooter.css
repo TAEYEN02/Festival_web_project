@@ -1,0 +1,18 @@
+main-footer {
+    background: #ffffff;
+    box-sizing: border-box;
+    height: 35px;
+}
+
+.main-footer-container {
+    margin-top: 100px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.main-footer-container p {
+    margin: 3px;
+}
