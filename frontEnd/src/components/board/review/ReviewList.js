@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom"
 import './ReviewList.css';
 import { useEffect, useState } from 'react';
 import { reviewFindALL } from '../../../api/review';
+import { useAuth } from '../../../context/AuthContext';
 
 export const ReviewList = () => {
 
     const navigate = useNavigate();
+    const {user} = useAuth();
     const [posts, setPosts] = useState([]);
 
     // [Get]데이터 로딩
@@ -24,7 +26,7 @@ export const ReviewList = () => {
             <>
                 <div>표시할 데이터가 없습니다.</div>
                 {/* Floating Action Button */}
-                <button
+                {user&&<button
                     onClick={(e) => {
                         //이벤트 전파 방지
                         e.stopPropagation();
@@ -33,7 +35,7 @@ export const ReviewList = () => {
                     }}
                     className="floating-btn">
                     <SquarePen />
-                </button>
+                </button>}
             </>
         )
 
@@ -144,7 +146,8 @@ export const ReviewList = () => {
             </main>
 
             {/* Floating Action Button */}
-            <button
+            {console.log(user)}
+            {user&&<button
                 onClick={(e) => {
                     //이벤트 전파 방지
                     e.stopPropagation();
@@ -153,7 +156,7 @@ export const ReviewList = () => {
                 }}
                 className="floating-btn">
                 <SquarePen />
-            </button>
+            </button>}
         </div>
     )
 }

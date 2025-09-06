@@ -4,12 +4,14 @@ import { ArrowUpDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { boardFindALL,PostContent } from '../../api/board'
 import './BoardList.css'
+import { useAuth } from '../../context/AuthContext'
 
 export const BoardList = () => {
 
     // 게시판 주제 가져오기
     const { categoryId } = useParams();
     const [posts,setPosts]  = useState([]);
+    const {user} = useAuth();
     const navigate = useNavigate();
     const boardCategories = [
         { id: 0, name: '전체'},
@@ -144,7 +146,7 @@ export const BoardList = () => {
             </main>
 
             {/* Floating Action Button */}
-            <button
+            {user&&<button
                 onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/board/${categoryId}/write`)
@@ -152,7 +154,7 @@ export const BoardList = () => {
                 }}
                 className="BLfloatingbtn">
                 <SquarePen />
-            </button>
+            </button>}
         </div>
     )
 }
