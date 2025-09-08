@@ -4,6 +4,7 @@ import { useState } from "react";
 import { reviewWrite } from "../../../api/review";
 import './ReviewWrite.css';
 import Swal from "sweetalert2";
+import FestivalPickerModal from "../../tripPlanner/FestivalPickerModal";
 
 export const ReviewWrtie = () => {
     const { categoryId } = useParams();
@@ -20,6 +21,9 @@ export const ReviewWrtie = () => {
     const [tagInput, setTagInput] = useState('');
     const [images, setImages] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
+
+    const [dest, setDest] = useState('');
+    const [modalOpen, setModalOpen] = useState(false);
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({
@@ -108,7 +112,7 @@ export const ReviewWrtie = () => {
             if (img.file) form.append("images", img.file); // 파일 첨부
         });
 
-        reviewWrite(form,userId); // headers에 content-type 지정하지 않기
+        reviewWrite(form, userId); // headers에 content-type 지정하지 않기
 
         console.log('보낸 데이터:', form);
         console.log('보낸 데이터:', userId);
@@ -119,7 +123,7 @@ export const ReviewWrtie = () => {
             text: '리뷰 작성에 성공했습니다!'
         })
 
-        navigate(-1,{replace:true})
+        navigate(-1, { replace: true })
     };
 
     const handleKeyPress = (e) => {
@@ -130,6 +134,15 @@ export const ReviewWrtie = () => {
 
     return (
         <div className={`BWwrite-container review-bg`}>
+            <FestivalPickerModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onPick={(festival) => {
+                    setDest(festival);
+                    setFormData(prev => ({ ...prev, date: festival.eventenddate, location: festival.addr1 }))
+                    setModalOpen(false);
+                }}
+            />
 
             {/* Header */}
             <header className="BWwrite-header">
@@ -161,9 +174,15 @@ export const ReviewWrtie = () => {
                 <div className="BWform-container">
 
                     {/* Category Selection */}
-                    <div className="BWform-section">
+                    <div className="BWform-section Bwsection-top">
                         <label className="BWsection-label">리뷰 작성하기</label>
-
+                        <button
+                            type="button"
+                            className="Bwsection-top-btn"
+                            onClick={() => setModalOpen(true)}
+                        >
+                            축제 선택하기
+                        </button>
                     </div>
 
                     {/* Location & Date */}
@@ -176,10 +195,11 @@ export const ReviewWrtie = () => {
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="예: 서울, 평창, 속초"
-                                    value={formData.location}
-                                    onChange={(e) => handleInputChange('location', e.target.value)}
                                     className="BWform-input"
+                                    placeholder="축제를 선택해주세요"
+                                    value={formData.location}
+                                    disabled
+                                // onChange={(e) => handleInputChange('location', e.target.value)}
                                 />
                             </div>
                             <div className="BWinput-group">
@@ -189,10 +209,11 @@ export const ReviewWrtie = () => {
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="예: 2024년 2월"
-                                    value={formData.date}
-                                    onChange={(e) => handleInputChange('date', e.target.value)}
                                     className="BWform-input"
+                                    placeholder="축제를 선택해주세요"
+                                    value={formData.date}
+                                    disabled
+                                // onChange={(e) => handleInputChange('date', e.target.value)}
                                 />
                             </div>
                         </div>

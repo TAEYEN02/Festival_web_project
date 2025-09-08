@@ -123,7 +123,7 @@ export const reviewFindOne = async (reviewId, userId) => {
             response = await fetch(`${API_URL}/${reviewId}`, option)
         }
         const result = await response.json();
-        return {...result,comments:comments};
+        return { ...result, comments: comments };
 
     } catch (error) {
         console.log(error)
@@ -136,6 +136,23 @@ export const reviewFindOne = async (reviewId, userId) => {
 
 //좋아요
 export const reviewLikeToggle = async (reviewId, userId) => {
+    let comments;
+
+    const options = {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        },
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/comment/${reviewId}`, options)
+        const result = await response.json();
+        comments = result;
+    } catch (error) {
+        console.log(error)
+        throw new Error("[Find]서버 요청 중 오류 발생")
+    }
 
     const option = {
         method: "POST",
@@ -148,11 +165,14 @@ export const reviewLikeToggle = async (reviewId, userId) => {
     try {
         let response = await fetch(`${API_URL}/${reviewId}/like?userId=${userId}`, option)
         const result = await response.json();
-        return result;
+        return { ...result, comments: comments };
     } catch (error) {
         console.log(error)
         throw new Error("[Like]서버 요청 중 오류 발생")
     }
+
+
+
 }
 
 

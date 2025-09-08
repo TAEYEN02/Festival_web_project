@@ -141,12 +141,13 @@ public class ReviewService {
                     review.setLikes(review.getLikes() + 1);
                 }
         );
-
+        
         return toDTO(review, userId);
     }
 
     // 리뷰 → DTO 변환
     private ReviewResponseDTO toDTO(Review review, Long currentUserId) {
+    	
         boolean liked = currentUserId != null &&
                         reviewLikesRepository.existsByReviewIdAndUserId(review.getId(), currentUserId);
         

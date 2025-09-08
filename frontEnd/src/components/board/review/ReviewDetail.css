@@ -97,7 +97,7 @@ html, body {
 .RDavatar {
   width: 3rem;
   height: 3rem;
-  background: linear-gradient(to right, #a855f7, #ec4899);
+  background: linear-gradient(to right, #e0f7fa, #e6f7ff);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -202,6 +202,7 @@ html, body {
 
 .RDactions-buttons{
   display: flex;
+  gap:10px;
   flex-direction: row;
 }
 
@@ -215,6 +216,10 @@ html, body {
   background: transparent;
   border: none;
   transition: transform 0.2s, color 0.2s;
+}
+
+.RDheart{
+  color: red;
 }
 
 .RDaction-btn:hover {

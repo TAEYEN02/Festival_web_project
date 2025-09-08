@@ -33,19 +33,38 @@ export const ReviewDetail = () => {
 
     // [Get]데이터 로드
     useEffect(() => {
-        reviewFindOne(reviewId)
-            .then(response => {
-                console.log("detail",response)
-                setPost(response)
-            })
+        if (user) {
+            reviewFindOne(reviewId, userId)
+                .then(response => {
+                    console.log("detail", response)
+                    setPost(response)
+                })
+        } else {
+            reviewFindOne(reviewId)
+                .then(response => {
+                    console.log("detail", response)
+                    setPost(response)
+                })
+        }
+
     }, [])
 
 
     // [POST]좋아요
     const reviewLikeHandler = async () => {
+
+        if (!user) {
+            await Swal.fire({
+                text: '로그인시 가능합니다'
+            })
+            navigate(`/login`)
+            window.scroll(0, 0);
+            return;
+        }
+
         reviewLikeToggle(reviewId, userId)
             .then(response => {
-                // console.log(response)
+                console.log(response)
                 setPost(response)
             })
     }
@@ -196,9 +215,22 @@ export const ReviewDetail = () => {
                     {/* Post Actions */}
                     <div className="RDactions">
                         <div className="RDactions-buttons">
-                            <button className="RDaction-btn"><Heart/> {post?.likes}</button>
-                            <button className="RDaction-btn"><MessageSquareText /> {post?.comments.length}</button>
-                            <button className="RDaction-btn"><Share/> 공유</button>
+                            <button className={`RDaction-btn ${post.likedByCurrentUser ? 'RDheart' : ''}`}
+                                onClick={() => reviewLikeHandler()}
+                            ><Heart /> {post?.likes}</button>
+                            <button className="RDaction-btn"
+                            ><MessageSquareText /> {post?.comments.length}</button>
+                            <button className="RDaction-btn"
+                                onClick={() => reviewShareHandler()}
+                            ><Share /> 공유하기</button>
+                        </div>
+                        <div className="RDactions-buttons">
+                            {user && (post.authorNickname === user.username || userId === 1) && <><button className="RDaction-btn"
+                                onClick={''}
+                            ><NotebookPen /> 수정</button>
+                                <button className="RDaction-btn"
+                                    onClick={''}
+                                ><Trash /> 삭제</button></>}
                         </div>
                         {/* <span className="RDviews">👥 조회 {post.view}</span> */}
                     </div>
@@ -207,11 +239,11 @@ export const ReviewDetail = () => {
                     {/* 댓글 섹션*/}
                     <section className="RDcommentsection">
                         <h2 className="RDcommentheading"><MessageSquareText />댓글 <span className="RDcommentcount">{post.comments ? post.comments.length : 0}</span></h2>
-                        <div className="RDcommentform">
-                            {/* 댓글 입력 폼 */}
+                        {/* 댓글 입력 폼 */}
+                        {user && <div className="RDcommentform">
                             <textarea value={formData.content} onChange={(e) => { setFormData((prev) => ({ ...prev, content: e.target.value })) }} className="RDcommenttextarea" placeholder="댓글을 입력하세요..."></textarea>
                             <button onClick={() => reviewCommentWriteHandler()} className="RDcommentsubmitbtn">등록</button>
-                        </div>
+                        </div>}
                         {/* 댓글 보여주기 */}
                         <div className="RDcommentlist">
                             {post.comments && post.comments.length > 0 ? (
@@ -241,7 +273,7 @@ export const ReviewDetail = () => {
                                                 <span className="RDcommentcontent">{comment.content}</span>
                                                 <div>
                                                     <span className="RDcommentdate">{comment.createdAt.slice(0, 10)}/{comment.createdAt.slice(11, 16)}</span>
-                                                    {(comment.authorNickname === user?.username || userId === 1) && <div className="RDcommentactions">
+                                                    {user && (comment.authorNickname === user.username || userId === 1) && <div className="RDcommentactions">
                                                         <button className="RDcommenteditbtn"
                                                             onClick={() => setEdit(comment.id)}>수정</button>
                                                         <button className="RDcommentdeletebtn"

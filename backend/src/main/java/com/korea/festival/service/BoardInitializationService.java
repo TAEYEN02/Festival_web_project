@@ -55,8 +55,8 @@ public class BoardInitializationService implements CommandLineRunner {
                     .category("잡담")
                     .title(chatTitles[i])
                     .content(chatContents[i])
-                    .likes((int)(Math.random() * 20))
-                    .view((int)(Math.random() * 100))
+                    .likes(0)
+                    .view(0)
                     .user(i % 2 == 0 ? admin : testUser)
                     .tags(List.of("잡담", "샘플", "축제"))
                     .build();

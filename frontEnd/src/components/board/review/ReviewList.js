@@ -8,7 +8,7 @@ import { useAuth } from '../../../context/AuthContext';
 export const ReviewList = () => {
 
     const navigate = useNavigate();
-    const {user} = useAuth();
+    const { user } = useAuth();
     const [posts, setPosts] = useState([]);
 
     // [Get]데이터 로딩
@@ -26,7 +26,7 @@ export const ReviewList = () => {
             <>
                 <div>표시할 데이터가 없습니다.</div>
                 {/* Floating Action Button */}
-                {user&&<button
+                {user && <button
                     onClick={(e) => {
                         //이벤트 전파 방지
                         e.stopPropagation();
@@ -48,7 +48,13 @@ export const ReviewList = () => {
                     {posts.map((post) => (
                         <article key={post.id} className="post-card">
                             {/* Post Header */}
-                            <div className="post-header">
+                            <div className="post-header"
+                                onClick={(e) => {
+                                    //이벤트 전파 방지
+                                    e.stopPropagation();
+                                    navigate(`/board/review/detail/${post.id}`)
+                                    window.scroll(0, 0)
+                                }}>
                                 <div className="post-author-section">
                                     <div className="author-info">
                                         <div className="author-avatar">
@@ -147,7 +153,7 @@ export const ReviewList = () => {
 
             {/* Floating Action Button */}
             {console.log(user)}
-            {user&&<button
+            {user && <button
                 onClick={(e) => {
                     //이벤트 전파 방지
                     e.stopPropagation();

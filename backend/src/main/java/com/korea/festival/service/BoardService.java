@@ -119,7 +119,7 @@ public class BoardService {
 	//like
 	@Transactional
 	public BoardResponseDTO likeToggle(Long boardId,Long userId) {
-		Board board = boardRepository.findById(userId)
+		Board board = boardRepository.findById(boardId)
 				.orElseThrow(()->new RuntimeException("게시글 없음"));
 		User user = userRepository.findById(userId)
 				.orElseThrow(()->new RuntimeException("사용자 없음"));

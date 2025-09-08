@@ -53,7 +53,7 @@
 .author-avatar {
     width: 3.25rem; /* 아바타 크기 약간 키움 */
     height: 3.25rem;
-    background: linear-gradient(to right, #ffd194, #d1913c);
+    background: linear-gradient(to right, #e0f7fa, #e6f7ff);
     border-radius: 50%;
     display: flex;
     align-items: center;
