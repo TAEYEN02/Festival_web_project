@@ -25,7 +25,7 @@ const PrevArrow = ({ onClick }) => (
   </div>
 );
 
-const FestivalCardList = ({ festivals, festivalId, token, onToggleLike }) => {
+const FestivalCardList = ({ festivals, token, onToggleLike }) => {
   const settings = {
   dots: false,
   infinite: false,
@@ -54,15 +54,25 @@ const FestivalCardList = ({ festivals, festivalId, token, onToggleLike }) => {
   
 
   useEffect(() => {
-  if (!token) return;  // 로그인 안 된 경우 skip
-  // 좋아요 상태 조회 로직
-}, [festivalId, token]);
+    if (!token) return;
+    // 좋아요 상태 조회 로직 (필요 시)
+  }, [token]);
+
+  if (!Array.isArray(festivals) || festivals.length === 0) {
+    return <div className="festival-card-list-empty">등록된 축제가 없습니다.</div>;
+  }
 
   return (
     <div className="festival-card-list" style={{ position: "relative" }}>
-      <Slider key={festivals.map(f => f.contentid).join("-")} {...settings}>
-        {festivals.map(f => (
-          <FestivalCard key={f.contentid} festival={f} onToggleLike={onToggleLike} />
+      <Slider {...settings}>
+        {festivals.map((f) => (
+          // key에 likes 포함 → 좋아요 클릭 시 강제 리렌더링
+          <FestivalCard
+            key={`${f.contentid}-${f.likes}`}
+            festival={f}
+            token={token}
+            onToggleLike={onToggleLike}
+          />
         ))}
       </Slider>
     </div>

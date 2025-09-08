@@ -60,3 +60,5 @@ export const fetchFestivalLikesCount = async (festivalId) => {
     throw err;
   }
 };
+
+

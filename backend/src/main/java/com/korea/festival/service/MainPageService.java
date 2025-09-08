@@ -42,9 +42,10 @@ public class MainPageService {
 
     
     // 공공데이터에서 불러와 DB에 저장
+    @Transactional
     public void importFestivals() {
         LocalDate today = LocalDate.now();
-        String startDate = today.format(DateTimeFormatter.BASIC_ISO_DATE); // 오늘 날짜
+        String startDate = today.format(DateTimeFormatter.BASIC_ISO_DATE); 
         String endDate = "20261231"; 
         int numOfRows = 500;
         int pageNo = 1;
@@ -64,8 +65,6 @@ public class MainPageService {
                         .queryParam("arrange", "A"); // 시작일 오름차순
 
                 ResponseEntity<String> response = restTemplate.getForEntity(builder.toUriString(), String.class);
-                System.out.println("API Response (page " + pageNo + "): " + response.getBody());
-
                 JsonNode root = objectMapper.readTree(response.getBody());
                 JsonNode itemsNode = root.path("response").path("body").path("items").path("item");
 
@@ -81,13 +80,15 @@ public class MainPageService {
                     items.add(itemsNode);
                 }
 
-                // 시작일 기준 정렬 
                 items.sort(Comparator.comparing(node ->
                         LocalDate.parse(node.path("eventstartdate").asText(), DateTimeFormatter.BASIC_ISO_DATE)));
 
                 for (JsonNode node : items) {
                     String contentId = node.path("contentid").asText();
-                    if (mainPageRepository.findByContentId(contentId).isPresent()) continue;
+
+                    // 이미 존재하면 skip (DB UNIQUE 제약으로도 안전하게 방지됨)
+                    boolean exists = mainPageRepository.existsByContentId(contentId);
+                    if (exists) continue;
 
                     Festival_MainPage f = new Festival_MainPage();
                     f.setContentId(contentId);
@@ -99,7 +100,6 @@ public class MainPageService {
                     f.setClicks(0);
                     f.setCreatedAt(LocalDateTime.now());
 
-                    // 이미지 처리
                     String image = node.path("firstimage").asText();
                     if (image == null || image.isBlank()) {
                         image = node.path("firstimage2").asText();
@@ -109,7 +109,11 @@ public class MainPageService {
                     }
                     f.setFirstimage(image);
 
-                    mainPageRepository.save(f);
+                    try {
+                        mainPageRepository.saveAndFlush(f); // UNIQUE 제약 위반 시 예외 발생 → catch
+                    } catch (Exception e) {
+                        log.warn("중복 contentId로 저장 건너뜀: {}", contentId);
+                    }
                 }
 
                 int totalCount = root.path("response").path("body").path("totalCount").asInt();
@@ -124,6 +128,7 @@ public class MainPageService {
             throw new RuntimeException("축제 데이터 저장 실패", e);
         }
     }
+
     
     
     // DB 전체 삭제
@@ -133,10 +138,14 @@ public class MainPageService {
 
     
     // 최신순
-    public List<Festival_MainPage> getFestivalsByLatestUpcoming() {
+    public List<Festival_MainPage> getUpcomingFestivalsTop10() {
         LocalDate today = LocalDate.now();
-        return mainPageRepository.findTop10Upcoming(today, PageRequest.of(0, 10));
+        List<Festival_MainPage> festivals = mainPageRepository.findUpcomingFestivals(today);
+
+        // 가장 가까운 10개만 가져오기
+        return festivals.size() > 10 ? festivals.subList(0, 10) : festivals;
     }
+
 
 
     // 인기순 (조회수 기준)
@@ -159,7 +168,7 @@ public class MainPageService {
                 .description(f.getDescription())
                 .bookingUrl(f.getBookingUrl())
                 .views(f.getViews())
-                .likes(f.getLikesCount())
+                .likesCount(f.getLikesCount())
                 .clicks(f.getClicks())
                 .createdAt(f.getCreatedAt())
                 .build()

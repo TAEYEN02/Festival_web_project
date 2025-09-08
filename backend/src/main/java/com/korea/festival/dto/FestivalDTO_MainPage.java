@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.korea.festival.entity.FestivalImageEntity;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// 페인페이지에서 쓰일 축제 정보 Entity
+// 페인페이지에서 쓰일 축제 정보 DTO
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,9 +27,8 @@ public class FestivalDTO_MainPage {
     private String firstimage; // 대표 이미지
     private String description;
     private String bookingUrl;
-    private String homepage;
     private int views;
-    private int likes;
+    private int likesCount;
     private int clicks;
     private LocalDateTime createdAt;
 

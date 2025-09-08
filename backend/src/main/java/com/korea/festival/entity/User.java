@@ -80,11 +80,29 @@ public class User {
     @Column
     private String providerId; // OAuth 공급자 고유 ID
     
+//<<<<<<< Updated upstream
     @Value("${app.upload.path}")
     private String uploadPath;
     
     @Column
     private String profileImage;
+//=======
+    
+    // 사용자가 좋아요 누른 축제 정보
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<FestivalLikeEntity> festivalLikes = new ArrayList<>();
+//
+//    public void addFestivalLike(FestivalLikeEntity like) {
+//        festivalLikes.add(like);
+//        like.setUser(this);
+//    }
+//
+//    public void removeFestivalLike(FestivalLikeEntity like) {
+//        festivalLikes.remove(like);
+//        like.setUser(null);
+//    }
+
+//>>>>>>> Stashed changes
     
 }
 

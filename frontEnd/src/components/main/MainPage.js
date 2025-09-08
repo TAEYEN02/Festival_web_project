@@ -4,18 +4,17 @@ import {
   fetchLatestFestivals, 
   fetchPopularFestivalsByLikes,
   fetchPopularFestivalsByViews
-} from "../../api/festival"
+} from "../../api/festival";
 import FestivalCardList from "../festivals/FestivalCardList";
-import LatestFestivalCardList from "../festivals/LatestFestivalCardList";
+import MainFooter from "./MainFooter";
 
 import "./MainPage.css";
-import MainFooter from "./MainFooter";
 
 const MainPage = () => {
   const [festivals, setFestivals] = useState([]); // 외부 API
   const [latest, setLatest] = useState([]);       // 최신순
   const [popular, setPopular] = useState([]);     // 인기순
-  const [popularSort, setPopularSort] = useState("likes"); // 정렬 기준: likes / views
+  const [popularSort, setPopularSort] = useState("likes"); // 정렬 기준
 
   const token = localStorage.getItem("token");
 
@@ -30,21 +29,17 @@ const MainPage = () => {
       }
     };
     loadExternalFestivals();
-    
   }, []);
 
   // 최신순 불러오기
-   const loadLatest = async () => {
+  const loadLatest = async () => {
     try {
       const data = await fetchLatestFestivals();
-      if (!data || data.length === 0) {
-        // 서버가 빈 배열 반환하면 fallback 처리
-        setLatest([]); // 혹은 랜덤 10개 데이터
-      } else {
-        setLatest(data);
-      }
+       console.log("백엔드 반환 데이터:", data);
+      setLatest(data ?? []);
     } catch (err) {
       console.error("최신순 축제 불러오기 실패:", err);
+      setLatest([]);
     }
   };
 
@@ -71,15 +66,31 @@ const MainPage = () => {
     }
   };
 
+  // 페이지 초기 데이터 불러오기
   useEffect(() => {
-     loadLatest(); loadPopular(); 
+    loadLatest();
+    loadPopular();
+  }, [popularSort]);
 
-  }, []);
-
-  // 좋아요 토글 시 최신순에서 좋아요 수만 업데이트
+  // 좋아요 토글
   const handleToggleLike = (contentId, updatedCount) => {
-    setLatest(prev => prev.map(f => f.contentid === contentId ? { ...f, likes: updatedCount } : f));
-    loadPopular(); // 인기순은 다시 fetch
+    const strId = String(contentId);
+
+    // 최신순 리스트도 즉시 반영 + 객체 참조 새로 생성
+    setLatest(prev =>
+      prev.map(f =>
+        String(f.contentid) === strId
+          ? { ...f, likes: updatedCount }
+          : { ...f }
+      )
+    );
+
+    // 인기순 리스트 즉시 반영
+    setPopular(prev =>
+      prev.map(f =>
+        String(f.contentid) === strId ? { ...f, likes: updatedCount } : { ...f }
+      )
+    );
   };
 
   return (
@@ -91,15 +102,17 @@ const MainPage = () => {
 
       <div className="festival-card-list-container">
         <h3 className="section-title">🎊 Comming Soon! 최신 페스티벌은 어디? </h3>
-        <FestivalCardList festivals={latest} token={token} onToggleLike={handleToggleLike} />
+        <FestivalCardList
+          festivals={latest}
+          token={token}
+          onToggleLike={handleToggleLike} // 최신순 토글은 서버 fetch로 처리
+        />
       </div>
 
-
       <div className="festival-card-list-container">
-        <h3 className="section-title">
-          🎉 사용자들이 좋아요 누른
-        </h3>
+        <h3 className="section-title">🎉 사용자들이 좋아요 누른</h3>
         <FestivalCardList
+          key={`popular-${popular.map(f => f.likes).join("-")}`}
           festivals={popular}
           token={token}
           onToggleLike={handleToggleLike}

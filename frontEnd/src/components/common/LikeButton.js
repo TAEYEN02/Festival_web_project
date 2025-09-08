@@ -9,7 +9,7 @@ import {
 
 import "./LikeButton.css";
 
-const LikeButton = ({ festivalId, className, onToggleLike }) => {
+const LikeButton = ({ festivalId, onToggleLike }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
 
@@ -54,7 +54,7 @@ const LikeButton = ({ festivalId, className, onToggleLike }) => {
 
       // 부모 컴포넌트로 알림
       if (onToggleLike) {
-        onToggleLike(festivalId, result, updatedCount);
+        onToggleLike(festivalId, updatedCount); 
       }
     } catch (err) {
       console.error("좋아요 토글 실패:", err.response?.data || err.message);

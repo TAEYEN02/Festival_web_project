@@ -1,5 +1,6 @@
 package com.korea.festival.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -57,14 +58,16 @@ public class MainPageController {
 	
 	// 최신순 조회
     @GetMapping("/latest")
-    public ResponseEntity<List<Festival_MainPage>> getLatestFestivals() {
-        return ResponseEntity.ok(mainPageService.getFestivalsByLatestUpcoming());
+    public ResponseEntity<List<Festival_MainPage>> getUpcomingFestivalsTop10() {
+        List<Festival_MainPage> festivals = mainPageService.getUpcomingFestivalsTop10();
+        return ResponseEntity.ok(festivals);
     }
 
+    
     // 인기순 조회 (조회수 기준)
     @GetMapping("/popular")
     public ResponseEntity<List<Festival_MainPage>> getPopularFestivals() {
-    	System.out.println("너 들어오니2");
+    	
         return ResponseEntity.ok(mainPageService.getFestivalsByPopularity());
     }
 

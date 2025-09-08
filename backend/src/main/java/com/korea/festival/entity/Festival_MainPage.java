@@ -37,8 +37,11 @@ public class Festival_MainPage {
     @Column(nullable = false)
     private String name;       // 축제명
 
+    @Column(name = "start_date")
     private LocalDate startDate; // 시작일
+    @Column(name = "end_date")
     private LocalDate endDate;   // 종료일
+    
     private String location;     // 지역명 또는 주소
 
     @Column(name = "firstimage")

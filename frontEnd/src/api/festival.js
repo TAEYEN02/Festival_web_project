@@ -103,41 +103,27 @@ export const resetAndImportFestivals = async (token) => {
 };
 
 
-
-// 축제 상세정보 가져오기
-export const fetchFestivalDetail = async (id) => {
-  try {
-    const res = await axios.get(`${API_BASE}/detail/${id}`);
-    return res.data; // 축제 상세 정보
-  } catch (err) {
-    console.error("축제 상세 조회 실패:", err);
-    return null;
-  }
-};
-
 // 축제 최신순
 export const fetchLatestFestivals = async () => {
   try {
     const res = await axios.get(`${API_BASE}/latest`);
-    const festivals = Array.isArray(res.data) ? res.data : [];
-    return festivals.map(f => ({
-      contentid: f.contentId,
-      title: f.name,
-      addr1: f.location,
-      eventstartdate: f.startDate.replace(/-/g, ""),
-      eventenddate: f.endDate.replace(/-/g, ""),
-      firstimage: f.firstimage,
-      likes: f.likesCount,   // 좋아요 수도 전달
-      views: f.views
+    const raw = Array.isArray(res.data) ? res.data : [];
+    
+    return raw.map(f => ({
+      contentid: String(f.contentId ?? f.id ?? ""), // 문자열로 통일
+      title: f.name ?? "제목 없음",
+      addr1: f.location ?? "",
+      eventstartdate: f.startDate ? f.startDate.replace(/-/g, "") : "",
+      eventenddate: f.endDate ? f.endDate.replace(/-/g, "") : "",
+      firstimage: f.firstimage ?? "/default.jpg",
+      likes: f.likesCount ?? 0,
+      views: f.views ?? 0,
     }));
   } catch (err) {
     console.error("최신순 축제 불러오기 실패:", err);
     return [];
   }
 };
-
-
-
 
 
 // 축제 인기순 (좋아요 수 기준)
@@ -154,17 +140,17 @@ export const fetchPopularFestivalsByLikes = async () => {
       filtered = data.sort(() => 0.5 - Math.random()).slice(0, 10);
     }
 
-    return filtered.map(f => ({
-      contentid: f.contentId,
-      title: f.name,
-      addr1: f.location,
-      eventstartdate: f.startDate.replace(/-/g, ""),
-      eventenddate: f.endDate.replace(/-/g, ""),
-      firstimage: f.firstimage || "/default.jpg",
-      likes: f.likes,
-      views: f.views,
-      clicks: f.clicks,
-    }));
+   return filtered.map(f => ({
+    contentid: String(f.contentId ?? f.id ?? ""),
+    title: f.name ?? "제목 없음",
+    addr1: f.location ?? "",
+    eventstartdate: f.startDate ? f.startDate.replace(/-/g, "") : "",
+    eventenddate: f.endDate ? f.endDate.replace(/-/g, "") : "",
+    firstimage: f.firstimage || "/default.jpg",
+    likes: f.likesCount ?? 0,
+    views: f.views ?? 0,
+    clicks: f.clicks ?? 0,
+  }));
   } catch (error) {
     console.error("좋아요순 축제 불러오기 실패:", error);
     return [];
@@ -188,8 +174,8 @@ export const fetchPopularFestivalsByViews = async () => {
       addr1: f.location,
       eventstartdate: f.startDate.replace(/-/g, ""),
       eventenddate: f.endDate.replace(/-/g, ""),
-      firstimage: f.firstimage,
-      likes: f.likes,
+      firstimage: f.firstimage || "/default.jpg",
+      likes: f.likesCount ?? 0,
       views: f.views,
       clicks: f.clicks,
     }));
@@ -209,14 +195,5 @@ export const incrementViews = async (contentId) => {
   }
 };
 
-// 좋아요 토글
-export const toggleFestivalLike = async (contentId) => {
-  try {
-    const response = await axios.post(`${API_BASE}/toggle-like/${contentId}`);
-    return response.data.likes; // 현재 좋아요 수 반환
-  } catch (err) {
-    console.error("좋아요 토글 실패:", err);
-    return null;
-  }
-};
+
 
