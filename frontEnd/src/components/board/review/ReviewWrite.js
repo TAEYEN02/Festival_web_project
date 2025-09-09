@@ -22,7 +22,7 @@ export const ReviewWrtie = () => {
     const [images, setImages] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
 
-    const [dest, setDest] = useState('');
+    const [setDest] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
 
     const handleInputChange = (field, value) => {
@@ -58,7 +58,8 @@ export const ReviewWrtie = () => {
                 setImages(prev => [...prev, {
                     id: Date.now() + Math.random(),
                     url: event.target.result,
-                    name: file.name
+                    name: file.name,
+                    file: file
                 }]);
             };
             reader.readAsDataURL(file);
@@ -105,17 +106,14 @@ export const ReviewWrtie = () => {
             tags: formData.tags
         })], { type: "application/json" });
 
-        form.append("dto", dtoBlob);       // @RequestPart("dto")와 이름 맞춤
-        form.append("userId", userId);     // @RequestParam("userId")
+        form.append("dto", dtoBlob);      
+        form.append("userId", userId);     
 
         images.forEach(img => {
             if (img.file) form.append("images", img.file); // 파일 첨부
         });
 
-        reviewWrite(form, userId); // headers에 content-type 지정하지 않기
-
-        console.log('보낸 데이터:', form);
-        console.log('보낸 데이터:', userId);
+        reviewWrite(form, userId); 
 
         Swal.fire({
             title: '성공',
@@ -123,7 +121,7 @@ export const ReviewWrtie = () => {
             text: '리뷰 작성에 성공했습니다!'
         })
 
-        navigate(-1, { replace: true })
+        navigate('board/review', { replace: true })
     };
 
     const handleKeyPress = (e) => {
@@ -161,7 +159,11 @@ export const ReviewWrtie = () => {
                                 <p className="BWpage-subtitle">당신의 축제 경험을 공유해보세요</p>
                             </div>
                         </div>
-                        <button onClick={handleSubmit} className="BWpublish-button">
+                        <button onClick={handleSubmit}
+                            // className="BWpublish-button"
+                            disabled={!formData.title || !formData.content || !formData.location || !formData.date}
+                            className={`BWfinal-submit-btn ${formData.location && formData.date && formData.title && formData.content ? 'BWfinal-submit-btn-active' : ''}`}
+                        >
                             <span className="BWicon-placeholder"><Share /></span>
                             <span>발행하기</span>
                         </button>
@@ -354,8 +356,8 @@ export const ReviewWrtie = () => {
                         </div>
                         <button
                             onClick={handleSubmit}
-                            disabled={!formData.title || !formData.content}
-                            className={`BWfinal-submit-btn ${formData.title && formData.content ? 'BWfinal-submit-btn-active' : ''}`}
+                            disabled={!formData.title || !formData.content||!formData.location||!formData.date}
+                            className={`BWfinal-submit-btn ${formData.location && formData.date && formData.title && formData.content ? 'BWfinal-submit-btn-active' : ''}`}
                         >
                             <span className="BWicon-placeholder"><Share /></span>
                             <span>축제 이야기 발행하기 <FerrisWheel /></span>

@@ -1,23 +1,39 @@
-import { MessageSquareText, Heart, SquarePen } from 'lucide-react'
+import { Heart, SquarePen } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
 import './ReviewList.css';
 import { useEffect, useState } from 'react';
-import { reviewFindALL } from '../../../api/review';
+import { PostContent, reviewFindALL } from '../../../api/review';
 import { useAuth } from '../../../context/AuthContext';
+import { reviewBase } from '../review/reviewImg';
 
 export const ReviewList = () => {
 
     const navigate = useNavigate();
     const { user } = useAuth();
     const [posts, setPosts] = useState([]);
+    const [page, setPage] = useState(0);
+    const [totalPage, setTotalPage] = useState(1);
+    const [size] = useState(10);
+
+    //페이징
+    const goPrev = () => {
+        setPage(prev => Math.max(prev - 1, 0));
+    }
+
+    const goNext = () => {
+        setPage(prev => Math.min(prev + 1, totalPage - 1));
+    }
+
+
 
     // [Get]데이터 로딩
     useEffect(() => {
-        reviewFindALL()
+        reviewFindALL(page, size)
             .then(response => {
-                setPosts(response)
+                setTotalPage(response.totalPages)
+                setPosts(response.content)
             })
-    }, [])
+    }, [page, size])
 
     if (!posts) return <div>로딩중입니다...</div>
 
@@ -45,7 +61,7 @@ export const ReviewList = () => {
             {/* Posts List */}
             <main className="main-content">
                 <div className="posts-container">
-                    {posts.map((post) => (
+                    {posts?.map((post, index) => (
                         <article key={post.id} className="post-card">
                             {/* Post Header */}
                             <div className="post-header"
@@ -58,7 +74,7 @@ export const ReviewList = () => {
                                 <div className="post-author-section">
                                     <div className="author-info">
                                         <div className="author-avatar">
-                                            <img className="author-avatar" src={post.authorImg || '/default-profile.png'} />
+                                            <img className="author-avatar" alt='author-avatar' src={post.authorImg || '/default-profile.png'} />
                                         </div>
                                         <div className="author-details">
                                             <div className="author-name-section">
@@ -72,9 +88,9 @@ export const ReviewList = () => {
                                                 <span>{post.location || ''}</span>
                                                 <span>•</span>
                                                 {/* Calendar 아이콘 (react-icons: MdCalendarToday) */}
-                                                <span>{post.date}</span>
+                                                <span>축제일자 : {post.date}</span>
                                                 <span>•</span>
-                                                <span>{post.createdAt.slice(0, 10)}</span>
+                                                <span>작성일 : {post.createdAt.slice(0, 10)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -89,7 +105,7 @@ export const ReviewList = () => {
                                         window.scroll(0, 0)
                                     }}
                                     className="post-title">{post.title}</button>
-                                <p className="post-content">{post.content}</p>
+                                <div className="post-content">{PostContent(post.content)}</div>
 
                                 {/* Tags */}
                                 <div className="tags-container">
@@ -104,8 +120,8 @@ export const ReviewList = () => {
                             {/* 이미지 */}
                             {post.images && (
                                 <div className="post-image-container">
-                                    <img
-                                        src={post.images[0]}
+                                    {(post.images?.length > 0 || post.id < 16) && <img
+                                        src={post.id <= 15 ? `data:image/png;base64,${reviewBase[index + 1]}` : `data:image/png;base64,${post.images[0]}`}
                                         alt="Festival"
                                         className="post-image"
                                         onClick={(e) => {
@@ -114,7 +130,7 @@ export const ReviewList = () => {
                                             navigate(`/board/review/detail/${post.id}`)
                                             window.scroll(0, 0)
                                         }}
-                                    />
+                                    />}
                                 </div>
                             )}
 
@@ -143,16 +159,21 @@ export const ReviewList = () => {
                     )).reverse()}
                 </div>
 
-                {/* Load More Button */}
-                <div className="load-more-section">
-                    <button className="load-more-btn">
-                        더 많은 축제 이야기 보기 🎊
-                    </button>
+                {/* 페이징 버튼 */}
+                <div className="RLpagination">
+                    <button onClick={()=>{
+                        goPrev()
+                        window.scroll(0,0)
+                    }} disabled={page === 0}>이전</button>
+                    <span>{page + 1} / {totalPage}</span>
+                    <button onClick={()=>{
+                        goNext()
+                        window.scroll(0,0)
+                    }} disabled={page + 1 >= totalPage}>다음</button>
                 </div>
             </main>
 
             {/* Floating Action Button */}
-            {console.log(user)}
             {user && <button
                 onClick={(e) => {
                     //이벤트 전파 방지
@@ -163,6 +184,8 @@ export const ReviewList = () => {
                 className="floating-btn">
                 <SquarePen />
             </button>}
+
+
         </div>
     )
 }

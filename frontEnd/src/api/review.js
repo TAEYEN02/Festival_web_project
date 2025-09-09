@@ -71,7 +71,7 @@ export const reviewUpdate = async (dto, userId) => {
 }
 
 //불러오기(전체)
-export const reviewFindALL = async (userId) => {
+export const reviewFindALL = async (page, size) => {
 
     let response;
     const option = {
@@ -82,11 +82,7 @@ export const reviewFindALL = async (userId) => {
     }
 
     try {
-        if (userId) {
-            response = await fetch(`${API_URL}?userId=${userId}`, option)
-        } else {
-            response = await fetch(`${API_URL}`, option)
-        }
+        response = await fetch(`${API_URL}?page=${page}&size=${size}`, option)
         const result = await response.json();
         return result;
     } catch (error) {
@@ -243,7 +239,7 @@ export const reviewCommentDelete = async (commentId) => {
         return result;
     } catch (error) {
         console.log(error)
-        throw new Error("[Comment-delete]서버 요청 중 오류 발생")
+        // throw new Error("[Comment-delete]서버 요청 중 오류 발생")
     }
 }
 

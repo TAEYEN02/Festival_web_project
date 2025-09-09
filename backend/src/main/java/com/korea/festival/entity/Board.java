@@ -41,7 +41,7 @@ public class Board {
 	
 	private String title;
 	
-	@Column(columnDefinition = "TEXT")
+	@Column(columnDefinition = "LONGTEXT")
 	private String content;
 	
 	@CreationTimestamp
@@ -52,12 +52,14 @@ public class Board {
 	
 	private int likes;
 	
+	@Builder.Default
 	@OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<BoardLikes> boardLikes = new ArrayList<>();
 
 	
 	private int view;
 	
+	@Builder.Default
 	@OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
 	private List<BoardComment> comments = new ArrayList<BoardComment>();
 	

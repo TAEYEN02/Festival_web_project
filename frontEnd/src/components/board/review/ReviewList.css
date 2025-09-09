@@ -274,6 +274,46 @@
     transform: scale(1.08) translateY(-3px); /* 약간 커지고 위로 떠오르는 효과 */
 }
 
+/* 페이징 버튼 컨테이너 */
+.RLpagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem; /* 버튼 간 간격 */
+    margin: 2rem 0; /* 위아래 여백 */
+    font-family: 'Arial', sans-serif;
+}
+
+/* 이전 / 다음 버튼 스타일 */
+.RLpagination button {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #4fc3f7 0%, #0288d1 100%);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.RLpagination button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.RLpagination button:disabled {
+    background: #b0bec5; /* 비활성화 색상 */
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 현재 페이지 표시 */
+.RLpagination span {
+    font-weight: 600;
+    color: #37474f;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     /* 기존 미디어 쿼리 유지 (필요에 따라 조절) */

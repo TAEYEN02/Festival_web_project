@@ -3,6 +3,7 @@ package com.korea.festival.service;
 import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ import com.korea.festival.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+@Order(1)
 @Service
 @RequiredArgsConstructor
 public class DataInitializationService implements CommandLineRunner {

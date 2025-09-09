@@ -77,6 +77,6 @@ public class Review {
     @ElementCollection
     @Builder.Default
     @CollectionTable(name = "review_images", joinColumns = @JoinColumn(name="review_id"))
-    @Column(name = "image")
+    @Column(name = "image",columnDefinition = "LONGTEXT")
     private Set<String> images = new HashSet<>();
 }

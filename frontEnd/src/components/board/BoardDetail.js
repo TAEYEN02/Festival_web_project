@@ -45,7 +45,7 @@ export const BoardDetail = () => {
                     console.log(response)
                 })
         }
-    }, [])
+    }, [boardId,userId,user])
 
 
     const getBLCategoryClass = (category) => {
@@ -179,7 +179,7 @@ export const BoardDetail = () => {
                         <span className={`BDpostcategory ${getBLCategoryClass(post.category)}`} >{post.category}</span>
                         <h1 className="BDposttitle">{post.title}</h1>
                         <div className="BDpostmetainfo">
-                            <span className="BDpostauthor">{post.userNickname}</span>
+                            <span className="BDpostauthor">{post.authorNickname}</span>
                             <span className="BDinfodivider">|</span>
                             <span className="BDpostdate">{post.createdAt.slice(0, 10)}</span>
                             <span className="BDinfodivider">|</span>

@@ -2,6 +2,7 @@ package com.korea.festival.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,20 +32,24 @@ public class ReviewController {
 	 private final ReviewService reviewService;
 
 	    // c
-	 @PostMapping
-	 public ResponseEntity<?> reviewWrite(
-	         @RequestPart("dto") ReviewRequestDTO dto, 
-	         @RequestParam("userId") Long userId,
-	         @RequestPart(value = "images", required = false) List<MultipartFile> images
-	 ) {
-	     ReviewResponseDTO result = reviewService.reviewWrite(dto, userId, images);
-	     return ResponseEntity.ok().body(result);
-	 }
+		 @PostMapping
+		 public ResponseEntity<?> reviewWrite(
+		         @RequestPart("dto") ReviewRequestDTO dto, 
+		         @RequestParam("userId") Long userId,
+		         @RequestPart(value = "images", required = false) List<MultipartFile> images
+		 ) {
+		     ReviewResponseDTO result = reviewService.reviewWrite(dto, userId, images);
+		     return ResponseEntity.ok().body(result);
+		 }
 
 	    // r-all
 	    @GetMapping
-	    public ResponseEntity<?> reviewFindAll(@RequestParam(name = "userId",required = false) Long userId) {
-	        List<ReviewResponseDTO> result = reviewService.reviewFindAll(userId);
+	    public ResponseEntity<?> reviewFindAll(
+	    		@RequestParam(name = "page",defaultValue = "0") int page,
+	    		@RequestParam(name = "size",defaultValue = "10") int size,
+	    		@RequestParam(name = "userId",required = false) Long userId
+	    		) {
+	        Page<ReviewResponseDTO> result = reviewService.reviewFindAll(page,size,userId);
 	        return ResponseEntity.ok().body(result);
 	    }
 

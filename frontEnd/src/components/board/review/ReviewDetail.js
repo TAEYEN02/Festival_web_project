@@ -1,8 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { MessageSquareText, Heart, Share, NotebookPen, Trash } from 'lucide-react'
 import { useEffect, useState } from 'react';
-import { reviewCommentDelete, reviewCommentUpdate, reviewCommentWrite, reviewDelete, reviewFindOne, reviewLikeToggle } from '../../../api/review';
+import { PostContent, reviewCommentDelete, reviewCommentUpdate, reviewCommentWrite, reviewDelete, reviewFindOne, reviewLikeToggle } from '../../../api/review';
 import Swal from 'sweetalert2';
+import { reviewBase } from '../review/reviewImg';
 import './ReviewDetail.css';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -47,7 +48,7 @@ export const ReviewDetail = () => {
                 })
         }
 
-    }, [])
+    }, [user,reviewId,userId])
 
 
     // [POST]좋아요
@@ -84,7 +85,7 @@ export const ReviewDetail = () => {
     }
 
     // [Delete]게시물 삭제
-    const reviewDeleteHandler = async () => {
+    const reviewDeleteHandler = async (reviewId) => {
         try {
             const result = await Swal.fire({
                 title: "게시판 삭제",
@@ -147,6 +148,7 @@ export const ReviewDetail = () => {
 
     // [DELETE]댓글 삭제
     const reviewCommentDeleteHandler = async (commentId) => {
+        console.log("삭제할거야",commentId)
 
         const response = await Swal.fire({
             text: '정말 댓글을 삭제 하시겠습니까?',
@@ -159,7 +161,7 @@ export const ReviewDetail = () => {
             reviewCommentDelete(commentId)
         }
 
-        // navigate(0);
+        navigate(0);
     }
 
     if (!post) return <div className="RDempty">게시물이 없습니다.</div>;
@@ -176,7 +178,7 @@ export const ReviewDetail = () => {
                     <div className="RDpost-header">
                         <div className="RDauthor-section">
                             <div className="RDavatar">
-                                <img className="RDavatar" src={post?.authorImg || '/default-profile.png'} />
+                                <img className="RDavatar" alt='authorImg' src={post?.authorImg || '/default-profile.png'} />
                             </div>
                             <div className="RDauthor-info">
                                 <div className="RDauthor-name-category">
@@ -184,11 +186,11 @@ export const ReviewDetail = () => {
                                     <span className={`RDcategory RDinquiry`}>리뷰</span>
                                 </div>
                                 <div className="RDlocation-date">
-                                    <span>📍 {post?.location || ''}</span>
+                                    <span> {post?.location || ''}</span>
                                     <span>•</span>
-                                    <span>📅 {post?.date}</span>
+                                    <span>축제일자:  {post?.date}</span>
                                     <span>•</span>
-                                    <span>📅 {post?.createdAt.slice(0, 10)}</span>
+                                    <span> 작성일: {post?.createdAt.slice(0, 10)}</span>
                                 </div>
                             </div>
                         </div>
@@ -196,7 +198,7 @@ export const ReviewDetail = () => {
 
                     {/* Post Content */}
                     <h2 className="RDtitle">{post?.title}</h2><br /><br />
-                    <p className="RDcontent">{post?.content}</p>
+                    <p className="RDcontent">{PostContent(post?.content)}</p>
 
                     {/* Tags */}
                     <div className="RDtags">
@@ -208,7 +210,8 @@ export const ReviewDetail = () => {
                     {/* Images */}
                     {post?.images && post?.images.map((img, idx) => (
                         <div key={idx} className="RDimage-wrapper">
-                            <img src={img} alt={`Festival ${idx + 1}`} className="RDimage" />
+                            <img src={post.id>16?`data:image/png;base64,${img}`:`data:image/png;base64,${reviewBase[post.id]}`} 
+                            alt={`Festival ${idx + 1}`} className="RDimage" />
                         </div>
                     ))}
 
@@ -225,11 +228,11 @@ export const ReviewDetail = () => {
                             ><Share /> 공유하기</button>
                         </div>
                         <div className="RDactions-buttons">
-                            {user && (post.authorNickname === user.username || userId === 1) && <><button className="RDaction-btn"
-                                onClick={''}
+                            {user && (post.userId === userId || userId === 1) && <><button className="RDaction-btn"
+                                onClick={()=>{}}
                             ><NotebookPen /> 수정</button>
                                 <button className="RDaction-btn"
-                                    onClick={''}
+                                    onClick={()=>{reviewDeleteHandler(post.id)}}
                                 ><Trash /> 삭제</button></>}
                         </div>
                         {/* <span className="RDviews">👥 조회 {post.view}</span> */}
@@ -273,7 +276,7 @@ export const ReviewDetail = () => {
                                                 <span className="RDcommentcontent">{comment.content}</span>
                                                 <div>
                                                     <span className="RDcommentdate">{comment.createdAt.slice(0, 10)}/{comment.createdAt.slice(11, 16)}</span>
-                                                    {user && (comment.authorNickname === user.username || userId === 1) && <div className="RDcommentactions">
+                                                    {user && (comment.userId === userId || userId === 1) && <div className="RDcommentactions">
                                                         <button className="RDcommenteditbtn"
                                                             onClick={() => setEdit(comment.id)}>수정</button>
                                                         <button className="RDcommentdeletebtn"

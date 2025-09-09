@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.korea.festival.dto.BoardCommentRequestDTO;
@@ -55,13 +59,13 @@ public class BoardService {
 	}
 	
 	//r-all
-	public List<BoardResponseDTO> boardFindAll(Long userId){
-		List<Board> boards = boardRepository.findAll();
+	public Page<BoardResponseDTO> boardFindAll(int page, int size, Long userId){
 		
-		return boards.stream().map(board->{
-			BoardResponseDTO dto = toDTO(board, userId);
-			return dto;
-		}).toList();
+		Pageable pageable = PageRequest.of(page, size,Sort.by("createdAt").descending());
+		
+		Page<Board> boards = boardRepository.findAll(pageable);
+		
+		return boards.map(board->toDTO(board,userId));
 	}
 	
 	

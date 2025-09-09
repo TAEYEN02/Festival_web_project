@@ -140,6 +140,7 @@ html, body {
   font-size: 0.75rem;
   color: #6b7280;
   margin-top: 0.25rem;
+  margin-left: 0.5rem;
 }
 
 /* Post Content */
@@ -220,6 +221,7 @@ html, body {
 
 .RDheart{
   color: red;
+  
 }
 
 .RDaction-btn:hover {

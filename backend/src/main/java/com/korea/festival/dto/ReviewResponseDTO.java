@@ -26,6 +26,7 @@ public class ReviewResponseDTO {
 	private boolean likedByCurrentUser;
 	
 	private String authorNickname;
+	private Long userId;
 	private String authorImg;
 	
 	private Set<String> tags;

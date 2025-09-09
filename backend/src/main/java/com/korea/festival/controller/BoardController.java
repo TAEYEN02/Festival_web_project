@@ -2,6 +2,7 @@ package com.korea.festival.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,8 +38,12 @@ public class BoardController {
 	
 	//r-all
 	@GetMapping
-	public ResponseEntity<?> boardFindAll(@RequestParam(name = "userId",required = false)Long userId){
-		List<BoardResponseDTO> result = boardService.boardFindAll(userId);
+	public ResponseEntity<?> boardFindAll(
+			@RequestParam(name = "page",defaultValue = "0")int page,
+			@RequestParam(name = "size",defaultValue = "10")int size,
+			@RequestParam(name = "userId",required = false)Long userId
+			){
+		Page<BoardResponseDTO> result = boardService.boardFindAll(page,size,userId);
 		return ResponseEntity.ok().body(result);
 	}
 	

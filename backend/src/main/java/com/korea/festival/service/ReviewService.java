@@ -5,9 +5,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +30,6 @@ import com.korea.festival.repository.ReviewCommentRepository;
 import com.korea.festival.repository.ReviewLikesRepository;
 import com.korea.festival.repository.ReviewRepository;
 import com.korea.festival.repository.UserRepository;
-
 import java.io.IOException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -41,28 +47,47 @@ public class ReviewService {
     public ReviewResponseDTO reviewWrite(ReviewRequestDTO dto, Long userId, List<MultipartFile> images) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
+        
+        Set<String> getImages = new HashSet<String>();
+        
+        if(images != null) {
+	        for(MultipartFile f:images) {
+	        	if(f==null||f.isEmpty()) continue;
+	        	try {
+	        		String base64 = Base64.getEncoder().encodeToString(f.getBytes());
+	        		getImages.add(base64);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+	        }
+        }
+        
+        
 
         Review newReview = Review.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .location(dto.getLocation())
                 .tags(dto.getTags())
+                .date(dto.getDate())
                 .user(user)
                 .likes(0)
+                .view(0)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .images(getImages)
                 .build();
 
         reviewRepository.save(newReview);
 
-        // 이미지 저장 처리
-        if (images != null) {
-            for (MultipartFile file : images) {
-                String savedPath = saveFile(file); // 파일 저장 로직
-                newReview.getImages().add(savedPath);
-            }
-        }
-        reviewRepository.save(newReview);
+//        // 이미지 저장 처리
+//        if (images != null) {
+//            for (MultipartFile file : images) {
+//                String savedPath = saveFile(file); // 파일 저장 로직
+//                newReview.getImages().add(savedPath);
+//            }
+//        }
+//        reviewRepository.save(newReview);
 
         return toDTO(newReview, userId);
     }
@@ -77,12 +102,17 @@ public class ReviewService {
 
     // 전체 조회
     @Transactional
-    public List<ReviewResponseDTO> reviewFindAll(Long userId) {
-        // N+1 쿼리 문제를 해결하기 위해 findAllWithComments()를 호출
-        List<Review> reviews = reviewRepository.findAllWithComments(); 
-        return reviews.stream()
-                .map(review -> toDTO(review, userId))
-                .collect(Collectors.toList());
+    public Page<ReviewResponseDTO> reviewFindAll(int page,int size,Long userId) {
+    	Pageable pageable = PageRequest.of(page, size,Sort.by("createdAt").descending());
+    	
+    	Page<Review> reviews = reviewRepository.findAll(pageable);
+    	
+//        List<Review> reviews = reviewRepository.findAllWithComments(); 
+//        return reviews.stream()
+//                .map(review -> toDTO(review, userId))
+//                .collect(Collectors.toList());\
+    	return reviews
+    			.map(review->toDTO(review,userId));
     }
 
     // 리뷰 수정
@@ -167,6 +197,7 @@ public class ReviewService {
                 .view(review.getView())
                 .likedByCurrentUser(liked)
                 .authorNickname(review.getUser().getNickname())
+                .userId(review.getUser().getId())
                 .tags(review.getTags())
                 .date(review.getDate())
                 .images(review.getImages())

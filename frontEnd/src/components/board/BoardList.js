@@ -1,8 +1,8 @@
-import {MessageSquareText,Heart,SquarePen} from 'lucide-react'
+import { MessageSquareText, Heart, SquarePen } from 'lucide-react'
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowUpDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { boardFindALL,PostContent } from '../../api/board'
+import { boardFindALL } from '../../api/board'
 import './BoardList.css'
 import { useAuth } from '../../context/AuthContext'
 
@@ -10,25 +10,47 @@ export const BoardList = () => {
 
     // 게시판 주제 가져오기
     const { categoryId } = useParams();
-    const [posts,setPosts]  = useState([]);
-    const {user} = useAuth();
+    const [posts, setPosts] = useState([]);
+    const { user } = useAuth();
     const navigate = useNavigate();
+
+    //페이징
+    const [page, setPage] = useState(0);
+    const [totalPage, setTotalPage] = useState(1);
+    const [size] = useState(10);
+    const goPrev = () => {
+        setPage(prev => Math.max(prev - 1, 0));
+    }
+
+    const goNext = () => {
+        setPage(prev => Math.min(prev + 1, totalPage - 1));
+    }
+
     const boardCategories = [
-        { id: 0, name: '전체'},
-        { id: 1, name: '잡담'},
-        { id: 2, name: '질문'},
+        { id: '0', name: '전체' },
+        { id: '1', name: '잡담' },
+        { id: '2', name: '질문' },
     ];
 
     // useState 대신 categoryId로 직접 필터링
-    const currentCategory = boardCategories.find(cat => cat.id == categoryId);
+    const currentCategory = boardCategories.find(cat => cat.id === categoryId);
     const activeTab = currentCategory?.name || '전체';
 
-    useEffect(()=>{
+    useEffect(() => {
         boardFindALL()
             .then(response => {
-                setPosts(response);
+                const allPosts = response.content;
+                setTotalPage(Math.ceil(
+                    (activeTab === '전체'
+                        ? allPosts.length
+                        : allPosts.filter(post => post.category === activeTab).length
+                    ) / size
+                ));
+                setPosts(allPosts);
+                // setTotalPage(response.totalPages)
+                // setPosts(response.content);
             })
-    },[])
+    }, [page, size])
 
     const filteredPosts = activeTab === '전체'
         ? posts
@@ -42,8 +64,8 @@ export const BoardList = () => {
         }
     };
 
-    if(!posts) return<div>데이터 로딩중입니다...</div>
-    if(posts.length<=0) return<div>표시할 데이터가 없습니다...</div>
+    if (!posts) return <div>데이터 로딩중입니다...</div>
+    if (posts.length <= 0) return <div>표시할 데이터가 없습니다...</div>
 
     return (
         <div className='BLappcontainer' >
@@ -69,7 +91,7 @@ export const BoardList = () => {
                                 className="BLpostrow"
                                 onClick={() => {
                                     navigate(`/board/${categoryId}/detail/${post.id}`)
-                                    window.scroll(0,0)
+                                    window.scroll(0, 0)
                                 }}
                             >
                                 <div className="BLrowcategory">
@@ -82,7 +104,7 @@ export const BoardList = () => {
                                     <div className="BLtitlecontent">
                                         <span className="BLtitletext">{post.title}</span>
                                     </div>
-                                    <div className="BLtitlepreview">{PostContent(post.content)}</div>
+                                    {/* <div className="BLtitlepreview">{PostContent(post.content)}</div> */}
                                     <div className="BLtagscontainer">
                                         {post.tags.slice(0, 3).map((tag, index) => (
                                             <span key={index} className="BLtag">
@@ -114,7 +136,7 @@ export const BoardList = () => {
                                 </div>
 
                                 <div className="BLrowdate">
-                                    <span>{post.createdAt.slice(0,10)}</span>
+                                    <span>{post.createdAt.slice(0, 10)}</span>
                                 </div>
 
                                 <div className="BLrowstats">
@@ -133,24 +155,30 @@ export const BoardList = () => {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )).reverse()}
                     </div>
                 </div>
 
-                {/* Load More Button */}
-                <div className="BLloadmoresection">
-                    <button className="BLloadmorebtn">
-                        페이징 버튼(예정)
-                    </button>
+                {/* 페이징 버튼 */}
+                <div className="BLpagination">
+                    <button onClick={() => {
+                        goPrev()
+                        window.scroll(0, 0)
+                    }} disabled={page === 0}>이전</button>
+                    <span>{page + 1} / {totalPage}</span>
+                    <button onClick={() => {
+                        goNext()
+                        window.scroll(0, 0)
+                    }} disabled={page + 1 >= totalPage}>다음</button>
                 </div>
             </main>
 
             {/* Floating Action Button */}
-            {user&&<button
+            {user && <button
                 onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/board/${categoryId}/write`)
-                    window.scroll(0,0)
+                    window.scroll(0, 0)
                 }}
                 className="BLfloatingbtn">
                 <SquarePen />
