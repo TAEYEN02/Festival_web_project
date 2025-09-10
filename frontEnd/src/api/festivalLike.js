@@ -29,7 +29,7 @@ export const toggleFestivalLike = async (festivalId) => {
     if (!token) throw new Error("로그인이 필요합니다.");
 
     const res = await axios.post(
-      `${BASE_URL}/${festivalId}`,
+      `${BASE_URL}/${festivalId}/like`,
       null, // POST body 없음
       {
         headers: { Authorization: `Bearer ${token}` },

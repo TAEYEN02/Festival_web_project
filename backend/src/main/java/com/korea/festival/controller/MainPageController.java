@@ -60,6 +60,7 @@ public class MainPageController {
     @GetMapping("/latest")
     public ResponseEntity<List<Festival_MainPage>> getUpcomingFestivalsTop10() {
         List<Festival_MainPage> festivals = mainPageService.getUpcomingFestivalsTop10();
+        System.out.println("DEBUG >>> " + festivals); // 서버 로그 확인
         return ResponseEntity.ok(festivals);
     }
 

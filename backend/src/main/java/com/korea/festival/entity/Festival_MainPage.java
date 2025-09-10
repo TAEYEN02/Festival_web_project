@@ -71,26 +71,10 @@ public class Festival_MainPage {
     @OneToMany(mappedBy = "festival", cascade = CascadeType.ALL)
     private List<CommunityPostEntity> posts;
     
-    // 누가 좋아요 했는지 기록
-    @OneToMany(mappedBy = "festival", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FestivalLikeEntity> likes_info = new ArrayList<>();
-    
+  
     @Column(name = "likes_count")
     private int likesCount = 0;
     
     
-    // 좋아요 누름
-    public void addLike(FestivalLikeEntity like) {
-        likes_info.add(like);
-        like.setFestival(this);
-        this.likesCount = likes_info.size(); // 동기화
-    }
-
-    // 좋아요 취소
-    public void removeLike(FestivalLikeEntity like) {
-        likes_info.remove(like);
-        like.setFestival(null);
-        this.likesCount = likes_info.size(); // 동기화
-    }
 
 }

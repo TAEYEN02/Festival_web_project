@@ -107,16 +107,19 @@ export const resetAndImportFestivals = async (token) => {
 export const fetchLatestFestivals = async () => {
   try {
     const res = await axios.get(`${API_BASE}/latest`);
-    const raw = Array.isArray(res.data) ? res.data : [];
+
+    console.log(res.data)
     
+    const raw = Array.isArray(res.data) ? res.data : [];
+
     return raw.map(f => ({
-      contentid: String(f.contentId ?? f.id ?? ""), // 문자열로 통일
+      contentid: String(f.contentId ?? f.id ?? ""),
       title: f.name ?? "제목 없음",
       addr1: f.location ?? "",
       eventstartdate: f.startDate ? f.startDate.replace(/-/g, "") : "",
       eventenddate: f.endDate ? f.endDate.replace(/-/g, "") : "",
       firstimage: f.firstimage ?? "/default.jpg",
-      likes: f.likesCount ?? 0,
+      likes: f.likesCount ?? 0,  
       views: f.views ?? 0,
     }));
   } catch (err) {
@@ -124,6 +127,7 @@ export const fetchLatestFestivals = async () => {
     return [];
   }
 };
+
 
 
 // 축제 인기순 (좋아요 수 기준)

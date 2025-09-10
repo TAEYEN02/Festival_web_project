@@ -26,7 +26,7 @@ public class FestivalLikeController {
 
     
     // 좋아요 토글
-    @PostMapping("/{contentId}")
+    @PostMapping("/{contentId}/like")
     public ResponseEntity<?> toggleLike(
             @PathVariable("contentId") String contentId,
             HttpServletRequest request

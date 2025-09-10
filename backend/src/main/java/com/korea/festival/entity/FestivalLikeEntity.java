@@ -19,7 +19,7 @@ import lombok.Setter;
 @Table(
     name = "festival_likes",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "content_id"})
+        @UniqueConstraint(columnNames = {"user_id", "festival_id"})
     }
 )
 @Getter 
@@ -38,8 +38,8 @@ public class FestivalLikeEntity {
     private User user;
 
     // 좋아요가 눌린 축제
-    @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "content_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "festival_id", nullable = false)
     private Festival_MainPage festival;
 }
 

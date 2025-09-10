@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -22,7 +20,7 @@ import com.korea.festival.dto.FestivalDTO_MainPage;
 import com.korea.festival.entity.Festival_MainPage;
 import com.korea.festival.repository.MainPageRepository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,13 +136,13 @@ public class MainPageService {
 
     
     // 최신순
+    @Transactional(readOnly = true)
     public List<Festival_MainPage> getUpcomingFestivalsTop10() {
         LocalDate today = LocalDate.now();
         List<Festival_MainPage> festivals = mainPageRepository.findUpcomingFestivals(today);
-
-        // 가장 가까운 10개만 가져오기
         return festivals.size() > 10 ? festivals.subList(0, 10) : festivals;
     }
+
 
 
 

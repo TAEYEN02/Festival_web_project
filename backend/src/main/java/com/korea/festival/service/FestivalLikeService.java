@@ -24,12 +24,10 @@ public class FestivalLikeService {
     private final MainPageRepository mainPageRepository;
     private final UserRepository userRepository;
 
-    // 좋아요 토글
     @Transactional
     public String toggleLike(String username, String contentId) {
-        // 현재 로그인한 사용자 이름 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        username = authentication.getName();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        username = auth.getName();
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
@@ -37,43 +35,41 @@ public class FestivalLikeService {
         Festival_MainPage festival = mainPageRepository.findByContentId(contentId)
                 .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다."));
 
-        Optional<FestivalLikeEntity> existingLike = likeRepository.findByUserAndFestivalContentId(user, contentId);
+        Optional<FestivalLikeEntity> existingLike = likeRepository.findByUserAndFestival(user, festival);
 
         if (existingLike.isPresent()) {
-            likeRepository.delete(existingLike.get());
-            festival.setLikesCount(festival.getLikesCount() - 1);
+            likeRepository.deleteByUserAndFestival(user, festival);
             return "unliked";
         } else {
             FestivalLikeEntity like = new FestivalLikeEntity();
             like.setUser(user);
             like.setFestival(festival);
             likeRepository.save(like);
-            
-            festival.setLikesCount(festival.getLikesCount() + 1);
             return "liked";
         }
     }
 
-   
-
-    // 좋아요 수 조회
+    /**
+     * 특정 축제 좋아요 수 조회
+     */
     @Transactional(readOnly = true)
     public int getLikeCount(String contentId) {
         Festival_MainPage festival = mainPageRepository.findByContentId(contentId)
-                .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다"));
-        return festival.getLikesCount();
+                .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다."));
+        return likeRepository.countByFestival(festival);
     }
-    
-    
 
-    // 사용자의 좋아요 여부 확인
+    /**
+     * 사용자가 특정 축제를 좋아요했는지 여부
+     */
     @Transactional(readOnly = true)
     public boolean isLikedByUser(String contentId, String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        // 이제 contentId 자체를 전달
-        return likeRepository.existsByUserAndFestival_ContentId(user, contentId);
+        Festival_MainPage festival = mainPageRepository.findByContentId(contentId)
+                .orElseThrow(() -> new RuntimeException("축제를 찾을 수 없습니다."));
+
+        return likeRepository.existsByUserAndFestival(user, festival);
     }
-
 }
