@@ -28,13 +28,18 @@ export default function Step4Review({ data, onPrev, onFinish }) {
     return () => ac.abort();
   }, [data]);
 
-  // 주변 후보 조회
+  // 주변 후보 조회 (Abort + 키 decode + lat/lng 일관화 + 타입 가드)
   useEffect(() => {
+    const ac = new AbortController();
+
     const dest = data?.destination || {};
-    const lat = Number(dest.mapy);
-    const lng = Number(dest.mapx);
-    const contentTypes = (data?.preferences?.contentTypeIds || [15, 12, 39]).map(String);
-    const serviceKey = process.env.REACT_APP_TOURAPI_KEY;
+    const lat = Number(dest.lat ?? dest.mapy);
+    const lng = Number(dest.lng ?? dest.mapx);
+    const contentTypes = (data?.preferences?.contentTypeIds?.length
+      ? data.preferences.contentTypeIds
+      : [15, 12, 39]
+    ).map(String);
+    const serviceKey = decodeURIComponent(process.env.REACT_APP_TOURAPI_KEY || "");
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       setNearby({ loading: false, error: "도착지 좌표 없음", items: [] });
@@ -62,7 +67,7 @@ export default function Step4Review({ data, onPrev, onFinish }) {
     const fetchOne = async (ct) => {
       const params = new URLSearchParams({ ...common, contentTypeId: ct });
       const url = `https://apis.data.go.kr/B551011/KorService2/locationBasedList2?${params.toString()}`;
-      const resp = await fetch(url);
+      const resp = await fetch(url, { signal: ac.signal });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const json = await resp.json();
       const list = json?.response?.body?.items?.item || [];
@@ -88,9 +93,12 @@ export default function Step4Review({ data, onPrev, onFinish }) {
         const items = Array.from(map.values()).sort((a, b) => a.dist - b.dist).slice(0, 30);
         setNearby({ loading: false, error: "", items });
       } catch {
+        if (ac.signal.aborted) return;
         setNearby({ loading: false, error: "주변 후보 조회 실패", items: [] });
       }
     })();
+
+    return () => ac.abort();
   }, [data]);
 
   const prefText = useMemo(() => {
@@ -114,8 +122,10 @@ export default function Step4Review({ data, onPrev, onFinish }) {
 
   const o = data?.origin || {};
   const d = data?.destination || {};
-  const opt = data?.options || {};
-  const plan = ai.plan;
+  // 축제 메타(정규화된 구조 + meta.rawFestival 모두 대응)
+  const f = d.meta?.rawFestival || d.meta || {};
+  const plan = ai.plan && typeof ai.plan === "object" ? ai.plan : null;
+  const daysArr = Array.isArray(plan?.daily) ? plan.daily : [];
 
   return (
     <div className="sr4 sr4-wrap">
@@ -131,25 +141,28 @@ export default function Step4Review({ data, onPrev, onFinish }) {
         <div className="sr4-kv"><span>좌표</span><b>{fmtCoord(o.lat, o.lng)}</b></div>
       </section>
 
-      {/* 도착지 */}
+      {/* 도착지(축제) */}
       <section className="sr4-card">
         <h3>도착지(축제)</h3>
         <div className="sr4-row">
-          {d.firstimage && (
+          {/* 이미지: meta 우선, 없으면 d.firstimage */}
+          {(f.firstimage || d.firstimage) && (
             <img
-              src={d.firstimage}
+              src={f.firstimage || d.firstimage}
               alt=""
               style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 8, background: "#f3f4f6" }}
               onError={(e) => { e.currentTarget.style.display = "none"; }}
             />
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700 }}>{d.title || "-"}</div>
-            <div className="sr4-hint">{d.addr1 || "-"}</div>
+            <div style={{ fontWeight: 700 }}>{d.name ?? d.title ?? "-"}</div>
+            <div className="sr4-hint">{d.address ?? d.addr1 ?? "-"}</div>
             <div className="sr4-hint">
-              {d.eventstartdate ? yyyymmddToISO(d.eventstartdate) : "-"} ~ {d.eventenddate ? yyyymmddToISO(d.eventenddate) : "-"}
+              {f.eventstartdate ? yyyymmddToISO(f.eventstartdate) : (d.eventstartdate ? yyyymmddToISO(d.eventstartdate) : "-")}
+              {" ~ "}
+              {f.eventenddate ? yyyymmddToISO(f.eventenddate) : (d.eventenddate ? yyyymmddToISO(d.eventenddate) : "-")}
             </div>
-            <div className="sr4-hint">좌표: {fmtCoord(d.mapy, d.mapx)}</div>
+            <div className="sr4-hint">좌표: {fmtCoord(d.lat ?? d.mapy, d.lng ?? d.mapx)}</div>
           </div>
         </div>
       </section>
@@ -164,12 +177,12 @@ export default function Step4Review({ data, onPrev, onFinish }) {
       <section className="sr4-card">
         <h3>여행 옵션</h3>
         <div className="sr4-grid2">
-          <div className="sr4-kv"><span>인원</span><b>{opt.people || "-"}</b></div>
-          <div className="sr4-kv"><span>여행일수</span><b>{opt.days || "-"}</b></div>
-          <div className="sr4-kv"><span>기간</span><b>{opt.startDate || "-"} ~ {opt.endDate || "-"}</b></div>
-          <div className="sr4-kv"><span>스타일</span><b>{opt.tempo || "-"}</b></div>
-          <div className="sr4-kv"><span>일정 간 텀</span><b>{opt.gapMinutes ? `${opt.gapMinutes}분` : "-"}</b></div>
-          <div className="sr4-kv"><span>코스/일</span><b>{opt.stopsPerDay || "-"}</b></div>
+          <div className="sr4-kv"><span>인원</span><b>{data?.options?.people ?? "-"}</b></div>
+          <div className="sr4-kv"><span>여행일수</span><b>{data?.options?.days ?? "-"}</b></div>
+          <div className="sr4-kv"><span>기간</span><b>{data?.options?.startDate ?? "-"} ~ {data?.options?.endDate ?? "-"}</b></div>
+          <div className="sr4-kv"><span>스타일</span><b>{data?.options?.tempo ?? "-"}</b></div>
+          <div className="sr4-kv"><span>일정 간 텀</span><b>{data?.options?.gapMinutes ? `${data.options.gapMinutes}분` : "-"}</b></div>
+          <div className="sr4-kv"><span>코스/일</span><b>{data?.options?.stopsPerDay ?? "-"}</b></div>
         </div>
       </section>
 
@@ -183,12 +196,12 @@ export default function Step4Review({ data, onPrev, onFinish }) {
             {plan.title && <div style={{ fontWeight: 700, marginBottom: 6 }}>{plan.title}</div>}
             {plan.summary && <div className="sr4-hint" style={{ marginBottom: 8 }}>{plan.summary}</div>}
             <ul className="sr4-list">
-              {(plan.daily || []).map((day) => (
+              {daysArr.map((day) => (
                 <li key={day.day} className="sr4-item">
                   <div style={{ fontWeight: 600 }}>{`Day ${day.day} · ${day.date || ""}`}</div>
-                  <ul style={{ listStyle:"disc", marginLeft:18, marginTop:6 }}>
+                  <ul style={{ listStyle: "disc", marginLeft: 18, marginTop: 6 }}>
                     {(day.stops || []).slice(0, 8).map((s, idx) => (
-                      <li key={idx} style={{ fontSize:13, color:"#374151" }}>
+                      <li key={idx} style={{ fontSize: 13, color: "#374151" }}>
                         <b>{s.time}</b> {s.name} <span className="sr4-hint">({s.address})</span>
                         {s.notes ? <span className="sr4-hint"> · {s.notes}</span> : null}
                       </li>
@@ -205,7 +218,7 @@ export default function Step4Review({ data, onPrev, onFinish }) {
       <section className="sr4-card">
         <h3>도착지 주변 추천 후보(반경 2km)</h3>
         {nearby.loading && <div className="sr4-hint">불러오는 중…</div>}
-        {nearby.error && <div style={{ color:"#b91c1c" }}>{nearby.error}</div>}
+        {nearby.error && <div style={{ color: "#b91c1c" }}>{nearby.error}</div>}
         {!nearby.loading && !nearby.error && (
           <ul className="sr4-list">
             {nearby.items.slice(0, 10).map((it) => (
@@ -214,10 +227,10 @@ export default function Step4Review({ data, onPrev, onFinish }) {
                   <img
                     src={it.imageUrl || ""}
                     alt=""
-                    style={{ width:60, height:60, objectFit:"cover", borderRadius:8, background:"#f3f4f6" }}
+                    style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, background: "#f3f4f6" }}
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
-                  <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="sr4-name">{it.name}</div>
                     <div className="sr4-addr">{it.address}</div>
                   </div>

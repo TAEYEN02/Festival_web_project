@@ -50,7 +50,7 @@ export default function TripPlannerWizard() {
 }
 
 function WizardHeader({ step }) {
-    const steps = ["출발/도착", "선호 스타일", "인원·기간", "요약"];
+    const steps = ["출발/도착", "스타일", "옵션", "결과"];
     return (
         <div style={{ marginBottom: 12 }}>
             <h1 style={{ margin: "6px 0" }}>여행 일정 플래너</h1>

@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { formatDateRange, isOngoing, isUpcoming, isPast } from "../../util/date.js";
 
+import LikeButton from "../common/LikeButton";
+
 function escapeRegExp(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -79,14 +81,12 @@ export default function FestivalCard({ festival, onTagClick, isScrapped, onToggl
                         </button>
                     ))}
                 </div>
-                <button
-                    className={`scrap-btn ${isScrapped?.(id) ? "on" : ""}`}
-                    aria-label="스크랩 토글"
-                    onClick={(e) => { e.stopPropagation(); onToggleScrap?.(id); }}
-                    title="스크랩"
-                >
-                    {isScrapped?.(id) ? "★" : "☆"}
-                </button>
+                <LikeButton
+                    festivalId={festival.id}
+                    onToggleLike={(id, count) => {
+                        console.log("좋아요 토글됨:", id, count);
+                    }}
+                />
             </div>
 
             <div className="festival-body">

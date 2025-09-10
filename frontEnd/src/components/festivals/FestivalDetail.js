@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { fetchFestivalById, fetchNearbyFestivals /*, fetchRelatedFestivals */ } from "../../api/regionFestival";
 import { formatDateRange, isOngoing, isUpcoming, isPast } from "../../util/date";
-import "../RegionOverview/RegionOverview.css";
-import "./FestivalDetail.css";
 import MapView from "../RegionOverview/MapView";
-import useScrap from "../RegionOverview/useScrap";
+import LikeButton from "../common/LikeButton";
+
+import "./FestivalDetail.css";
+import "../RegionOverview/RegionOverview.css";
 import festivalImg from "../../asset/icons/festivalImg.png";
 
 // 파일 상단 import 아래(컴포넌트 바깥) 또는 컴포넌트 안 최상단에 추가
@@ -82,7 +83,6 @@ function walkMinutes(m) {
 export default function FestivalDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { isScrapped, toggleScrap } = useScrap();
 
     const [loading, setLoading] = useState(true);
     const [festival, setFestival] = useState(null);
@@ -214,14 +214,12 @@ export default function FestivalDetail() {
         <div className="detail-wrap">
             {/* 히어로 영역 */}
             <div className="detail-hero">
-                <button
-                    className={`scrap-fab ${isScrapped(festival.id) ? "on" : ""}`}
-                    onClick={() => toggleScrap(festival.id)}
-                    aria-label="스크랩 토글"
-                    title="스크랩"
-                >
-                    {isScrapped(festival.id) ? "★" : "☆"}
-                </button>
+                <LikeButton
+                    festivalId={festival.id}
+                    onToggleLike={(id, count) => {
+                        console.log("좋아요 토글됨:", id, count);
+                    }}
+                />
             </div>
 
             {/* 기본 정보 */}

@@ -97,7 +97,7 @@ export default function PlaceSearchInputKakao({ placeholder = "장소 또는 주
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude, lng = pos.coords.longitude;
-        const finish = (addr) => { setLoading(false); onSelect?.({ name:"내 위치", address:addr||"", lat, lng }); };
+        const finish = (addr) => { setLoading(false); onSelect?.({ name: "내 위치", address: addr || "", lat, lng }); };
         if (!geocoderRef.current || !window.kakao?.maps) { finish(""); return; }
         const g = geocoderRef.current;
         const coord = new window.kakao.maps.LatLng(lat, lng);
@@ -109,7 +109,7 @@ export default function PlaceSearchInputKakao({ placeholder = "장소 또는 주
           }
           g.coord2RegionCode(coord.getLng(), coord.getLat(), (res2, status2) => {
             if (status2 === window.kakao.maps.services.Status.OK && res2?.[0]) {
-              const admin = res2.find((x)=>x.region_type==="H") || res2[0];
+              const admin = res2.find((x) => x.region_type === "H") || res2[0];
               const addr2 = [admin.region_1depth_name, admin.region_2depth_name, admin.region_3depth_name].filter(Boolean).join(" ");
               finish(addr2);
             } else { setLoading(false); setError("역지오코딩 실패"); finish(""); }
@@ -117,7 +117,7 @@ export default function PlaceSearchInputKakao({ placeholder = "장소 또는 주
         });
       },
       (err) => { setLoading(false); setError(`위치 권한 거부 또는 실패 (${err.code})`); },
-      { enableHighAccuracy:true, timeout:10000 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -156,6 +156,18 @@ export default function PlaceSearchInputKakao({ placeholder = "장소 또는 주
           className="psk-input"
           aria-label="장소 검색"
         />
+        {/* [추가] X 버튼 */}
+        {q && (
+          <button
+            type="button"
+            className="psk-btn clear-btn"
+            onClick={() => { setQ(""); setItems([]); setError(""); }}
+            aria-label="검색어 지우기"
+          >
+            ✕
+          </button>
+        )}
+
         {/* 클릭 = 우편번호 팝업 */}
         <button type="button" onClick={openPostcode} disabled={loading || !ready} className="psk-btn" aria-label="주소 검색">
           검색
