@@ -27,4 +27,6 @@ public interface FestivalLikeRepository extends JpaRepository<FestivalLikeEntity
     
      // 특정 축제에 좋아요가 몇 개 눌렸는지 카운트
     int countByFestival(Festival_MainPage festival);
+    
+    
 }

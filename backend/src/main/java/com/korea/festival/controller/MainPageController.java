@@ -58,12 +58,12 @@ public class MainPageController {
 	
 	// 최신순 조회
     @GetMapping("/latest")
-    public ResponseEntity<List<Festival_MainPage>> getUpcomingFestivalsTop10() {
-        List<Festival_MainPage> festivals = mainPageService.getUpcomingFestivalsTop10();
-        System.out.println("DEBUG >>> " + festivals); // 서버 로그 확인
+    public ResponseEntity<List<FestivalDTO_MainPage>> getUpcomingFestivalsTop10() {
+        List<FestivalDTO_MainPage> festivals = mainPageService.getUpcomingFestivalsTop10();
+        System.out.println("DEBUG >>> " + festivals);
         return ResponseEntity.ok(festivals);
     }
-
+    
     
     // 인기순 조회 (조회수 기준)
     @GetMapping("/popular")

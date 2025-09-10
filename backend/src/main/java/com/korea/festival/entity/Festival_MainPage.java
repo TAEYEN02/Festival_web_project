@@ -72,8 +72,21 @@ public class Festival_MainPage {
     private List<CommunityPostEntity> posts;
     
   
+    @OneToMany(mappedBy = "festival")
+    private List<FestivalLikeEntity> likes = new ArrayList<>();
+
     @Column(name = "likes_count")
     private int likesCount = 0;
+
+    // 좋아요 수 증감 편의 메서드
+    public void increaseLikes() {
+        this.likesCount++;
+    }
+
+    public void decreaseLikes() {
+        if (this.likesCount > 0) this.likesCount--;
+    }
+
     
     
 

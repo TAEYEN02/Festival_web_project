@@ -88,7 +88,9 @@ const MainPage = () => {
     // 인기순 리스트 즉시 반영
     setPopular(prev =>
       prev.map(f =>
-        String(f.contentid) === strId ? { ...f, likes: updatedCount } : { ...f }
+        String(f.contentid) === strId
+         ? { ...f, likes: updatedCount }
+          : { ...f }
       )
     );
   };
@@ -103,6 +105,7 @@ const MainPage = () => {
       <div className="festival-card-list-container">
         <h3 className="section-title">🎊 Comming Soon! 최신 페스티벌은 어디? </h3>
         <FestivalCardList
+          key={`latest-${latest.map(f => f.likes).join("-")}`}
           festivals={latest}
           token={token}
           onToggleLike={handleToggleLike} // 최신순 토글은 서버 fetch로 처리

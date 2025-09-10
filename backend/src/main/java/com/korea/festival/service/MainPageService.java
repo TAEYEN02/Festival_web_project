@@ -137,10 +137,28 @@ public class MainPageService {
     
     // 최신순
     @Transactional(readOnly = true)
-    public List<Festival_MainPage> getUpcomingFestivalsTop10() {
+    public List<FestivalDTO_MainPage> getUpcomingFestivalsTop10() {
         LocalDate today = LocalDate.now();
         List<Festival_MainPage> festivals = mainPageRepository.findUpcomingFestivals(today);
-        return festivals.size() > 10 ? festivals.subList(0, 10) : festivals;
+
+        return festivals.stream()
+                .limit(10) 
+                .map(f -> FestivalDTO_MainPage.builder()
+                        .id(f.getId())
+                        .contentId(f.getContentId())
+                        .name(f.getName())
+                        .startDate(f.getStartDate())
+                        .endDate(f.getEndDate())
+                        .location(f.getLocation())
+                        .firstimage(f.getFirstimage())
+                        .description(f.getDescription())
+                        .bookingUrl(f.getBookingUrl())
+                        .views(f.getViews())
+                        .clicks(f.getClicks())
+                        .likesCount(f.getLikesCount())
+                        .createdAt(f.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 
 

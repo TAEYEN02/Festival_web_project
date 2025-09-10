@@ -38,16 +38,22 @@ public class FestivalLikeService {
         Optional<FestivalLikeEntity> existingLike = likeRepository.findByUserAndFestival(user, festival);
 
         if (existingLike.isPresent()) {
-            likeRepository.deleteByUserAndFestival(user, festival);
+            // 좋아요 취소
+            likeRepository.delete(existingLike.get());
+            festival.decreaseLikes();   // 좋아요 수 -1
             return "unliked";
         } else {
+            // 좋아요 추가
             FestivalLikeEntity like = new FestivalLikeEntity();
             like.setUser(user);
             like.setFestival(festival);
             likeRepository.save(like);
+
+            festival.increaseLikes();   // 좋아요 수 +1
             return "liked";
         }
     }
+
 
     /**
      * 특정 축제 좋아요 수 조회
