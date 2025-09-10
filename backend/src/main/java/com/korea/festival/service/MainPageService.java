@@ -44,7 +44,7 @@ public class MainPageService {
     public void importFestivals() {
         LocalDate today = LocalDate.now();
         String startDate = today.format(DateTimeFormatter.BASIC_ISO_DATE); 
-        String endDate = "20261231"; 
+        String endDate = "20251231"; 
         int numOfRows = 500;
         int pageNo = 1;
         boolean hasMore = true;
@@ -136,6 +136,7 @@ public class MainPageService {
 
     
     // 최신순
+    // JPA 양방향 연관관계 + JSON 직렬화 문제 => DTO로 분리하기
     @Transactional(readOnly = true)
     public List<FestivalDTO_MainPage> getUpcomingFestivalsTop10() {
         LocalDate today = LocalDate.now();
@@ -170,6 +171,7 @@ public class MainPageService {
     }
 
     // 인기순 (좋아요 기준)
+    // JPA 양방향 연관관계 + JSON 직렬화 문제 => DTO로 분리하기
     public List<FestivalDTO_MainPage> getFestivalsByLikesDTO() {
         List<Festival_MainPage> list = mainPageRepository.findTop10ByOrderByLikesCountDesc();
         return list.stream()
