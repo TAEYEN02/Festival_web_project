@@ -22,7 +22,7 @@ export const ReviewWrtie = () => {
     const [images, setImages] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
 
-    const [setDest] = useState('');
+    const [dest,setDest] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
 
     const handleInputChange = (field, value) => {

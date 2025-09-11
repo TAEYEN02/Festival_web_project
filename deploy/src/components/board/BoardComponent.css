@@ -1,0 +1,299 @@
+/* Main Container */
+.BCcontainer {
+    min-height: 100vh;
+}
+
+/* Hero Section */
+.BCheroSection {
+    padding: 4rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    background: #f7fafc;
+}
+
+.BCvideoContainer {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.BCvideoPreview {
+    cursor: pointer;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+}
+
+.BCvideoPreview:hover {
+    transform: scale(1.02);
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
+}
+
+.BCvideoThumbnail {
+    position: relative;
+    background: #4a4aff;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.BCvideoPreview {
+    width: 85%;
+    max-width: 900px;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    object-fit: contain;
+}
+
+
+.BCplayButton {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.BCvideoPreview:hover .BCplayButton {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.BCvideoOverlay h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.BCvideoOverlay p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    text-align: center;
+}
+
+.BCactiveVideo {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: #1a1a1a;
+    height: 400px;
+}
+
+.BCvideoPlayer {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.BCvideoContent {
+    text-align: center;
+}
+
+/* Features Section */
+.BCfeaturesSection {
+    padding: 5rem 2rem;
+    background: white;
+}
+
+.BCsectionTitle {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.BCsectionTitle h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.BCsectionTitle p {
+    font-size: 1.2rem;
+    color: #718096;
+}
+
+.BCfeaturesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.BCfeatureCard {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.BCfeatureCard:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.BCfeatureIcon {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.BCfeatureCard h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.BCfeatureCard h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #718096;
+    margin-bottom: 1rem;
+}
+
+.BCfeatureCard p {
+    color: #4a5568;
+    line-height: 1.6;
+}
+
+
+/* CTA Section */
+.BCctaSection {
+    padding: 5rem 2rem;
+    text-align: center;
+}
+
+.BCctaContent {
+    max-width: 600px;
+    margin: 0 auto;
+    color: white;
+}
+
+.BCctaContent svg {
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.BCctaContent h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.BCctaContent p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.BCctaButton {
+    background: #f7fafc;
+    color: #667eea;
+    padding: 1rem 2rem;
+    border-radius: 9999px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.BCctaButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .BCheroSection {
+        padding: 2rem 1rem;
+        min-height: 50vh;
+    }
+
+    .BCvideoThumbnail {
+        height: 300px;
+    }
+
+    .BCvideoOverlay h2 {
+        font-size: 2rem;
+    }
+
+    .BCvideoOverlay p {
+        font-size: 1rem;
+    }
+
+    .BCfeaturesSection,
+    .BCpreviewSection,
+    .BCctaSection {
+        padding: 3rem 1rem;
+    }
+
+    .BCsectionTitle h2 {
+        font-size: 2rem;
+    }
+
+    .BCfeaturesGrid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .BCfeatureCard {
+        padding: 2rem;
+    }
+
+    .BCnavTabs {
+        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .BCnavGroup {
+        flex-wrap: wrap;
+    }
+
+    .BCpostsPreview {
+        padding: 1rem;
+    }
+
+    .BCpostCard {
+        padding: 1rem;
+    }
+
+    .BCpostTitle {
+        font-size: 1rem;
+    }
+
+    .BCpostFooter {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+
+    .BCctaContent h2 {
+        font-size: 2rem;
+    }
+
+    .BCctaContent p {
+        font-size: 1rem;
+    }
+}

@@ -3,6 +3,7 @@ import MainHeader from "./components/main/MainHeader";
 import MainPage from "./components/main/MainPage";
 
 import './App.css';
+import BoardComponent from "./components/board/BoardComponent";
 
 function App() {
   return (
@@ -32,7 +33,7 @@ function App() {
                 <Route path="/mypage" element={''} />
 
                 {/* 게시판*/}
-                <Route path='/board' element={''} />
+                <Route path='/board' element={<BoardComponent/>} />
             </Routes>
         </div>
   );
