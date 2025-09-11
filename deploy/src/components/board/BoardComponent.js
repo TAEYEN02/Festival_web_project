@@ -83,7 +83,8 @@ const BoardComponent = () => {
 
             {/* CTA Section */}
             <section className="BCctaSection">
-                <button className="BCctaButton">
+                <button className="BCctaButton"
+                onClick={()=>window.scroll(0,0)}>
                     처음으로 돌아가기
                     <ChevronRight size={20} />
                 </button>
