@@ -141,7 +141,7 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
     { id: 'profile', label: '프로필 관리', icon: User },
     { id: 'scraps', label: '찜 목록', icon: Bookmark },
     { id: 'inquiries', label: '1:1 문의', icon: MessageSquare },
-    { id: 'regionChat', label: '지역 채팅', icon: Users },
+    // { id: 'regionChat', label: '지역 채팅', icon: Users },
   ];
 
   console.log("JWT token:", token);

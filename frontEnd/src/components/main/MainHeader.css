@@ -202,3 +202,7 @@
   .auth-actions { display: none; }
   .menu-toggle { display: inline-flex; }
 }
+
+@media (max-width: 990px) {
+   .header-center { display: none; }
+}

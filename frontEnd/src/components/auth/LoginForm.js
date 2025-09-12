@@ -537,7 +537,7 @@ const LoginForm = () => {
       {error && <ErrorBox>{error}</ErrorBox>}
 
       {/* 디버깅용 - 나중에 제거할 수 있습니다 */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div style={{ 
           fontSize: '12px', 
           color: '#666', 
@@ -552,7 +552,7 @@ const LoginForm = () => {
           <div>Kakao SDK: {sdkLoading.kakao ? '🔄 로딩중' : sdkLoaded.kakao ? '✅ 로딩됨' : '❌ 실패'}</div>
           <div>Google SDK: {sdkLoading.google ? '🔄 로딩중' : sdkLoaded.google ? '✅ 로딩됨' : '❌ 실패'}</div>
         </div>
-      )}
+      )} */}
 
       <RoleContainer>
         <SecondaryButton
