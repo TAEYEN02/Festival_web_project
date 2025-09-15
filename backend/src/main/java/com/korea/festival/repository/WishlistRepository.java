@@ -12,8 +12,10 @@ import com.korea.festival.entity.Wishlist;
 
 @Repository
 public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
-    Page<Wishlist> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
-    Optional<Wishlist> findByUserAndItemTypeAndItemId(User user, String itemType, Long itemId);
-    boolean existsByUserAndItemTypeAndItemId(User user, String itemType, Long itemId);
+	
+	boolean existsByUserAndItemTypeAndItemId(User user, String itemType, Long itemId);
+
     void deleteByUserAndItemTypeAndItemId(User user, String itemType, Long itemId);
+
+    Page<Wishlist> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 }

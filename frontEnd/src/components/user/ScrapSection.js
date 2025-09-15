@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Bookmark, Heart, Trash2, Calendar, ExternalLink } from 'lucide-react';
-import { fetchMyWishlist, removeFromWishlist } from '../../api/mypage';
+import { Bookmark, Heart, Trash2, Calendar } from 'lucide-react';
+import { fetchMyLikedFestivals, toggleFestivalLike } from '../../api/festivalLike';
+import axios from 'axios';
 import ConfirmModal from '../common/ConfirmModal';
 
 const Container = styled.div`
@@ -95,7 +97,7 @@ const ItemInfo = styled.div`
   flex: 1;
 `;
 
-const ItemPrice = styled.div`
+const ItemLocation = styled.div`
   font-weight: 600;
   color: #6366f1;
   margin-bottom: 0.25rem;
@@ -131,62 +133,61 @@ const ErrorMessage = styled.div`
   margin-bottom: 1rem;
 `;
 
-const ScrapSection = ({ userId }) => {
+const Itemdday = styled.div`
+  font-weight: 650;
+  color: #ff5252ff;
+  font-size : 14px;
+  margin-top : 7px;
+  margin-bottom: 0.25rem;
+`;
+
+
+const ScrapSection = ({ token }) => {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // 커스텀 모달 상태 추가
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
 
+  const navigate = useNavigate();
 
+  // 좋아요 목록 불러오기
   useEffect(() => {
+    const loadWishlist = async () => {
+      try {
+        setLoading(true);
+        if (!token) throw new Error("로그인이 필요합니다.");
+        const data = await fetchMyLikedFestivals(token); // token 전달
+        console.log("좋아요 목록 데이터 확인:", data);
+        setWishlist(data || []);
+      } catch (err) {
+        console.error('좋아요 목록 로드 실패:', err);
+        setError('좋아요 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
     loadWishlist();
-  }, []);
+  }, [token]);
 
-  const loadWishlist = async () => {
-    try {
-      setLoading(true);
-      const response = await fetchMyWishlist(0, 20);
-      setWishlist(response.content || []);
-    } catch (err) {
-      console.error('찜 목록 로드 실패:', err);
-      setError('찜 목록을 불러오는데 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRemoveItem = async (item, e) => {
+  const handleRemoveItem = (item, e) => {
     e.stopPropagation();
-    
-    // 커스텀 모달로 변경
     setItemToRemove(item);
     setShowRemoveConfirm(true);
   };
 
   const confirmRemoveItem = async () => {
     if (!itemToRemove) return;
-
     try {
-      await removeFromWishlist(itemToRemove.itemType, itemToRemove.itemId);
+      await toggleFestivalLike(itemToRemove.contentId, token); // 좋아요 토글 API
       setWishlist(prev => prev.filter(w => w.id !== itemToRemove.id));
     } catch (err) {
-      console.error('찜 제거 실패:', err);
-      setError('찜 제거에 실패했습니다.');
+      console.error('좋아요 취소 실패:', err);
+      setError('좋아요 취소에 실패했습니다.');
     } finally {
       setItemToRemove(null);
+      setShowRemoveConfirm(false);
     }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('ko-KR');
-  };
-
-  const formatPrice = (price) => {
-    if (!price) return '가격 정보 없음';
-    return new Intl.NumberFormat('ko-KR').format(price) + '원';
   };
 
   if (loading) {
@@ -194,18 +195,26 @@ const ScrapSection = ({ userId }) => {
       <Container>
         <Title>
           <Bookmark size={24} />
-          찜 목록
+          좋아요 누른 축제
         </Title>
-        <LoadingState>찜 목록을 불러오는 중...</LoadingState>
+        <LoadingState>좋아요 목록을 불러오는 중...</LoadingState>
       </Container>
     );
   }
+
+
+  // 상세페이지 이동
+  const handleCardClick = (item) => {
+    if (!item.contentId) return;
+    navigate(`/festival/${item.contentId}`);
+  };
+
 
   return (
     <Container>
       <Title>
         <Bookmark size={24} />
-        찜 목록 ({wishlist.length})
+        좋아요 누른 축제 ({wishlist.length})
       </Title>
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -213,15 +222,15 @@ const ScrapSection = ({ userId }) => {
       {wishlist.length === 0 ? (
         <EmptyState>
           <Heart size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
-          <p>찜한 항목이 없습니다.</p>
-          <p style={{ fontSize: '0.875rem' }}>마음에 드는 축제나 이벤트를 찜해보세요!</p>
+          <p>좋아요한 항목이 없습니다.</p>
+          <p style={{ fontSize: '0.875rem' }}>마음에 드는 축제나 이벤트를 추가해보세요!</p>
         </EmptyState>
       ) : (
         <Grid>
           {wishlist.map(item => (
-            <WishlistCard key={item.id}>
+            <WishlistCard key={item.id} onClick={() => handleCardClick(item)}>
               <CardHeader>
-                <CardTitle>{item.itemTitle}</CardTitle>
+                <CardTitle>{item.name}</CardTitle>
                 <RemoveButton onClick={(e) => handleRemoveItem(item, e)}>
                   <Trash2 size={16} />
                 </RemoveButton>
@@ -229,10 +238,10 @@ const ScrapSection = ({ userId }) => {
 
               <CardContent>
                 <ItemImage>
-                  {item.itemImage ? (
+                  {item.firstimage ? (
                     <img
-                      src={item.itemImage}
-                      alt={item.itemTitle}
+                      src={item.firstimage}
+                      alt={item.name}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem' }}
                     />
                   ) : (
@@ -241,12 +250,45 @@ const ScrapSection = ({ userId }) => {
                 </ItemImage>
 
                 <ItemInfo>
-                  <ItemPrice>{formatPrice(item.itemPrice)}</ItemPrice>
-                  <ItemMeta>
-                    <Calendar size={14} />
-                    {formatDate(item.createdAt)}
-                  </ItemMeta>
-                </ItemInfo>
+                <ItemLocation>{item.location || '위치 정보 없음'}</ItemLocation>
+
+                <ItemMeta>
+                  <Calendar size={14} />
+                  {item.startDate && item.endDate 
+                    ? `${item.startDate} ~ ${item.endDate}` 
+                    : '기간 정보 없음'}
+                </ItemMeta>
+
+                {/* D-DAY 계산 */}
+                {item.startDate && item.endDate && (() => {
+                  const today = new Date();
+                  const start = new Date(item.startDate);
+                  const end = new Date(item.endDate);
+
+                  const diffToStart = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+                  const diffToEnd = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+                  let status = '';
+                  let text = '';
+
+                  if (diffToStart > 0) {
+                    status = 'upcoming';
+                    text = `D-${diffToStart}`;
+                  } else if (diffToStart === 0) {
+                    status = 'today';
+                    text = 'D-Day';
+                  } else if (diffToStart < 0 && diffToEnd >= 0) {
+                    status = 'ongoing';
+                    text = '진행중';
+                  } else {
+                    status = 'ended';
+                    text = '종료';
+                  }
+
+                  return <Itemdday className={status}>{text}</Itemdday>;
+                })()}
+              </ItemInfo>
+
               </CardContent>
             </WishlistCard>
           ))}
@@ -260,8 +302,8 @@ const ScrapSection = ({ userId }) => {
           setItemToRemove(null);
         }}
         onConfirm={confirmRemoveItem}
-        title="찜 목록에서 제거"
-        message={`"${itemToRemove?.itemTitle}"을(를) 찜 목록에서 제거하시겠습니까?`}
+        title="좋아요 목록에서 제거"
+        message={`"${itemToRemove?.name}"을(를) 좋아요 목록에서 제거하시겠습니까?`}
         confirmText="제거"
         cancelText="취소"
         variant="danger"

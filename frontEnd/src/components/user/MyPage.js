@@ -115,11 +115,13 @@ const MyPage = () => {
   const renderCurrentSection = () => {
     if (!userData) return null;
 
+     const token = localStorage.getItem('token');
+
     switch (currentSection) {
       case 'profile':
         return <ProfileSection userData={userData} onUpdateUser={handleUserDataUpdate} />;
       case 'scraps':
-        return <ScrapSection userId={userData.id} />;
+        return <ScrapSection token={token} />;
       case 'inquiries':
         return <InquirySection userId={userData.id} />;
       case 'regionChat':

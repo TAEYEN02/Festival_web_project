@@ -128,41 +128,41 @@ public class MyPageController {
 
 	// ===== 찜 목록 관련 =====
 
-	@PostMapping("/wishlist")
-	public ResponseEntity<WishListDto> addToWishlist(@AuthenticationPrincipal UserDetails userDetails,
-			@RequestBody Map<String, Object> request) {
-		String itemType = (String) request.get("itemType");
-		Long itemId = Long.valueOf(request.get("itemId").toString());
-		String itemTitle = (String) request.get("itemTitle");
-		String itemImage = (String) request.get("itemImage");
-		Integer itemPrice = request.get("itemPrice") != null ? Integer.valueOf(request.get("itemPrice").toString())
-				: null;
-
-		WishListDto wishlist = wishlistService.addToWishlist(userDetails.getUsername(), itemType, itemId, itemTitle,
-				itemImage, itemPrice);
-		return ResponseEntity.ok(wishlist);
-	}
-
-	@DeleteMapping("/wishlist/{itemType}/{itemId}")
-	public ResponseEntity<Void> removeFromWishlist(@AuthenticationPrincipal UserDetails userDetails,
-			@PathVariable("itemType") String itemType, @PathVariable("itemId") Long itemId) {
-		wishlistService.removeFromWishlist(userDetails.getUsername(), itemType, itemId);
-		return ResponseEntity.ok().build();
-	}
-
-	@GetMapping("/wishlist")
-	public ResponseEntity<Page<WishListDto>> getUserWishlist(@AuthenticationPrincipal UserDetails userDetails,
-			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-		Page<WishListDto> wishlist = wishlistService.getUserWishlist(userDetails.getUsername(), pageable);
-		return ResponseEntity.ok(wishlist);
-	}
-
-	@GetMapping("/wishlist/check/{itemType}/{itemId}")
-	public ResponseEntity<Map<String, Boolean>> checkWishlist(@AuthenticationPrincipal UserDetails userDetails,
-			@PathVariable("itemType") String itemType, @PathVariable("itemId") Long itemId) {
-		boolean isInWishlist = wishlistService.isInWishlist(userDetails.getUsername(), itemType, itemId);
-		return ResponseEntity.ok(Map.of("isInWishlist", isInWishlist));
-	}
+//	@PostMapping("/wishlist")
+//	public ResponseEntity<WishListDto> addToWishlist(@AuthenticationPrincipal UserDetails userDetails,
+//			@RequestBody Map<String, Object> request) {
+//		String itemType = (String) request.get("itemType");
+//		Long itemId = Long.valueOf(request.get("itemId").toString());
+//		String itemTitle = (String) request.get("itemTitle");
+//		String itemImage = (String) request.get("itemImage");
+//		Integer itemPrice = request.get("itemPrice") != null ? Integer.valueOf(request.get("itemPrice").toString())
+//				: null;
+//
+//		WishListDto wishlist = wishlistService.addToWishlist(userDetails.getUsername(), itemType, itemId, itemTitle,
+//				itemImage, itemPrice);
+//		return ResponseEntity.ok(wishlist);
+//	}
+//
+//	@DeleteMapping("/wishlist/{itemType}/{itemId}")
+//	public ResponseEntity<Void> removeFromWishlist(@AuthenticationPrincipal UserDetails userDetails,
+//			@PathVariable("itemType") String itemType, @PathVariable("itemId") Long itemId) {
+//		wishlistService.removeFromWishlist(userDetails.getUsername(), itemType, itemId);
+//		return ResponseEntity.ok().build();
+//	}
+//
+//	@GetMapping("/wishlist")
+//	public ResponseEntity<Page<WishListDto>> getUserWishlist(@AuthenticationPrincipal UserDetails userDetails,
+//			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+//		Page<WishListDto> wishlist = wishlistService.getUserWishlist(userDetails.getUsername(), pageable);
+//		return ResponseEntity.ok(wishlist);
+//	}
+//
+//	@GetMapping("/wishlist/check/{itemType}/{itemId}")
+//	public ResponseEntity<Map<String, Boolean>> checkWishlist(@AuthenticationPrincipal UserDetails userDetails,
+//			@PathVariable("itemType") String itemType, @PathVariable("itemId") Long itemId) {
+//		boolean isInWishlist = wishlistService.isInWishlist(userDetails.getUsername(), itemType, itemId);
+//		return ResponseEntity.ok(Map.of("isInWishlist", isInWishlist));
+//	}
 
 	// ===== 지역채팅 관련 =====
 

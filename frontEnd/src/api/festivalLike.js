@@ -23,9 +23,8 @@ export const fetchFestivalLikeStatus = async (festivalId) => {
 };
 
 // 축제 좋아요 토글
-export const toggleFestivalLike = async (festivalId) => {
+export const toggleFestivalLike = async (festivalId, token) => {
   try {
-    const token = localStorage.getItem("token");
     if (!token) throw new Error("로그인이 필요합니다.");
 
     const res = await axios.post(
@@ -50,6 +49,7 @@ export const toggleFestivalLike = async (festivalId) => {
 };
 
 
+
 //축제 좋아요 수 조회 (로그인 필요 없음)
 export const fetchFestivalLikesCount = async (festivalId) => {
   try {
@@ -61,4 +61,13 @@ export const fetchFestivalLikesCount = async (festivalId) => {
   }
 };
 
+
+
+// 사용자가 좋아요한 축제 목록 조회
+export const fetchMyLikedFestivals = async (token) => {
+  const response = await axios.get(`${BASE_URL}/likes/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
 

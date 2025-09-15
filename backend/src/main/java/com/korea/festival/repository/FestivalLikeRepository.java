@@ -1,5 +1,6 @@
 package com.korea.festival.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,17 +17,21 @@ public interface FestivalLikeRepository extends JpaRepository<FestivalLikeEntity
     boolean existsByUserAndFestival(User user, Festival_MainPage festival);
 
     
-     // 특정 사용자 + 특정 축제 좋아요 엔티티 조회
-     // 토글 기능에서 기존 좋아요가 있는지 확인할 때 사용
+    // 특정 사용자 + 특정 축제 좋아요 엔티티 조회
+    // 토글 기능에서 기존 좋아요가 있는지 확인할 때 사용
     Optional<FestivalLikeEntity> findByUserAndFestival(User user, Festival_MainPage festival);
 
     
-     // 특정 사용자와 특정 축제 좋아요 삭제
+    // 특정 사용자와 특정 축제 좋아요 삭제
     void deleteByUserAndFestival(User user, Festival_MainPage festival);
 
     
-     // 특정 축제에 좋아요가 몇 개 눌렸는지 카운트
+    // 특정 축제에 좋아요가 몇 개 눌렸는지 카운트
     int countByFestival(Festival_MainPage festival);
+    
+    
+    // 사용자별 좋아요 목록 조회
+    List<FestivalLikeEntity> findByUser(User user);
     
     
 }

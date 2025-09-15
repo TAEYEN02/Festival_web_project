@@ -1,24 +1,32 @@
+/* 좋아요 버튼 */
 .like-button {
-  width: 32px;              /* 버튼 크기 축소 */
-  height: 32px;
+  position: absolute;       /* 카드 오른쪽 상단 고정 */
+  top: 8px;
+  right: 8px;
+  
+  width: 35px;              /* 버튼 크기 */
+  height: 35px;
   border-radius: 50%;       /* 동그라미 */
-  background-color: rgba(255, 255, 255, 0.8); /* 흰색 + 반투명 */
+  background-color: rgba(255, 255, 255, 0.9);   /* 항상 흰색 배경 */
   display: flex;
   justify-content: center;
   align-items: center;
+  
   border: none;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* 그림자 약간 축소 */
+  outline: none;
+  z-index: 10;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* 약간 그림자 */
   transition: transform 0.1s ease, background-color 0.2s ease;
 }
 
 .like-button:hover {
-  transform: scale(1.1);   /* 호버 시 살짝 커짐 */
-  background-color: rgba(255, 255, 255, 1); /* 호버 시 완전 불투명 */
+  transform: scale(1.1);   /* 호버 시 살짝 확대 */
+  background-color: #fff;  /* 호버 시도 흰색 유지 */
 }
 
 .like-button img {
-  width: 20px;  /* 하트 아이콘 크기 축소 */
-  height: 20px;
-  
+  width: 23px;  /* 하트 아이콘 크기 */
+  height: 23px;
 }

@@ -45,21 +45,20 @@ const LikeButton = ({ festivalId, onToggleLike }) => {
     }
 
     try {
-      // festivalId를 매번 동적으로 전달
-      const { result, likeCount: updatedCount } = await toggleFestivalLike(festivalId);
+      const { result, likeCount: updatedCount } = await toggleFestivalLike(festivalId, token);
 
-      // 상태 업데이트
       setLiked(result === "liked");
       setLikeCount(updatedCount);
 
-      // 부모 컴포넌트로 알림
       if (onToggleLike) {
-        onToggleLike(festivalId, updatedCount); 
+        onToggleLike(festivalId, updatedCount);
       }
     } catch (err) {
       console.error("좋아요 토글 실패:", err.response?.data || err.message);
     }
   };
+
+
 
   return (
     <button className="like-button" onClick={handleToggle}>

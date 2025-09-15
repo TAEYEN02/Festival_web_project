@@ -27,28 +27,27 @@ const PrevArrow = ({ onClick }) => (
 
 const FestivalCardList = ({ festivals, token, onToggleLike }) => {
   const settings = {
-  dots: false,
-  infinite: false,
-  speed: 500,
-  slidesToShow: 4,   // 기본 4개
-  slidesToScroll: 1,
-  adaptiveHeight: true,   // 카드 내용에 따라 슬라이드 높이 자동 조정
-  responsive: [
-    {
-      breakpoint: 1200,  // 화면 1200px 이하
-      settings: {
-        slidesToShow: 3,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    infinite: false,
+    arrows: true,
+    responsive: [
+      {
+        breakpoint: 1200,
+        settings: { slidesToShow: 3 }
       },
-    },
-    {
-      breakpoint: 900,  // 화면 900px 이하
-      settings: {
-        slidesToShow: 2,
+      {
+        breakpoint: 900,
+        settings: { slidesToShow: 2 }
       },
-    },
-  ],
-  nextArrow: <NextArrow />,
-  prevArrow: <PrevArrow />,
+      {
+        breakpoint: 480,
+        settings: { slidesToShow: 1 }
+      }
+    ],
+
+    nextArrow: <NextArrow />,
+    prevArrow: <PrevArrow />,
 };
 
   

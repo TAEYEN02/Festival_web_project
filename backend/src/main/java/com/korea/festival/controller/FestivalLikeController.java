@@ -94,6 +94,34 @@ public class FestivalLikeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("축제를 찾을 수 없습니다");
         }
     }
+    
+ 
+    
+    // 사용자가 좋아요 누른 축제 목록 조회
+    @GetMapping("/likes/me")
+    public ResponseEntity<?> getMyLikedFestivals(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Authorization 헤더 없음 또는 형식 오류");
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        if (!tokenProvider.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("유효하지 않은 토큰");
+        }
+
+        String username = tokenProvider.getUsernameFromToken(token);
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("JWT에서 username 추출 실패");
+        }
+
+        // Service에서 username으로 내가 좋아요한 축제 목록 가져오기
+        return ResponseEntity.ok(festivalLikeService.getLikedFestivalsByUser(username));
+    }
+
 
     
 }
