@@ -13,7 +13,7 @@ export default function TripPlannerWizard() {
 
     const toISO = (yyyymmdd) =>
         yyyymmdd && yyyymmdd.length === 8
-            ? `${yyyymmdd.slice(0,4)}-${yyyymmdd.slice(4,6)}-${yyyymmdd.slice(6,8)}`
+            ? `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`
             : "";
 
     const defaultStart = toISO(s1?.destination?.eventstartdate) || "";
@@ -23,6 +23,14 @@ export default function TripPlannerWizard() {
         const payload = { ...s1, preferences: s2, options: s3 };
         console.log("[TripPlanner] 최종 payload ::", payload);
         alert("완료. 콘솔 확인.");
+
+        // 처음 화면으로 이동
+        setStep(1);
+
+        // 입력값도 초기화하고 싶으면 아래까지
+        setS1(null);
+        setS2(null);
+        setS3(null);
     };
 
     return (

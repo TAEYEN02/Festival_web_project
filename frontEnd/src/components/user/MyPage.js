@@ -6,6 +6,7 @@ import MyPageSidebar from '../../components/user/MyPageSidebar';
 import ProfileSection from '../../components/user/ProfileSection';
 import ScrapSection from '../../components/user/ScrapSection';
 import InquirySection from '../../components/user/InquirySection';
+import MyItineraries from '../../components/user/MyItineraries';
 import RealtimeChat from '../../components/user/RealtimeChat';
 
 const PageContainer = styled.div`
@@ -115,7 +116,7 @@ const MyPage = () => {
   const renderCurrentSection = () => {
     if (!userData) return null;
 
-     const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
 
     switch (currentSection) {
       case 'profile':
@@ -126,6 +127,8 @@ const MyPage = () => {
         return <InquirySection userId={userData.id} />;
       case 'regionChat':
         return <RealtimeChat userId={userData.id} userNickname={userData.nickname} />;
+      case 'aiPlanner':
+        return <MyItineraries token={token} />;
       default:
         return <ProfileSection userData={userData} onUpdateUser={handleUserDataUpdate} />;
     }
@@ -145,8 +148,8 @@ const MyPage = () => {
     return (
       <PageContainer>
         <ErrorContainer>
-          <h2 style={{color:'black'}}>오류가 발생했습니다</h2>
-          <p style={{color:'black'}}>{error}</p>
+          <h2 style={{ color: 'black' }}>오류가 발생했습니다</h2>
+          <p style={{ color: 'black' }}>{error}</p>
           <button
             onClick={() => {
               hasLoadedRef.current = false; // 재로드 허용

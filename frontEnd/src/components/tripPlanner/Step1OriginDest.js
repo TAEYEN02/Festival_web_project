@@ -45,9 +45,6 @@ export default function Step1OriginDest({ onNext }) {
           <div className="step1-info">
             <div>선택: {origin.name}</div>
             {origin.address && <div className="addr">위치: {origin.address}</div>}
-            <div>
-              좌표: {origin.lat}, {origin.lng}
-            </div>
           </div>
         )}
       </section>
@@ -72,9 +69,6 @@ export default function Step1OriginDest({ onNext }) {
           <div className="step1-info">
             <div>선택: {dest.name}</div>
             {dest.address && <div className="addr">위치: {dest.address}</div>}
-            <div>
-              좌표: {dest.lat}, {dest.lng}
-            </div>
           </div>
         )}
       </section>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createItinerary } from "./api/aiClient";
+import { saveItinerary } from "../../api/mypage";
 import "./Step4Review.css";
 
 /**
@@ -10,6 +11,7 @@ import "./Step4Review.css";
  */
 export default function Step4Review({ data, onPrev, onFinish }) {
   const [ai, setAi] = useState({ loading: true, error: "", plan: null });
+  const [saving, setSaving] = useState(false);
   const [nearby, setNearby] = useState({ loading: true, error: "", items: [] });
 
   // AI 일정 생성
@@ -28,7 +30,7 @@ export default function Step4Review({ data, onPrev, onFinish }) {
     return () => ac.abort();
   }, [data]);
 
-  // 주변 후보 조회 (Abort + 키 decode + lat/lng 일관화 + 타입 가드)
+  // 주변 후보 조회
   useEffect(() => {
     const ac = new AbortController();
 
@@ -122,10 +124,50 @@ export default function Step4Review({ data, onPrev, onFinish }) {
 
   const o = data?.origin || {};
   const d = data?.destination || {};
-  // 축제 메타(정규화된 구조 + meta.rawFestival 모두 대응)
   const f = d.meta?.rawFestival || d.meta || {};
   const plan = ai.plan && typeof ai.plan === "object" ? ai.plan : null;
   const daysArr = Array.isArray(plan?.daily) ? plan.daily : [];
+
+  const handleFinish = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    if (!plan) {
+      alert("AI 일정이 없습니다.");
+      return;
+    }
+
+    const payload = {
+      // 요약 필드(분리 저장을 위한 힌트)
+      title: plan.title || d.name || d.title || "",
+      destinationName: d.name || d.title || "",
+      destinationId: d.contentid || d.id || "",
+      periodStart: data?.options?.startDate || yyyymmddToISO(f.eventstartdate || d.eventstartdate || ""),
+      periodEnd: data?.options?.endDate || yyyymmddToISO(f.eventenddate || d.eventenddate || ""),
+      days: data?.options?.days || (Array.isArray(plan?.daily) ? plan.daily.length : undefined),
+
+      // 원본 구조
+      origin: data.origin,
+      destination: data.destination,
+      preferences: data.preferences,
+      options: data.options,
+      plan: plan,
+    };
+
+    try {
+      setSaving(true);
+      await saveItinerary(payload); // axiosInstance 사용 가정
+      alert("일정이 저장되었습니다. 마이페이지에서 확인하세요.");
+      onFinish();
+    } catch (err) {
+      console.error("일정 저장 실패:", err);
+      alert("일정 저장에 실패했습니다.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="sr4 sr4-wrap">
@@ -138,14 +180,12 @@ export default function Step4Review({ data, onPrev, onFinish }) {
         <h3>출발지</h3>
         <div className="sr4-kv"><span>이름</span><b>{o.name || "-"}</b></div>
         <div className="sr4-kv"><span>주소</span><b>{o.address || "-"}</b></div>
-        <div className="sr4-kv"><span>좌표</span><b>{fmtCoord(o.lat, o.lng)}</b></div>
       </section>
 
       {/* 도착지(축제) */}
       <section className="sr4-card">
         <h3>도착지(축제)</h3>
         <div className="sr4-row">
-          {/* 이미지: meta 우선, 없으면 d.firstimage */}
           {(f.firstimage || d.firstimage) && (
             <img
               src={f.firstimage || d.firstimage}
@@ -162,7 +202,6 @@ export default function Step4Review({ data, onPrev, onFinish }) {
               {" ~ "}
               {f.eventenddate ? yyyymmddToISO(f.eventenddate) : (d.eventenddate ? yyyymmddToISO(d.eventenddate) : "-")}
             </div>
-            <div className="sr4-hint">좌표: {fmtCoord(d.lat ?? d.mapy, d.lng ?? d.mapx)}</div>
           </div>
         </div>
       </section>
@@ -246,18 +285,20 @@ export default function Step4Review({ data, onPrev, onFinish }) {
       {/* actions */}
       <div className="sr4-actions">
         <button type="button" className="sr4-btn" onClick={onPrev}>이전</button>
-        <button type="button" className="sr4-btn sr4-btn--pri" onClick={onFinish}>완료</button>
+        <button
+          type="button"
+          className="sr4-btn sr4-btn--pri"
+          onClick={handleFinish}
+          disabled={saving || !plan}
+        >
+          {saving ? "저장 중..." : "완료"}
+        </button>
       </div>
     </div>
   );
 }
 
 /* utils */
-function fmtCoord(lat, lng) {
-  const a = Number(lat), b = Number(lng);
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return "-";
-  return `${a.toFixed(6)}, ${b.toFixed(6)}`;
-}
 function yyyymmddToISO(s) {
   if (!s || s.length !== 8) return s || "";
   return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { User, Bookmark, MessageSquare, LogOut, Calendar, Users, Camera } from 'lucide-react';
+import { User, Bookmark, MessageSquare, LogOut, Calendar, Camera, Star } from 'lucide-react';
 import axios from 'axios';
 
 const SidebarContainer = styled.div`
@@ -140,6 +140,7 @@ const MyPageSidebar = ({ currentSection, onSectionChange, isLoggedIn, userData, 
   const menuItems = [
     { id: 'profile', label: '프로필 관리', icon: User },
     { id: 'scraps', label: '좋아요 목록', icon: Bookmark },
+    { id: 'aiPlanner', label: 'AI 일정 추천 목록', icon: Star },
     { id: 'inquiries', label: '1:1 문의', icon: MessageSquare },
     // { id: 'regionChat', label: '지역 채팅', icon: Users },
   ];

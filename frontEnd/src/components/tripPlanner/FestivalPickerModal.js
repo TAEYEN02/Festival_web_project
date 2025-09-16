@@ -7,6 +7,7 @@ export default function FestivalPickerModal({ open, onClose, onPick }) {
   const [end, setEnd] = useState("");
   const [page, setPage] = useState(1);      // 1-base
   const [rows, setRows] = useState(10);
+  const [query, setQuery] = useState("");   // 검색어 상태
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
@@ -24,7 +25,7 @@ export default function FestivalPickerModal({ open, onClose, onPick }) {
     setError("");
     try {
       const res = await fetchFestivalsPage({
-        query: "",
+        query,
         region,
         sort,
         status,
@@ -90,6 +91,48 @@ export default function FestivalPickerModal({ open, onClose, onPick }) {
               disabled={loading}
             >조회</button>
           </div>
+
+          {/* 검색 기능 */}
+          <div className="fpm__row">
+            <label className="fpm__label">검색어</label>
+            <div className="fpm__input-wrap">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="축제명 검색"
+                className="fpm__input"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setPage(1);
+                    fetchList();
+                  }
+                }}
+              />
+              {query && (
+                <button
+                  type="button"
+                  className="fpm__clear"
+                  onClick={() => {
+                    setQuery("");
+                    setPage(1);
+                    fetchList();
+                  }}
+                  aria-label="검색어 지우기"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              className="fpm__btn fpm__btn--pri"
+              onClick={() => { setPage(1); fetchList(); }}
+              disabled={loading}
+            >검색</button>
+          </div>
+
           <div className="fpm__row">
             <label className="fpm__label">표시개수</label>
             <select
