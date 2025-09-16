@@ -54,8 +54,8 @@ export default function MainHeader() {
                             관리자
                         </Link>
                     )}
-                    <Link to="/ai-test" className="nav-item" onClick={closeMenu}>
-                        AI 테스트
+                    <Link to="/ai-test" className="nav-item2" onClick={closeMenu}>
+                        AI 방방곡곡
                     </Link>
                 </nav>
             </div>
