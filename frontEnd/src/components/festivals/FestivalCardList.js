@@ -34,15 +34,15 @@ const FestivalCardList = ({ festivals, token, onToggleLike }) => {
     responsive: [
       {
         breakpoint: 1200,
-        settings: { slidesToShow: 3 }
+        settings: { slidesToShow: 4 }
       },
       {
         breakpoint: 900,
-        settings: { slidesToShow: 2 }
+        settings: { slidesToShow: 3 }
       },
       {
-        breakpoint: 480,
-        settings: { slidesToShow: 1 }
+        breakpoint: 600,
+        settings: { slidesToShow: 2 }
       }
     ],
 

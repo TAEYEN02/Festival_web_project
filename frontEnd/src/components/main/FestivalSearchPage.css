@@ -1,18 +1,18 @@
 .festival-search-page-container {
-    margin: 30px;
+    margin: 10px;
 }
 
 .title {
   display: inline-block;
   font-size: 1rem;             /* 글자 크기 */
   font-weight: 600;             /* 글자 두껍게 */
-  color: #1e90ff;               
+  color: #1e35ff;               
   background-color: #e6f0ff;    
   padding: 8px 16px;            /* 여백 */
   border-radius: 12px;          
   border: 1px solid #99c2ff;    
   box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-  margin-bottom: 10px;         
+  margin: 10px;         
 }
 
 .pagination {
@@ -47,3 +47,5 @@
   font-weight: bold;
   color: #333;
 }
+
+

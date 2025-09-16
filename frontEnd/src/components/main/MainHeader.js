@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext"; // 🔹 AuthContext import
+import { FaSearch } from "react-icons/fa";
+
 import "./MainHeader.css";
 
 export default function MainHeader() {
@@ -60,17 +62,20 @@ export default function MainHeader() {
 
             {/* 가운데 - 검색창 */}
             <div className="header-center">
-                <div className="search-box" role="search">
-                    <input
-                        type="text"
-                        placeholder="축제 이름 또는 지역으로 축제 검색하기"
-                        value={query}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                    />
-                    <button className="search-btn" type="button" onClick={handleSearch}>🔍</button>
-                </div>
+            <div className="search-box" role="search">
+                <input
+                type="text"
+                placeholder="키워드로 축제 검색해보기"
+                value={query}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                />
+                <button className="search-btn" type="button" onClick={handleSearch}>
+                <FaSearch />
+                </button>
             </div>
+            </div>
+
 
             {/* 오른쪽 - 인증/모바일 토글 */}
             <div className="header-right">

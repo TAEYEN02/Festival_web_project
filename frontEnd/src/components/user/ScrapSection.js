@@ -116,7 +116,7 @@ const ItemMeta = styled.div`
 
 const Itemdday = styled.div`
   font-weight: 650;
-  color: #3B82F6;
+  color: #ff7272ff;
   font-size : 14px;
   margin-top : 7px;
   margin-bottom: 0.25rem;
