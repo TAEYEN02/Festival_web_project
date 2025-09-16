@@ -116,10 +116,15 @@ const ItemMeta = styled.div`
 
 const Itemdday = styled.div`
   font-weight: 650;
-  color: #ff7272ff;
-  font-size : 14px;
-  margin-top : 7px;
+  font-size: 14px;
+  margin-top: 7px;
   margin-bottom: 0.25rem;
+  color: ${(props) => {
+    if (props.status === 'upcoming') return '#e63946';  // 오픈 기간 남음 → 빨간색
+    if (props.status === 'today' || props.status === 'ongoing') return '#2a9d8f'; // 진행중 → 초록색
+    if (props.status === 'ended') return '#999999';     // 종료 → 회색
+    return '#000'; 
+  }};
 `;
 
 const EmptyState = styled.div`
@@ -319,7 +324,7 @@ const ScrapSection = ({ token }) => {
                         text = '종료';
                       }
 
-                      return <Itemdday className={status}>{text}</Itemdday>;
+                      return <Itemdday status={status}>{text}</Itemdday>;
                     })()}
                   </ItemInfo>
                 </CardContent>

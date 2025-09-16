@@ -1,5 +1,11 @@
 .festival-search-page-container {
+    margin: 30px;
+}
+
+@media (max-width: 900px) {
+  .festival-search-page-container {
     margin: 10px;
+}
 }
 
 .title {
