@@ -89,6 +89,7 @@ export default function MainHeader() {
                                 onClick={() => {
                                     logout();   // 🔹 바로 AuthContext의 logout 실행
                                     closeMenu();
+                                    navigate("/login");
                                 }}
                             >
                                 로그아웃
