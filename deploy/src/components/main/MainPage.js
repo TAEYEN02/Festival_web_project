@@ -24,12 +24,12 @@ const MainPage = () => {
       icon: <Clock size={40} />,
       title: "최신순 & 인기순",
       subtitle: "정렬 • 추천 리스트",
-      description: "축제를 최신순으로 확인하거나, 좋아요를 많이 받은 인기순으로 정렬해보세요.",
+      description: "곧 다가오는 축제들이 모여있는 최신순 리스트, 사용자들이 좋아하는 축제 인기순 리스트를 볼 수 있습니다.",
       color: "#4ecdc4",
     },
     {
       icon: <Heart size={40} />,
-      title: "좋아요 & 목록 관리",
+      title: "좋아요 기능 & 목록 관리",
       subtitle: "나만의 축제",
       description: "마음에 드는 축제에 좋아요를 누르고, 내가 찜한 목록을 따로 확인할 수 있습니다.",
       color: "#45b7d1",
@@ -70,7 +70,7 @@ const MainPage = () => {
                 ) : (
                     <div className="BCactiveVideo">
                         <div className="BCvideoPlayer">
-                            <video autoPlay loop muted className='BCvideoPreview' src='media/board.mp4' alt="Video Preview" />
+                            <video autoPlay loop muted className='BCvideoPreview' src='media/main.mp4' alt="Video Preview" />
                         </div>
                     </div>
                 )}

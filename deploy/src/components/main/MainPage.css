@@ -30,7 +30,7 @@
 
 .BCvideoThumbnail {
     position: relative;
-    background: #fffc4a;
+    background: #4a4aff;
     height: 400px;
     display: flex;
     flex-direction: column;
@@ -80,7 +80,7 @@
     border-radius: 1.5rem;
     overflow: hidden;
     background: #1a1a1a;
-    height: 400px;
+    height: 500px;
 }
 
 .BCvideoPlayer {

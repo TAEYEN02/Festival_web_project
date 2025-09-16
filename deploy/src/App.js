@@ -4,6 +4,7 @@ import MainPage from "./components/main/MainPage";
 
 import './App.css';
 import BoardComponent from "./components/board/BoardComponent";
+import MyPage from "./user/MyPage";
 
 function App() {
   return (
@@ -30,7 +31,7 @@ function App() {
                 <Route path="/admin" element={''}/>
 
                 {/* 마이페이지 */}
-                <Route path="/mypage" element={''} />
+                <Route path="/mypage" element={<MyPage />} />
 
                 {/* 게시판*/}
                 <Route path='/board' element={<BoardComponent/>} />

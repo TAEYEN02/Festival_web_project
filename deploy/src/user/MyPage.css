@@ -1,0 +1,206 @@
+.BCheroSection {
+    padding: 4rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    background: #f7fafc;
+}
+
+.BCvideoContainer {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.BCvideoPreview {
+    cursor: pointer;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+}
+
+.BCvideoPreview:hover {
+    transform: scale(1.02);
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
+}
+
+.BCvideoThumbnail {
+    position: relative;
+    background: #4a4aff;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.BCvideoPreview {
+    width: 85%;
+    max-width: 900px;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    object-fit: contain;
+}
+
+
+.BCplayButton {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.BCvideoPreview:hover .BCplayButton {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.BCvideoOverlay h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.BCvideoOverlay p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    text-align: center;
+}
+
+.BCactiveVideo {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: #1a1a1a;
+    height: 400px;
+}
+
+.BCvideoPlayer {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.BCvideoContent {
+    text-align: center;
+}
+
+.mypage-container {
+  min-height: 100vh;
+  background: #f7fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 섹션 타이틀 */
+.mypage-section-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #2d3748;
+}
+
+/* 유저 정보 박스 */
+.mypage-profile-info {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+
+.mypage-profile-info p {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+}
+
+/* 기능 카드 그리드 */
+.mypage-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mypage-feature-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 1.5rem;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.mypage-feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.mypage-feature-icon {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.mypage-feature-card h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.3rem;
+}
+
+.mypage-feature-card h4 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #718096;
+  margin-bottom: 1rem;
+}
+
+.mypage-feature-card p {
+  color: #4a5568;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mypage-container {
+    padding: 1rem;
+  }
+
+  .mypage-section-title {
+    font-size: 1.6rem;
+  }
+
+  .mypage-feature-card {
+    padding: 2rem;
+  }
+
+  .mypage-feature-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .mypage-feature-card h4 {
+    font-size: 0.9rem;
+  }
+
+  .mypage-feature-card p {
+    font-size: 0.9rem;
+  }
+}

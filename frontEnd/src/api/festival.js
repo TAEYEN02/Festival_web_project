@@ -40,8 +40,8 @@ export const fetchFestivalsFromApi = async () => {
       const end = festival.eventenddate;
       const month = parseInt(start.substring(4, 6)); // 시작일 기준 월
       return (
-        month >= 6 &&
-        month <= 8 &&
+        month >= 8 &&
+        month <= 12 &&
         todayStr >= start &&
         todayStr <= end
       );
