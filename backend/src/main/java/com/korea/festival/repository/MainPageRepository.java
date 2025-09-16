@@ -4,12 +4,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.korea.festival.dto.FestivalDTO_MainPage;
 import com.korea.festival.entity.Festival_MainPage;
 
 // 메인페이지용 레포지토리
@@ -22,8 +22,6 @@ public interface MainPageRepository extends JpaRepository<Festival_MainPage, Lon
 	List<Festival_MainPage> findUpcomingFestivals(@Param("today") LocalDate today);
 
 
-
-
     // 인기순 정렬 (조회수 기준)
     List<Festival_MainPage> findAllByOrderByViewsDesc();
 
@@ -34,7 +32,29 @@ public interface MainPageRepository extends JpaRepository<Festival_MainPage, Lon
     // 축제 중복 체크
     Optional<Festival_MainPage> findByContentId(String contentId);
     
- // contentId 존재 여부 체크 (중복 방지용)
+    // contentId 존재 여부 체크 (중복 방지용)
     boolean existsByContentId(String contentId);
+    
+    
+    // 전체 축제 조회
+    @Query("SELECT new com.korea.festival.dto.FestivalDTO_MainPage(" +
+           "f.id, f.contentId, f.name, f.startDate, f.endDate, f.location, " +
+           "f.firstimage, f.description, f.bookingUrl, f.views, f.likesCount, " +
+           "f.clicks, f.createdAt, null, null) " +
+           "FROM Festival_MainPage f")
+    List<FestivalDTO_MainPage> findAllFestivals();
+
+    // 이름이나 지역으로 검색
+    @Query("SELECT new com.korea.festival.dto.FestivalDTO_MainPage(" +
+           "f.id, f.contentId, f.name, f.startDate, f.endDate, f.location, " +
+           "f.firstimage, f.description, f.bookingUrl, f.views, f.likesCount, " +
+           "f.clicks, f.createdAt, null, null) " +
+           "FROM Festival_MainPage f " +
+           "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(f.location) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<FestivalDTO_MainPage> searchByNameOrLocation(@Param("query") String query);
+
+
+
 
 }

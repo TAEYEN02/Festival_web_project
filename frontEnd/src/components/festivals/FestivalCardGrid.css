@@ -1,0 +1,13 @@
+.festival-card-grid {
+  margin: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 8px;
+  padding: 20px 0;
+}
+
+.festival-card-grid-empty {
+  text-align: center;
+  margin: 50px 0;
+  color: #666;
+}

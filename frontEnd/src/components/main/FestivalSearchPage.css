@@ -1,0 +1,49 @@
+.festival-search-page-container {
+    margin: 30px;
+}
+
+.title {
+  display: inline-block;
+  font-size: 1rem;             /* 글자 크기 */
+  font-weight: 600;             /* 글자 두껍게 */
+  color: #1e90ff;               
+  background-color: #e6f0ff;    
+  padding: 8px 16px;            /* 여백 */
+  border-radius: 12px;          
+  border: 1px solid #99c2ff;    
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+  margin-bottom: 10px;         
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #1e90ff;    
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.pagination button:hover {
+  background-color: #0066cc;    
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: default;
+}
+
+.pagination span {
+  font-weight: bold;
+  color: #333;
+}

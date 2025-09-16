@@ -200,4 +200,27 @@ export const incrementViews = async (contentId) => {
 };
 
 
+// 축제 검색 API
+export const searchFestivals = async (query) => {
+  if(!query || !query.trim()) return []; // 🔹 빈 검색어 안전 처리
+  try {
+    const res = await axios.get(`${API_BASE}/search`, {
+      params: { query }
+    });
+    return res.data; // 검색 결과 배열 반환
+  } catch (err) {
+    console.error("축제 검색 오류:", err);
+    return [];
+  }
+};
 
+// 전체 축제 가져오기
+export const fetchAllFestivals = async () => {
+  try {
+    const res = await axios.get(`${API_BASE}/festivals`);
+    return res.data;
+  } catch (err) {
+    console.error("전체 축제 조회 오류:", err);
+    return [];
+  }
+};

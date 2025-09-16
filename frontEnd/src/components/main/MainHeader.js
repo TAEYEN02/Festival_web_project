@@ -1,15 +1,31 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext"; // 🔹 AuthContext import
 import "./MainHeader.css";
 
 export default function MainHeader() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [query, setQuery] = useState("");
     const { isAuthenticated, user, logout } = useAuth(); // 🔹 컨텍스트에서 가져오기
+    
     const isAdmin = user?.roles?.includes("ROLE_ADMIN"); // 🔹 역할 판별
     const username = user?.username || "";
+    const navigate = useNavigate();
 
     const closeMenu = () => setMenuOpen(false);
+
+    const handleInputChange = (e) => setQuery(e.target.value);
+
+    const handleSearch = () => {
+        if(!query.trim()) return;
+        navigate(`/festivals/search?query=${encodeURIComponent(query)}`);
+        setQuery("");
+        closeMenu();
+    };
+
+    const handleKeyDown = (e) => {
+        if(e.key === "Enter") handleSearch();
+    };
 
     return (
         <header className="main-header">
@@ -45,9 +61,14 @@ export default function MainHeader() {
             {/* 가운데 - 검색창 */}
             <div className="header-center">
                 <div className="search-box" role="search">
-                    <input type="text" placeholder="더 뜨거운 여름휴가 보내기" />
-                    <button 
-                        className="search-btn" type="button">🔍</button>
+                    <input
+                        type="text"
+                        placeholder="축제 이름 또는 지역으로 축제 검색하기"
+                        value={query}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                    />
+                    <button className="search-btn" type="button" onClick={handleSearch}>🔍</button>
                 </div>
             </div>
 

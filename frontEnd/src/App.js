@@ -6,7 +6,11 @@ import MyPage from "./components/user/MyPage";
 import RegionOverviewPage from "./components/RegionOverview/RegionOverviewPage";
 import MainHeader from "./components/main/MainHeader";
 import FestivalDetail from "./components/festivals/FestivalDetail";
+
+// 메인페이지 관련
 import MainPage from "./components/main/MainPage";
+import  FestivalSearchPage from "./components/main/FestivalSearchPage";
+
 import TripPlannerWizard from "./components/tripPlanner/TripPlannerWizard";
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -69,6 +73,7 @@ function AppContent() {
             <Routes>
                 {/* 메인 - 축제 리스트 */}
                 <Route path="/" element={<MainPage />} />
+                <Route path="/festivals/search" element={<FestivalSearchPage />} />
 
                 {/* AI 일정 추천 */}
                 <Route path="/ai-test" element={<TripPlannerWizard />} />

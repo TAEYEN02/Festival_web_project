@@ -1,6 +1,5 @@
 package com.korea.festival.controller;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -9,9 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.korea.festival.dto.FestivalDTO_MainPage;
+import com.korea.festival.dto.FestivalResponseDTO;
 import com.korea.festival.entity.Festival_MainPage;
 import com.korea.festival.service.MainPageService;
 
@@ -91,7 +92,13 @@ public class MainPageController {
 
     
     
-    
+    // 검색 API
+    @GetMapping("/search")
+    public ResponseEntity<List<FestivalResponseDTO>> searchFestivals(
+            @RequestParam(name = "query", required = false) String query) {
+        List<FestivalResponseDTO> festivals = mainPageService.searchFestivals(query);
+        return ResponseEntity.ok(festivals);
+    }
     
     
 }

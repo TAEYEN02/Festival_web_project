@@ -72,6 +72,7 @@ const MainPage = () => {
     loadPopular();
   }, [popularSort]);
 
+  
   // 좋아요 토글
   const handleToggleLike = (contentId, updatedCount) => {
     const strId = String(contentId);

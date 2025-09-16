@@ -11,16 +11,17 @@ import java.util.stream.StreamSupport;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.korea.festival.dto.FestivalDTO_MainPage;
+import com.korea.festival.dto.FestivalResponseDTO;
 import com.korea.festival.entity.Festival_MainPage;
 import com.korea.festival.repository.MainPageRepository;
 
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +35,8 @@ public class MainPageService {
 	private final MainPageRepository mainPageRepository;
 	private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 	
 	private final String API_URL = "https://apis.data.go.kr/B551011/KorService2/searchFestival2";
     private final String API_KEY = "437d76c0cc52c6e459d60d55ba21fa2b4446b310df80d1a0f2e8ff57f2ed8222"; // 인코딩된 인증키
@@ -206,4 +209,28 @@ public class MainPageService {
         festival.setViews(festival.getViews() + 1); // 조회수 +1
         mainPageRepository.save(festival);
     }
+    
+    
+    // 검색어로 축제 검색
+    public List<FestivalResponseDTO> searchFestivals(String query) {
+        List<FestivalDTO_MainPage> entities =
+                (query == null || query.isEmpty())
+                        ? mainPageRepository.findAllFestivals()
+                        : mainPageRepository.searchByNameOrLocation(query);
+
+        // Entity → ResponseDTO 변환
+        return entities.stream()
+                .map(f -> new FestivalResponseDTO(
+                        f.getContentId(),
+                        f.getName(),
+                        f.getLocation(),
+                        f.getFirstimage(),
+                        (f.getStartDate() != null ? f.getStartDate().format(FORMATTER) : null),
+                        (f.getEndDate() != null ? f.getEndDate().format(FORMATTER) : null),
+                        f.getLikesCount()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    
 }
