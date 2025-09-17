@@ -8,7 +8,7 @@ const MainPage = () => {
 
   // 동영상 재생
   const handleVideoClick = () => {
-        setIsVideoPlaying(true);
+        setIsVideoPlaying(!setIsVideoPlaying);
     };
 
 
@@ -68,7 +68,7 @@ const MainPage = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="BCactiveVideo">
+                    <div className="BCactiveVideo" onClick={handleVideoClick}>
                         <div className="BCvideoPlayer">
                             <video autoPlay loop muted className='BCvideoPreview' src='media/main.mp4' alt="Video Preview" />
                         </div>

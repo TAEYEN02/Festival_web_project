@@ -5,6 +5,8 @@ import MainPage from "./components/main/MainPage";
 import './App.css';
 import BoardComponent from "./components/board/BoardComponent";
 import MyPage from "./user/MyPage";
+import { AdminPage } from "./components/auth/AdminPage";
+import { AuthPage } from "./components/auth/AuthPages";
 
 function App() {
   return (
@@ -25,10 +27,10 @@ function App() {
                 <Route path="/festival/:id" element={''} />
 
                 {/* 로그인-회원가입-회원가입 */}
-                <Route path="/register" element={''} />
+                <Route path="/register" element={<AuthPage/>} />
 
                 {/* 관리자 */}
-                <Route path="/admin" element={''}/>
+                <Route path="/admin" element={<AdminPage/>}/>
 
                 {/* 마이페이지 */}
                 <Route path="/mypage" element={<MyPage />} />
