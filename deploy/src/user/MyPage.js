@@ -5,10 +5,10 @@ import { useState } from "react";
 
 const MyPage = () => {
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-
+    
     // 동영상 재생
   const handleVideoClick = () => {
-        setIsVideoPlaying(true);
+        setIsVideoPlaying(!isVideoPlaying);
     };
 ;
 
@@ -75,7 +75,7 @@ const MyPage = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="BCactiveVideo">
+                    <div className="BCactiveVideo" onClick={handleVideoClick}>
                         <div className="BCvideoPlayer">
                             <video autoPlay loop muted className='BCvideoPreview' src='media/mypage.mp4' alt="Video Preview" />
                         </div>

@@ -8,7 +8,7 @@ const MainPage = () => {
 
   // 동영상 재생
   const handleVideoClick = () => {
-        setIsVideoPlaying(!setIsVideoPlaying);
+       setIsVideoPlaying(!isVideoPlaying);
     };
 
 
